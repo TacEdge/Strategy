@@ -150,7 +150,7 @@ export const DiagramPage = ({
         <AddHorizonModal onClose={() => setAddOpen(null)} onCreated={selectHorizon} />
       )}
 
-      {modal === 'loos' && <LooManager onClose={onCloseModal} />}
+      {modal === 'loos' && <LooManager onClose={onCloseModal} onOpenNow={onOpenNow} />}
       {modal === 'milestones' && (
         <MilestoneListModal onClose={onCloseModal} onOpen={onOpenMilestonePage} />
       )}

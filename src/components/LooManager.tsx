@@ -6,7 +6,9 @@ import { IconArrowUp, IconArrowDown, IconArchive, IconTrash, IconPlus, IconEdit 
 
 const ROLES: LooRole[] = ['main-effort', 'supporting', 'sustaining', 'paused'];
 
-export const LooManager = ({ onClose }: { onClose: () => void }) => {
+export const LooManager = ({
+  onClose, onOpenNow,
+}: { onClose: () => void; onOpenNow: () => void }) => {
   const { state, dispatch } = useStore();
   const [confirm, setConfirm] = useState<{ kind: 'archive' | 'delete'; id: string } | null>(null);
   const [renaming, setRenaming] = useState<string | null>(null);
@@ -120,9 +122,16 @@ export const LooManager = ({ onClose }: { onClose: () => void }) => {
           </button>
         </div>
       ))}
-      <div>
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
         <button type="button" className="btn btn-secondary" onClick={addLoo}>
           <IconPlus size={14} /> Add Line of Operation
+        </button>
+        <button
+          type="button"
+          className="btn btn-primary"
+          onClick={() => { onClose(); onOpenNow(); }}
+        >
+          What should I do now?
         </button>
       </div>
 

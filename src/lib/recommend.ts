@@ -57,6 +57,19 @@ const OPEN = (m: Milestone) =>
 
 const CONF_RANK = { low: 0, medium: 1, high: 2 } as const;
 
+const words = (text: string): Set<string> =>
+  new Set(text.toLowerCase().split(/[^a-z]+/).filter((w) => w.length >= 4));
+
+/** Does this milestone appear in the weekly review's stated outcomes? */
+const namedInWeeklyOutcomes = (m: Milestone, state: CampaignState): boolean => {
+  const titleWords = words(m.title);
+  return state.weekly.outcomes.some((outcome) => {
+    let overlap = 0;
+    words(outcome).forEach((w) => { if (titleWords.has(w)) overlap += 1; });
+    return overlap >= 2;
+  });
+};
+
 /** Score one open milestone against the strategic picture. */
 const scoreMilestone = (
   m: Milestone,
@@ -98,6 +111,9 @@ const scoreMilestone = (
   else { score += 2; }
   if (m.confidence === 'low') { score += 8; reasons.push('Low confidence — needs securing'); }
   else if (m.confidence === 'medium') { score += 4; }
+  if (namedInWeeklyOutcomes(m, state)) {
+    score += 10; reasons.push("Named in this week's outcomes");
+  }
 
   return { score, reasons };
 };
@@ -223,6 +239,10 @@ export const recommend = (state: CampaignState, input: NowInput = {}): Recommend
     { question: 'Currently in front of it', answer: blockers.length > 0 ? blockers.join('; ') : 'No recorded blockers' },
     { question: 'Best action for the time available', answer: `${action.text} (${action.block} minutes against ${minutes} available)` },
     { question: 'Why the founder', answer: whyFounder },
+    {
+      question: 'Grounded in the weekly review',
+      answer: state.weekly.outcomes.filter(Boolean).join('; ') || 'No weekly outcomes recorded',
+    },
     { question: 'Consciously not today', answer: state.campaign.notToday.join('; ') },
   ];
 

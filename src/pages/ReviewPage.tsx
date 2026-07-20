@@ -189,6 +189,17 @@ export const ReviewPage = ({
                 {founderOffMain.map((m) => m.title).join('; ')}.
               </p>
             )}
+            {(() => {
+              const doneOffMain = achieved.filter((m) => m.looId !== mainEffort?.id);
+              return (
+                <p className="detail-text muted" style={{ fontSize: 14 }}>
+                  {doneOffMain.length} of {achieved.length} completed milestones sit outside the Main Effort
+                  {doneOffMain.length > achieved.length / 2
+                    ? ' — check whether effort is following the stated priority.'
+                    : '.'}
+                </p>
+              );
+            })()}
             <div className="detail-section">
               <SectionHeading>Risks raised this horizon</SectionHeading>
               <ul className="detail-list">

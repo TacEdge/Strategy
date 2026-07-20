@@ -82,7 +82,7 @@ export const AddHorizonModal = ({
     const id = newId('hz');
     const horizon: StrategicHorizon = {
       id, date, theme: t,
-      integratedState: 'Describe what TACEDGE should look like at this point if the LOO objectives are achieved together.',
+      integratedState: 'Describe the endstate for this horizon.',
       status: 'forming', confidence: 'low',
       assumptions: [], risks: [],
       assessment: 'Forming. Objectives are directional until earlier horizons deliver evidence.',

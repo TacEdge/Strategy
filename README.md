@@ -21,8 +21,8 @@ npm run preview    # serve the build
   horizon. Roles: Main Effort, Supporting, Sustaining, Paused. One Main
   Effort at a time.
 - **Strategic Horizons** — vertical synchronisation points. Each carries an
-  Integrated Horizon State, one objective per LOO, assumptions, risks and an
-  assessment. Lines continue visually through and beyond every horizon.
+  Endstate, one objective per LOO, assumptions, risks and an assessment.
+  Lines continue visually through and beyond every horizon.
 - **Milestones** — conditions that must become true, not activities. Live
   objects with purpose, importance, success criteria, dependencies, risks,
   decisions, tasks, evidence, notes, next best action and change history.

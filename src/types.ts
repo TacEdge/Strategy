@@ -53,6 +53,7 @@ export interface StrategicHorizon {
   id: string;
   date: string; // ISO date
   theme: string;
+  /** The Endstate: what TACEDGE looks like at this horizon. */
   integratedState: string;
   status: HorizonStatus;
   confidence: Confidence;

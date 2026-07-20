@@ -87,11 +87,7 @@ export const HorizonDrawer = ({
         </div>
 
         <div className="detail-section">
-          <SectionHeading>Integrated Horizon State</SectionHeading>
-          <p className="detail-text muted" style={{ fontSize: 13 }}>
-            What TACEDGE looks like at this point if the LOO objectives are achieved together.
-            The Lines of Operation continue beyond it.
-          </p>
+          <SectionHeading>Endstate</SectionHeading>
           <textarea
             className="field-textarea"
             style={{
@@ -100,7 +96,7 @@ export const HorizonDrawer = ({
             }}
             value={h.integratedState}
             onChange={(e) => patch({ integratedState: e.target.value })}
-            aria-label="Integrated Horizon State"
+            aria-label="Endstate"
           />
         </div>
 

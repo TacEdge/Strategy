@@ -39,7 +39,7 @@ const M = (
 });
 
 export const seedState: CampaignState = {
-  schemaVersion: 1,
+  schemaVersion: 2,
 
   campaign: {
     id: 'campaign-1',
@@ -50,6 +50,13 @@ export const seedState: CampaignState = {
       note: 'An enduring direction, not an endpoint. The Lines of Operation continue through every horizon.',
     },
     activeHorizonId: 'hz-1',
+    primaryConstraint: 'Insufficiently defined enterprise pilot scope',
+    notToday: [
+      'Website visual refinement',
+      'Additional work-type mock-ups',
+      'Broad industry research',
+      'Non-urgent administration',
+    ],
   },
 
   loos: [
@@ -190,6 +197,31 @@ export const seedState: CampaignState = {
       ],
       nextBestAction: 'Draft a one-page pilot scope for customer review.',
       notes: 'Sponsor is engaged. The open question is which project hosts the pilot.',
+      actions: [
+        {
+          id: 'act-mv3-90', block: 90,
+          text: 'Draft the Fulton Hogan pilot scope.',
+          completion: 'A one-page pilot proposal is ready for customer review and requests agreement on scope, ownership, success measures and timing.',
+        },
+        {
+          id: 'act-mv3-45', block: 45,
+          text: 'Outline the four decisions required in the Fulton Hogan pilot proposal.',
+          completion: 'Pilot workflow, customer owner, success measures and commercial commitment are each defined in one sentence, ready for the next full work block.',
+        },
+        {
+          id: 'act-mv3-30', block: 30,
+          text: 'List the open questions blocking the pilot scope and give each an owner and a date.',
+          completion: 'Every open question has an owner and a date.',
+        },
+      ],
+      unlocks: [
+        'Customer review can be scheduled',
+        'Pilot pricing can be finalised',
+        'Product configuration requirements can be confirmed',
+        'Technical delivery capacity can be assessed',
+      ],
+      consequenceOfDelay:
+        'The pilot decision drifts past the September window, compressing delivery and putting the 31 December Market Validation objective at risk.',
     }),
     M('ms-mv-4', 'loo-mv', 'First live V2 design partner', '2026-11-16', 'future', 'medium', 'Mike', 0, {
       major: true,
@@ -225,6 +257,13 @@ export const seedState: CampaignState = {
       tasks: [
         { id: 'tk-pt2-1', title: 'Close the two Hunter Civil workflow gaps', done: true, owner: 'Technical Lead' },
         { id: 'tk-pt2-2', title: 'Run end-to-end validation session', done: false, owner: 'Technical Lead', week: 'Week of 3 Aug' },
+      ],
+      actions: [
+        {
+          id: 'act-pt2-45', block: 45,
+          text: 'Prepare the Hunter Civil workflow questions for Thursday.',
+          completion: 'The question list covers both workflow gaps and the end-to-end validation sequence.',
+        },
       ],
     }),
     M('ms-pt-3', 'loo-pt', 'Field-ready anchoring workflow', '2026-09-30', 'at-risk', 'medium', 'Technical Lead', 35, {
@@ -269,6 +308,20 @@ export const seedState: CampaignState = {
         { id: 'tk-cr1-2', title: 'Test pricing structure with design partner', done: false, owner: 'Mike', week: 'Week of 27 Jul' },
       ],
       nextBestAction: 'Test the pilot pricing structure with the design partner.',
+      actions: [
+        {
+          id: 'act-cr1-60', block: 60,
+          text: 'Test the pilot pricing structure with the design partner.',
+          completion: 'The design partner has reacted to the three price points and a preferred structure is chosen.',
+        },
+        {
+          id: 'act-cr1-30', block: 30,
+          text: 'Write the one-paragraph rationale for each of the three pilot price points.',
+          completion: 'Each price point has a defensible rationale ready to test with the design partner.',
+        },
+      ],
+      consequenceOfDelay:
+        'The Fulton Hogan proposal goes out without a price, or waits for one.',
     }),
     M('ms-cr-2', 'loo-cr', 'First paid V2 pilot', '2026-10-30', 'future', 'medium', 'Mike', 0, {
       major: true,
@@ -345,6 +398,20 @@ export const seedState: CampaignState = {
       ],
       nextBestAction: 'Decide the package question, then re-approach the two warm candidates.',
       notes: 'Blocked on the package decision. Two warm candidates are waiting on it.',
+      actions: [
+        {
+          id: 'act-cc2-60', block: 60,
+          text: 'Decide the technical-lead package question and re-approach the two warm candidates.',
+          completion: 'The package decision is made and both candidates have been contacted with a concrete offer path.',
+        },
+        {
+          id: 'act-cc2-30', block: 30,
+          text: 'Confirm the technical-lead role profile with Dan.',
+          completion: 'The role profile is confirmed and ready to attach to the package decision.',
+        },
+      ],
+      consequenceOfDelay:
+        'Both warm candidates cool off and field readiness slips past the pilot window.',
     }),
     M('ms-cc-3', 'loo-cc', 'V2 delivery cadence established', '2026-10-20', 'future', 'medium', 'Technical Lead', 0, {
       purpose: 'A weekly build-measure-review cadence that survives founder absence.',
@@ -402,18 +469,29 @@ export const seedState: CampaignState = {
     { id: 'in-5', kind: 'momentum', text: 'Main Effort has no completed milestone in the current month.' },
   ],
 
-  recommendation: {
-    action: 'Draft the Fulton Hogan pilot scope.',
-    milestoneId: 'ms-mv-3',
-    looId: 'loo-mv',
-    horizonObjectiveId: 'obj-h1-mv',
-    why: 'This is the next founder-owned action on the current Main Effort. It removes a blocker from the next Market Validation milestone and enables Commercial and Product decisions.',
-    suggestedBlock: '90 minutes',
-    successfulCompletion: 'A one-page pilot proposal is ready for customer review and asks for a defined commitment.',
-    doNotPrioritise: [
-      'Website refinement',
-      'Broad work-type expansion',
-      'Speculative product features',
+  waiting: [
+    { id: 'wt-1', text: 'Fulton Hogan confirmation of the pilot review meeting date', who: 'Customer' },
+    { id: 'wt-2', text: 'Developer estimate for the pilot workflow build', who: 'Contract developer' },
+    { id: 'wt-3', text: 'Candidate responses on the technical-lead package', who: 'Candidates' },
+  ],
+
+  capacity: {
+    minutes: 90,
+    blocks: 2,
+    energy: 'medium',
+    meetings: '',
+    together: false,
+    constrainedDay: true,
+  },
+
+  closeouts: [],
+
+  weekly: {
+    outcomes: [
+      'Fulton Hogan pilot scope agreed in principle',
+      'Technical-lead package decision made and candidates re-engaged',
+      'Pilot pricing structure tested with the design partner',
     ],
+    updatedAt: '2026-07-19T18:00:00',
   },
 };

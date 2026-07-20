@@ -11,11 +11,12 @@ import { statusIcon, IconChevronRight, IconPlus } from '../components/icons';
 const EDIT_STATUSES: MilestoneStatus[] = ['future', 'active', 'at-risk', 'blocked', 'complete', 'superseded'];
 
 export const MilestonePage = ({
-  milestoneId, onBack, onOpenMilestone,
+  milestoneId, onBack, onOpenMilestone, onOpenNow,
 }: {
   milestoneId: string;
   onBack: () => void;
   onOpenMilestone: (id: string) => void;
+  onOpenNow: () => void;
 }) => {
   const { state, dispatch } = useStore();
   const loos = useLoos();
@@ -90,6 +91,9 @@ export const MilestonePage = ({
           <div className="ws-title-row">
             <h1 className="ws-title">{m.title}</h1>
             <StatusBadge status={m.status} />
+            <button type="button" className="btn btn-secondary btn-sm" onClick={onOpenNow}>
+              What should I do now?
+            </button>
           </div>
           <div className="ws-meta-row">
             <span>{loo?.name}</span>

@@ -14,11 +14,12 @@ const HZ_STATUS: { value: HorizonStatus; label: string }[] = [
 ];
 
 export const HorizonDrawer = ({
-  horizonId, onClose, onSelectMilestone,
+  horizonId, onClose, onSelectMilestone, onOpenNow,
 }: {
   horizonId: string;
   onClose: () => void;
   onSelectMilestone: (id: string) => void;
+  onOpenNow: () => void;
 }) => {
   const { state, dispatch } = useStore();
   const loos = useLoos();
@@ -188,6 +189,9 @@ export const HorizonDrawer = ({
       </div>
 
       <div className="drawer-foot">
+        <button type="button" className="btn btn-primary btn-sm" onClick={onOpenNow}>
+          What should I do now?
+        </button>
         <button type="button" className="btn btn-secondary btn-sm" onClick={() => setConfirm('archive')}>
           <IconArchive size={13} /> Archive
         </button>

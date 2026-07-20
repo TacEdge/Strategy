@@ -4,7 +4,8 @@ import {
 import type { ReactNode, Dispatch } from 'react';
 import type {
   CampaignState, Milestone, LineOfOperation, StrategicHorizon,
-  HorizonObjective, Dependency, ChangeHistoryEntry,
+  HorizonObjective, Dependency, ChangeHistoryEntry, Campaign,
+  CapacityProfile, WaitingItem, DailyCloseout, WeeklyPlan,
 } from '../types';
 import { seedState } from '../data/seed';
 import { nowStamp, fmtDate } from '../lib/time';
@@ -41,6 +42,12 @@ export type Action =
   | { type: 'objective/update'; id: string; patch: Partial<HorizonObjective> }
   | { type: 'dependency/add'; dependency: Dependency }
   | { type: 'dependency/remove'; id: string }
+  | { type: 'campaign/update'; patch: Partial<Campaign> }
+  | { type: 'capacity/set'; patch: Partial<CapacityProfile> }
+  | { type: 'waiting/add'; item: WaitingItem }
+  | { type: 'waiting/remove'; id: string }
+  | { type: 'closeout/add'; entry: DailyCloseout }
+  | { type: 'weekly/update'; patch: Partial<WeeklyPlan> }
   | { type: 'campaign/reset' };
 
 const withHistory = (m: Milestone, summary: string): Milestone => ({
@@ -185,6 +192,25 @@ export const reducer = (state: CampaignState, action: Action): CampaignState => 
       return { ...state, dependencies: [...state.dependencies, action.dependency] };
     case 'dependency/remove':
       return { ...state, dependencies: state.dependencies.filter((d) => d.id !== action.id) };
+
+    case 'campaign/update':
+      return { ...state, campaign: { ...state.campaign, ...action.patch } };
+    case 'capacity/set':
+      return { ...state, capacity: { ...state.capacity, ...action.patch } };
+    case 'waiting/add':
+      return { ...state, waiting: [...state.waiting, action.item] };
+    case 'waiting/remove':
+      return { ...state, waiting: state.waiting.filter((w) => w.id !== action.id) };
+    case 'closeout/add': {
+      // The closeout feeds tomorrow: the stated blocker becomes the primary
+      // constraint the recommendation engine surfaces.
+      const campaign = action.entry.primaryBlocker.trim()
+        ? { ...state.campaign, primaryConstraint: action.entry.primaryBlocker.trim() }
+        : state.campaign;
+      return { ...state, campaign, closeouts: [...state.closeouts, action.entry] };
+    }
+    case 'weekly/update':
+      return { ...state, weekly: { ...state.weekly, ...action.patch } };
 
     case 'campaign/reset':
       return seedState;

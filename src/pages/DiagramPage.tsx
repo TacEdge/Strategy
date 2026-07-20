@@ -9,18 +9,18 @@ import { Diagram } from '../components/Diagram';
 import { InsightsStrip } from '../components/InsightsStrip';
 import { MilestoneDrawer } from '../components/MilestoneDrawer';
 import { HorizonDrawer } from '../components/HorizonDrawer';
-import { PriorityPanel } from '../components/PriorityPanel';
 import { AddMilestoneModal, AddHorizonModal } from '../components/AddModals';
 import { LooManager } from '../components/LooManager';
 import { MilestoneListModal } from '../components/MilestoneListModal';
 
 export const DiagramPage = ({
-  expanded, onToggleExpanded, onOpenMilestonePage,
+  expanded, onToggleExpanded, onOpenMilestonePage, onOpenNow,
   modal, onCloseModal,
 }: {
   expanded: boolean;
   onToggleExpanded: () => void;
   onOpenMilestonePage: (id: string) => void;
+  onOpenNow: () => void;
   modal: 'loos' | 'milestones' | null;
   onCloseModal: () => void;
 }) => {
@@ -33,7 +33,6 @@ export const DiagramPage = ({
   const [focusLooId, setFocusLooId] = useState<string | null>(null);
   const [selectedMilestoneId, setSelectedMilestoneId] = useState<string | null>('ms-mv-3');
   const [selectedHorizonId, setSelectedHorizonId] = useState<string | null>(null);
-  const [priorityOpen, setPriorityOpen] = useState(false);
   const [addOpen, setAddOpen] = useState<'milestone' | 'horizon' | null>(null);
   const scrollRef = useRef<HTMLDivElement | null>(null);
 
@@ -109,7 +108,7 @@ export const DiagramPage = ({
         onToggleExpanded={onToggleExpanded}
         onAddMilestone={() => setAddOpen('milestone')}
         onAddHorizon={() => setAddOpen('horizon')}
-        onPriority={() => setPriorityOpen(true)}
+        onPriority={onOpenNow}
       />
 
       <Diagram
@@ -141,13 +140,7 @@ export const DiagramPage = ({
           horizonId={selectedHorizonId}
           onClose={() => setSelectedHorizonId(null)}
           onSelectMilestone={selectMilestone}
-        />
-      )}
-      {priorityOpen && (
-        <PriorityPanel
-          state={state}
-          onClose={() => setPriorityOpen(false)}
-          onOpenMilestone={selectMilestone}
+          onOpenNow={onOpenNow}
         />
       )}
       {addOpen === 'milestone' && (

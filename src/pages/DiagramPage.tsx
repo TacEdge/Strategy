@@ -109,6 +109,7 @@ export const DiagramPage = ({
         loos={loos}
         view={view}
         selectedMilestoneId={selectedMilestoneId}
+        selectedHorizonId={selectedHorizonId}
         focusLooId={focusLooId}
         showAllDeps={showAllDeps}
         scrollRef={scrollRef}

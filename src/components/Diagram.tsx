@@ -18,6 +18,7 @@ interface DiagramProps {
   loos: LineOfOperation[];
   view: ViewSpec;
   selectedMilestoneId: string | null;
+  selectedHorizonId: string | null;
   focusLooId: string | null;
   showAllDeps: boolean;
   scrollRef: RefObject<HTMLDivElement | null>;
@@ -78,7 +79,7 @@ const useDragDays = (
 };
 
 export const Diagram = ({
-  state, loos, view, selectedMilestoneId, focusLooId, showAllDeps, scrollRef,
+  state, loos, view, selectedMilestoneId, selectedHorizonId, focusLooId, showAllDeps, scrollRef,
   onSelectMilestone, onSelectHorizon, onMoveMilestone, onMoveHorizon, onToggleFocus,
 }: DiagramProps) => {
   const t0 = parseDate(TIMELINE_START);
@@ -238,6 +239,13 @@ export const Diagram = ({
   };
   const onBgPointerUp = () => { panning.current = null; setIsPanning(false); };
 
+  // Click-to-select props: keep the pointerdown away from the canvas pan so
+  // the click lands, and never start a drag from an unselected element.
+  const selectProps = (fn: () => void) => ({
+    onPointerDown: (e: ReactPointerEvent) => e.stopPropagation(),
+    onClick: fn,
+  });
+
   const laneDim = (loo: LineOfOperation) => focusLooId !== null && focusLooId !== loo.id;
   const nodeOpacity = (loo: LineOfOperation, m: Milestone) => {
     if (laneDim(loo)) return 0.25;
@@ -338,9 +346,10 @@ export const Diagram = ({
             </svg>
           )}
 
-          {/* horizon markers */}
+          {/* horizon markers: select first, then drag to move */}
           {horizons.map(({ h, flagTop }) => {
-            const dx = hzDrag.drag?.id === h.id ? hzDrag.drag.dx : 0;
+            const hzSelected = selectedHorizonId === h.id;
+            const dx = hzSelected && hzDrag.drag?.id === h.id ? hzDrag.drag.dx : 0;
             const hx = x(h.date) + dx;
             const forming = h.status === 'forming';
             return (
@@ -348,11 +357,15 @@ export const Diagram = ({
                 <div className={`horizon-line${forming ? ' forming' : ''}`} style={{ left: hx, top: HEAD_H, height: bodyH }} />
                 <button
                   type="button"
-                  className={`horizon-flag${forming ? ' forming' : ''}`}
+                  className={`horizon-flag${forming ? ' forming' : ''}${hzSelected ? ' selected' : ''}`}
                   style={{ left: hx, top: flagTop }}
-                  title={`Strategic Horizon: ${h.theme}. Drag to change date, select for detail.`}
+                  title={hzSelected
+                    ? `Strategic Horizon: ${h.theme}. Drag to change date.`
+                    : `Strategic Horizon: ${h.theme}. Select for detail; select first to move.`}
                   aria-label={`Strategic Horizon ${fmtDayMonth(h.date)}: ${h.theme}`}
-                  {...hzDrag.handlers(h.id)}
+                  {...(hzSelected
+                    ? hzDrag.handlers(h.id)
+                    : selectProps(() => onSelectHorizon(h.id)))}
                 >
                   <span className="hz-date">{fmtDayMonth(h.date)} {parseDate(h.date).getFullYear()}</span>
                   <span className="hz-theme">{h.theme}</span>
@@ -378,7 +391,7 @@ export const Diagram = ({
                     top: laneTop + laneH * LINE_AT,
                     opacity: laneDim(loo) ? 0.25 : 1,
                   }}
-                  onClick={() => onSelectHorizon(h.id)}
+                  {...selectProps(() => onSelectHorizon(h.id))}
                   title={`${loo.name} objective at ${fmtDayMonth(h.date)}: ${obj.statement}`}
                 >
                   <span className="obj-diamond" aria-hidden />
@@ -396,7 +409,7 @@ export const Diagram = ({
             const dragging = msDrag.drag?.id === m.id && msDrag.drag.dx !== 0;
             const selected = selectedMilestoneId === m.id;
             const opacity = nodeOpacity(loo, m);
-            const label = `${m.title}. ${STATUS_LABEL[m.status]}, ${fmtDayMonth(m.targetDate)}, ${m.owner}. Drag to reschedule.`;
+            const label = `${m.title}. ${STATUS_LABEL[m.status]}, ${fmtDayMonth(m.targetDate)}, ${m.owner}.`;
 
             if (selected && !sparse) {
               return (
@@ -405,8 +418,8 @@ export const Diagram = ({
                   key={m.id}
                   className={`ms-selected-box st-${m.status}${dragging ? ' dragging' : ''}`}
                   style={{ left: cx, top: cy }}
-                  aria-label={label}
-                  title={label}
+                  aria-label={`${label} Selected. Drag to reschedule.`}
+                  title={`${label} Drag to reschedule.`}
                   {...msDrag.handlers(m.id)}
                 >
                   <span className={`st-icon-${m.status}`}><MarkerIcon status={m.status} size={15} /></span>
@@ -422,15 +435,17 @@ export const Diagram = ({
               ? m.tasks.filter((t) => !t.done).slice(0, 2)
               : [];
 
+            // Unselected milestones select on click only; dragging them pans
+            // the canvas. Rescheduling requires selecting first.
             return (
               <div key={m.id} className="ms-point" style={{ opacity }}>
                 <button
                   type="button"
-                  className={`ms-dot st-icon-${m.status}${dragging ? ' dragging' : ''}`}
+                  className={`ms-dot st-icon-${m.status}`}
                   style={{ left: cx, top: cy }}
-                  aria-label={label}
-                  title={label}
-                  {...msDrag.handlers(m.id)}
+                  aria-label={`${label} Select to view and move.`}
+                  title={`${label} Select to view and move.`}
+                  {...selectProps(() => onSelectMilestone(m.id))}
                 >
                   <MarkerIcon status={m.status} size={sparse ? 12 : 14} />
                 </button>
@@ -443,7 +458,7 @@ export const Diagram = ({
                       top: pl.row === 1 ? cy - 10 : cy + 10,
                       width: labelW,
                     }}
-                    onClick={() => onSelectMilestone(m.id)}
+                    {...selectProps(() => onSelectMilestone(m.id))}
                     title={label}
                     tabIndex={-1}
                     aria-hidden

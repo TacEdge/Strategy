@@ -13,11 +13,15 @@ import { MilestoneListModal } from '../components/MilestoneListModal';
 
 export const DiagramPage = ({
   expanded, onToggleExpanded, onOpenMilestonePage,
+  initialMilestoneId = null, initialHorizonId = null,
   modal, onCloseModal,
 }: {
   expanded: boolean;
   onToggleExpanded: () => void;
   onOpenMilestonePage: (id: string) => void;
+  /** Deep-link selection from the URL; the app otherwise opens neutral. */
+  initialMilestoneId?: string | null;
+  initialHorizonId?: string | null;
   modal: 'loos' | 'milestones' | null;
   onCloseModal: () => void;
 }) => {
@@ -29,8 +33,16 @@ export const DiagramPage = ({
   );
   const [focusLooId, setFocusLooId] = useState<string | null>(null);
   const [showAllDeps, setShowAllDeps] = useState(false);
-  const [selectedMilestoneId, setSelectedMilestoneId] = useState<string | null>('ms-mv-3');
-  const [selectedHorizonId, setSelectedHorizonId] = useState<string | null>(null);
+  // Neutral by default: drawers open only on user selection or a deep link.
+  const [selectedMilestoneId, setSelectedMilestoneId] = useState<string | null>(
+    () => (initialMilestoneId && state.milestones.some((m) => m.id === initialMilestoneId)
+      ? initialMilestoneId : null),
+  );
+  const [selectedHorizonId, setSelectedHorizonId] = useState<string | null>(
+    () => (!initialMilestoneId && initialHorizonId
+      && state.horizons.some((h) => h.id === initialHorizonId)
+      ? initialHorizonId : null),
+  );
   const [addOpen, setAddOpen] = useState<'milestone' | 'horizon' | null>(null);
   const scrollRef = useRef<HTMLDivElement | null>(null);
 

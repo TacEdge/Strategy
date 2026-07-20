@@ -7,16 +7,22 @@ import { MilestonePage } from './pages/MilestonePage';
 import { ReviewPage } from './pages/ReviewPage';
 
 type Route =
-  | { name: 'diagram' }
+  | { name: 'diagram'; milestoneId: string | null; horizonId: string | null }
   | { name: 'review' }
   | { name: 'milestone'; id: string };
 
 const parseHash = (): Route => {
   const h = window.location.hash;
-  const match = h.match(/^#\/milestone\/(.+)$/);
+  const match = h.match(/^#\/milestone\/([^?]+)/);
   if (match) return { name: 'milestone', id: decodeURIComponent(match[1]) };
   if (h.startsWith('#/review')) return { name: 'review' };
-  return { name: 'diagram' };
+  // The diagram opens neutral; ?milestone= / ?horizon= deep links open a drawer.
+  const params = new URLSearchParams(h.split('?')[1] ?? '');
+  return {
+    name: 'diagram',
+    milestoneId: params.get('milestone'),
+    horizonId: params.get('horizon'),
+  };
 };
 
 export const App = () => {
@@ -61,6 +67,8 @@ export const App = () => {
             expanded={expanded}
             onToggleExpanded={() => setExpanded((e) => !e)}
             onOpenMilestonePage={goMilestone}
+            initialMilestoneId={route.milestoneId}
+            initialHorizonId={route.horizonId}
             modal={modal}
             onCloseModal={() => setModal(null)}
           />

@@ -662,29 +662,6 @@ input, select, textarea { font: inherit; color: var(--te-ink); }
   border-color: transparent transparent transparent var(--te-olive-edge);
 }
 
-/* ============================== Insights bar ============================== */
-
-.insights-bar {
-  display: flex; align-items: center; gap: var(--te-sp-3xl);
-  background: var(--te-card);
-  border: 1px solid var(--te-line);
-  border-radius: var(--te-r-md);
-  padding: var(--te-sp-sm) var(--te-sp-xl);
-  overflow-x: auto;
-}
-.insights-bar .eyebrow { flex: none; }
-.insight-stat {
-  display: flex; align-items: baseline; gap: var(--te-sp-sm);
-  white-space: nowrap;
-}
-.insight-stat-label { font-size: var(--te-fs-sm); color: var(--te-ink-60); }
-.insight-stat-value {
-  font-family: var(--te-mono);
-  font-size: var(--te-fs-lg);
-  font-weight: 700;
-  color: var(--te-forest);
-}
-
 /* ============================== Status / confidence primitives ============================== */
 
 .status-badge {

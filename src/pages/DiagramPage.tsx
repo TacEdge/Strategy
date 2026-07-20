@@ -5,7 +5,6 @@ import type { ViewId } from '../lib/views';
 import { parseDate, daysBetween, todayIso } from '../lib/time';
 import { TimeControls } from '../components/TimeControls';
 import { Diagram, DiagramLegend } from '../components/Diagram';
-import { InsightsStrip } from '../components/InsightsStrip';
 import { MilestoneDrawer } from '../components/MilestoneDrawer';
 import { HorizonDrawer } from '../components/HorizonDrawer';
 import { AddMilestoneModal, AddHorizonModal } from '../components/AddModals';
@@ -115,8 +114,6 @@ export const DiagramPage = ({
       />
 
       <DiagramLegend />
-
-      {!expanded && <InsightsStrip />}
 
       {selectedMilestoneId && (
         <MilestoneDrawer

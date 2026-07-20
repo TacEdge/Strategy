@@ -16,12 +16,12 @@ export interface ViewSpec {
 
 /** Ordered near-term to long-term; zooming in steps toward Month. */
 export const VIEWS: ViewSpec[] = [
-  { id: 'month', label: 'Month', pxPerDay: 15, detail: 'operational', laneHeight: 152, showWeeks: true },
-  { id: 'quarter', label: 'Quarter', pxPerDay: 7.4, detail: 'detail', laneHeight: 128, showWeeks: false },
-  { id: '6m', label: '6 months', pxPerDay: 3.8, detail: 'detail', laneHeight: 118, showWeeks: false },
-  { id: 'year', label: 'Year', pxPerDay: 1.9, detail: 'macro', laneHeight: 108, showWeeks: false },
-  { id: '3y', label: '3 years', pxPerDay: 0.72, detail: 'macro', laneHeight: 84, showWeeks: false },
-  { id: '5y', label: '5 years', pxPerDay: 0.42, detail: 'macro', laneHeight: 84, showWeeks: false },
+  { id: 'month', label: 'Month', pxPerDay: 15, detail: 'operational', laneHeight: 164, showWeeks: true },
+  { id: 'quarter', label: 'Quarter', pxPerDay: 7.4, detail: 'detail', laneHeight: 142, showWeeks: false },
+  { id: '6m', label: '6 months', pxPerDay: 3.8, detail: 'detail', laneHeight: 134, showWeeks: false },
+  { id: 'year', label: 'Year', pxPerDay: 1.9, detail: 'macro', laneHeight: 122, showWeeks: false },
+  { id: '3y', label: '3 years', pxPerDay: 0.72, detail: 'macro', laneHeight: 94, showWeeks: false },
+  { id: '5y', label: '5 years', pxPerDay: 0.42, detail: 'macro', laneHeight: 94, showWeeks: false },
 ];
 
 export const viewById = (id: ViewId): ViewSpec =>

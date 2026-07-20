@@ -31,8 +31,10 @@ npm run preview    # serve the build
 
 - **LOO Diagram** (`#/`, the landing route) — the strategic map: lanes,
   horizons, objectives, milestones, dependencies, semantic zoom, editing.
-  Milestone cards are deliberately minimal (status, title, date); full
-  detail lives in the selection drawer and milestone workspace.
+  Milestones are status dots on the LOO line with short labels; horizon
+  objectives are diamonds with short summaries; dependency lines appear
+  only for the selected milestone (or via "Show all dependencies").
+  Full detail lives in the selection drawer and milestone workspace.
 - **Weekly Review** (`#/review`) — movement toward the horizon, progress
   by LOO, achieved/slipped milestones, founder allocation, and the three
   outcomes for the next seven days.

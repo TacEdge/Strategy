@@ -108,6 +108,56 @@ export const IconStatusSuperseded = (p: P) => (
 );
 export const IconStatusArchived = (p: P) => <IconArchive {...p} />;
 
+/**
+ * Compact timeline markers. Shape carries status at dot scale: filled =
+ * complete, ringed dot = active, open = future, triangle = at risk,
+ * square = blocked, slashed = superseded. Each draws a card-coloured
+ * backing so the LOO line does not show through.
+ */
+export const MarkerIcon = ({ status, size = 14 }: { status: MilestoneStatus; size?: number }) => {
+  const backing = <circle cx="7" cy="7" r="6.4" fill="var(--te-card)" />;
+  const common = {
+    width: size, height: size, viewBox: '0 0 14 14',
+    'aria-hidden': true as const,
+  };
+  switch (status) {
+    case 'complete':
+      return <svg {...common}>{backing}<circle cx="7" cy="7" r="5" fill="currentColor" /></svg>;
+    case 'active':
+      return (
+        <svg {...common}>{backing}
+          <circle cx="7" cy="7" r="4.9" fill="none" stroke="currentColor" strokeWidth="1.6" />
+          <circle cx="7" cy="7" r="2.1" fill="currentColor" />
+        </svg>
+      );
+    case 'at-risk':
+      return (
+        <svg {...common}>{backing}
+          <path d="M7 2.4 12.2 11.6H1.8Z" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
+        </svg>
+      );
+    case 'blocked':
+      return (
+        <svg {...common}>{backing}
+          <rect x="2.6" y="2.6" width="8.8" height="8.8" rx="1" fill="none" stroke="currentColor" strokeWidth="1.6" />
+        </svg>
+      );
+    case 'superseded':
+      return (
+        <svg {...common}>{backing}
+          <circle cx="7" cy="7" r="4.9" fill="none" stroke="currentColor" strokeWidth="1.4" />
+          <path d="m3.9 10.1 6.2-6.2" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+        </svg>
+      );
+    default: // future / archived
+      return (
+        <svg {...common}>{backing}
+          <circle cx="7" cy="7" r="4.9" fill="none" stroke="currentColor" strokeWidth="1.5" />
+        </svg>
+      );
+  }
+};
+
 export const statusIcon = (status: MilestoneStatus, size = 16): JSX.Element => {
   switch (status) {
     case 'complete': return <IconStatusComplete size={size} />;

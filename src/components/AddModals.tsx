@@ -93,6 +93,7 @@ export const AddHorizonModal = ({
       horizonId: id,
       looId: loo.id,
       statement: `Define the ${loo.name} objective at this horizon.`,
+      summary: 'Objective to define',
       confidence: 'low',
     }));
     dispatch({ type: 'horizon/add', horizon, objectives });

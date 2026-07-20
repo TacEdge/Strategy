@@ -47,6 +47,8 @@ export interface HorizonObjective {
   horizonId: string;
   looId: string;
   statement: string;
+  /** Short form shown at the horizon marker on the diagram. */
+  summary: string;
   confidence: Confidence;
 }
 
@@ -132,12 +134,6 @@ export interface Milestone {
   history: ChangeHistoryEntry[];
 }
 
-export interface Insight {
-  id: string;
-  text: string;
-  kind: 'congestion' | 'founder' | 'sequencing' | 'resource' | 'momentum';
-}
-
 export interface WeeklyPlan {
   /** The three most important outcomes for the next seven days. */
   outcomes: string[];
@@ -153,6 +149,5 @@ export interface CampaignState {
   objectives: HorizonObjective[];
   milestones: Milestone[];
   dependencies: Dependency[];
-  insights: Insight[];
   weekly: WeeklyPlan;
 }

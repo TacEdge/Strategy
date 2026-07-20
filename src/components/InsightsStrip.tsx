@@ -1,21 +1,38 @@
-import type { Insight } from '../types';
+import { useMemo } from 'react';
+import { useStore } from '../state/store';
+import { parseDate, addDays, toIso, todayIso } from '../lib/time';
 
-const KIND_LABEL: Record<Insight['kind'], string> = {
-  congestion: 'Congestion',
-  founder: 'Founder',
-  sequencing: 'Sequencing',
-  resource: 'Resource',
-  momentum: 'Momentum',
+const OPEN = ['active', 'at-risk', 'blocked', 'future'];
+
+/** Compact computed campaign signals. */
+export const InsightsStrip = () => {
+  const { state } = useStore();
+
+  const stats = useMemo(() => {
+    const today = todayIso();
+    const in30 = toIso(addDays(parseDate(today), 30));
+    const mainEffort = state.loos.find((l) => l.role === 'main-effort' && !l.archived);
+    const open = state.milestones.filter((m) => OPEN.includes(m.status));
+    return [
+      {
+        label: 'Main Effort milestones · next 30 days',
+        value: open.filter((m) => m.looId === mainEffort?.id && m.targetDate >= today && m.targetDate <= in30).length,
+      },
+      { label: 'Milestones at risk', value: open.filter((m) => m.status === 'at-risk').length },
+      { label: 'Blocked milestones', value: open.filter((m) => m.status === 'blocked').length },
+      { label: 'Founder-owned open milestones', value: open.filter((m) => m.founderAction).length },
+    ];
+  }, [state.milestones, state.loos]);
+
+  return (
+    <section className="insights-bar" aria-label="Campaign signals">
+      <span className="eyebrow">Insights</span>
+      {stats.map((s) => (
+        <div key={s.label} className="insight-stat">
+          <span className="insight-stat-label">{s.label}</span>
+          <span className="insight-stat-value">{s.value}</span>
+        </div>
+      ))}
+    </section>
+  );
 };
-
-export const InsightsStrip = ({ insights }: { insights: Insight[] }) => (
-  <section className="insights-strip" aria-label="Campaign insights">
-    <span className="eyebrow">Insights</span>
-    {insights.map((i) => (
-      <div key={i.id} className="insight-chip">
-        <span className="insight-kind">{KIND_LABEL[i.kind]}</span>
-        <span>{i.text}</span>
-      </div>
-    ))}
-  </section>
-);

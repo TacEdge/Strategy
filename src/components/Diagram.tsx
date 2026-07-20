@@ -6,10 +6,12 @@ import { TIMELINE_START, TIMELINE_END } from '../lib/views';
 import {
   parseDate, toIso, daysBetween, addDays, monthShort, todayIso, fmtDayMonth,
 } from '../lib/time';
-import { statusIcon } from './icons';
-import { STATUS_LABEL } from './ui';
+import { MarkerIcon } from './icons';
+import { STATUS_LABEL, ConfidenceMeter } from './ui';
 
-const HEAD_H = 44;
+const HEAD_H = 40;
+/** The LOO line runs at this fraction of lane height; labels hang below. */
+const LINE_AT = 0.42;
 
 interface DiagramProps {
   state: CampaignState;
@@ -17,6 +19,7 @@ interface DiagramProps {
   view: ViewSpec;
   selectedMilestoneId: string | null;
   focusLooId: string | null;
+  showAllDeps: boolean;
   scrollRef: RefObject<HTMLDivElement | null>;
   onSelectMilestone: (id: string) => void;
   onSelectHorizon: (id: string) => void;
@@ -28,9 +31,7 @@ interface DiagramProps {
 interface Placed {
   m: Milestone;
   x: number;
-  cy: number; // anchor centre y (for dependency lines)
-  top: number; // card top (detail views)
-  row: number;
+  row: number; // 0 = label below the line, 1 = label above
   laneTop: number;
 }
 
@@ -77,7 +78,7 @@ const useDragDays = (
 };
 
 export const Diagram = ({
-  state, loos, view, selectedMilestoneId, focusLooId, scrollRef,
+  state, loos, view, selectedMilestoneId, focusLooId, showAllDeps, scrollRef,
   onSelectMilestone, onSelectHorizon, onMoveMilestone, onMoveHorizon, onToggleFocus,
 }: DiagramProps) => {
   const t0 = parseDate(TIMELINE_START);
@@ -89,10 +90,13 @@ export const Diagram = ({
   const bodyH = loos.length * laneH;
   const totalH = HEAD_H + bodyH;
   const today = todayIso();
-  const isDetail = view.detail !== 'macro';
-  const isOperational = view.detail === 'operational';
-  const sparse = px < 1; // 3y / 5y: strategic shape only
-  const showObjectives = !sparse && !isOperational;
+
+  // Semantic density by view: dots -> labelled dots -> dates/owners -> tasks.
+  const sparse = px < 1; // 5y / 3y
+  const zoomedIn = ['6m', 'quarter', 'month'].includes(view.id);
+  const showMeta = ['quarter', 'month'].includes(view.id);
+  const showTasks = view.id === 'month';
+  const showSummaries = zoomedIn;
 
   const msDrag = useDragDays(
     px,
@@ -117,7 +121,7 @@ export const Diagram = ({
     onSelectHorizon,
   );
 
-  // ---- month / week / year grid ----
+  // ---- time header ticks ----
   const monthTicks = useMemo(() => {
     const ticks: { x: number; label: string; year: number; month: number }[] = [];
     const d = new Date(t0.getFullYear(), t0.getMonth(), 1);
@@ -136,7 +140,7 @@ export const Diagram = ({
     if (!view.showWeeks) return [];
     const ticks: { x: number; label: string }[] = [];
     const d = new Date(t0);
-    d.setDate(d.getDate() + ((8 - d.getDay()) % 7)); // first Monday
+    d.setDate(d.getDate() + ((8 - d.getDay()) % 7));
     while (d <= t1) {
       ticks.push({ x: daysBetween(t0, d) * px, label: `${d.getDate()}` });
       d.setDate(d.getDate() + 7);
@@ -144,65 +148,64 @@ export const Diagram = ({
     return ticks;
   }, [view.showWeeks, px, t0, t1]);
 
-  // ---- milestone placement with collision avoidance ----
+  // ---- milestone placement: centre track, alternate above when crowded ----
+  const labelW = showMeta ? 132 : 118;
   const placedByLane = useMemo(() => {
     const map = new Map<string, Placed[]>();
     loos.forEach((loo, laneIdx) => {
       const laneTop = HEAD_H + laneIdx * laneH;
       const ms = state.milestones
         .filter((m) => m.looId === loo.id && m.status !== 'archived')
-        .filter((m) => (isDetail ? true : m.major && m.status !== 'superseded'))
+        .filter((m) => (zoomedIn ? true : m.major && m.status !== 'superseded'))
         .sort((a, b) => a.targetDate.localeCompare(b.targetDate));
 
       const rowEnds: number[] = [];
       const placed: Placed[] = ms.map((m) => {
         const cx = x(m.targetDate);
-        const w = isDetail ? 212 : sparse ? 30 : Math.min(230, 44 + m.title.length * 6.4);
+        const w = sparse ? 26 : labelW + 8;
         const startX = cx - w / 2;
-        let row = rowEnds.findIndex((end) => startX >= end + 8);
-        const maxRows = 2;
+        let row = rowEnds.findIndex((end) => startX >= end + 6);
         if (row === -1) {
-          row = rowEnds.length < maxRows
-            ? rowEnds.length
-            : rowEnds.indexOf(Math.min(...rowEnds));
+          row = rowEnds.length < 2 ? rowEnds.length : rowEnds.indexOf(Math.min(...rowEnds));
         }
         rowEnds[row] = cx + w / 2;
-        const cy = isDetail
-          ? laneTop + (row === 0 ? laneH * 0.32 : laneH * 0.72)
-          : laneTop + (row === 0 ? laneH * 0.62 : laneH * 0.86);
-        const top = isDetail
-          ? laneTop + (row === 0 ? 8 : laneH * 0.52)
-          : cy;
-        return { m, x: cx, cy, top, row, laneTop };
+        return { m, x: cx, row, laneTop };
       });
       map.set(loo.id, placed);
     });
     return map;
-  }, [state.milestones, loos, laneH, isDetail, px]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [state.milestones, loos, laneH, zoomedIn, sparse, labelW, px]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const positions = useMemo(() => {
     const p = new Map<string, { x: number; y: number }>();
     placedByLane.forEach((list) => list.forEach((pl) => {
       const dx = msDrag.drag?.id === pl.m.id ? msDrag.drag.dx : 0;
-      p.set(pl.m.id, { x: pl.x + dx, y: pl.cy });
+      p.set(pl.m.id, { x: pl.x + dx, y: pl.laneTop + laneH * LINE_AT });
     }));
     return p;
-  }, [placedByLane, msDrag.drag]);
+  }, [placedByLane, msDrag.drag, laneH]);
 
-  // ---- dependencies ----
-  const deps = useMemo(() => {
-    const majorIds = new Set(
-      state.milestones.filter((m) => m.major).map((m) => m.id),
-    );
-    return state.dependencies.filter((d) => {
-      if (!d.fromMilestoneId) return false;
-      if (!positions.has(d.fromMilestoneId) || !positions.has(d.toMilestoneId)) return false;
-      if (!isDetail) return majorIds.has(d.fromMilestoneId) && majorIds.has(d.toMilestoneId);
-      return true;
+  // ---- selection focus: related milestones and visible dependencies ----
+  const relatedIds = useMemo(() => {
+    if (!selectedMilestoneId) return null;
+    const set = new Set([selectedMilestoneId]);
+    state.dependencies.forEach((d) => {
+      if (d.toMilestoneId === selectedMilestoneId && d.fromMilestoneId) set.add(d.fromMilestoneId);
+      if (d.fromMilestoneId === selectedMilestoneId) set.add(d.toMilestoneId);
     });
-  }, [state.dependencies, state.milestones, positions, isDetail]);
+    return set;
+  }, [selectedMilestoneId, state.dependencies]);
 
-  // Stagger horizon flags vertically when they crowd at wide zooms.
+  const visibleDeps = useMemo(() => {
+    if (!zoomedIn) return [];
+    const placeable = state.dependencies.filter((d) =>
+      d.fromMilestoneId && positions.has(d.fromMilestoneId) && positions.has(d.toMilestoneId));
+    if (showAllDeps) return placeable;
+    if (!selectedMilestoneId) return [];
+    return placeable.filter((d) =>
+      d.toMilestoneId === selectedMilestoneId || d.fromMilestoneId === selectedMilestoneId);
+  }, [state.dependencies, positions, zoomedIn, showAllDeps, selectedMilestoneId]);
+
   const horizons = useMemo(() => {
     const list = state.horizons
       .filter((h) => !h.archived)
@@ -214,7 +217,7 @@ export const Diagram = ({
       const row = hx - lastEnd < 230 ? (lastRow + 1) % 2 : 0;
       lastEnd = hx;
       lastRow = row;
-      return { h, flagTop: 2 + row * 40 };
+      return { h, flagTop: 2 + row * 38 };
     });
   }, [state.horizons, px]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -235,41 +238,40 @@ export const Diagram = ({
   };
   const onBgPointerUp = () => { panning.current = null; setIsPanning(false); };
 
-  const laneDim = (loo: LineOfOperation) =>
-    focusLooId !== null && focusLooId !== loo.id;
+  const laneDim = (loo: LineOfOperation) => focusLooId !== null && focusLooId !== loo.id;
+  const nodeOpacity = (loo: LineOfOperation, m: Milestone) => {
+    if (laneDim(loo)) return 0.25;
+    if (relatedIds && !relatedIds.has(m.id)) return 0.4;
+    if (m.status === 'superseded') return 0.5;
+    return 1;
+  };
 
   return (
-    <div className="diagram-card" style={{ minHeight: totalH + 14 }}>
+    <div className="diagram-card" style={{ minHeight: totalH + 10 }}>
       {/* Left rail: LOO identities */}
       <div className="lane-rail" style={{ height: totalH }}>
         <div className="lane-rail-head" style={{ height: HEAD_H }}>
-          <span className="eyebrow">Lines of Operation</span>
+          <span className="rail-title">Lines of Operation</span>
         </div>
         {loos.map((loo) => (
           <div
             key={loo.id}
-            className={`lane-label${loo.role === 'paused' ? ' paused' : ''}`}
-            style={{ height: laneH, opacity: laneDim(loo) ? 0.4 : 1 }}
+            className={`lane-label role-lane-${loo.role}`}
+            style={{ height: laneH, opacity: laneDim(loo) ? 0.35 : 1 }}
           >
-            <div className="lane-label-top">
-              <span className="lane-num">{String(loo.number).padStart(2, '0')}</span>
-              <button
-                type="button"
-                className="lane-name"
-                style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', font: 'inherit' }}
-                onClick={() => onToggleFocus(loo.id)}
-                title={focusLooId === loo.id ? 'Clear focus' : `Focus on ${loo.name}`}
-              >
-                {loo.name}
-              </button>
-            </div>
-            <div className="lane-meta">
-              <span className={`role-tag role-${loo.role}`}>
-                {loo.role === 'main-effort' ? 'Main Effort'
-                  : loo.role.charAt(0).toUpperCase() + loo.role.slice(1)}
-              </span>
-              {isDetail && <span className="lane-owner">{loo.owner}</span>}
-            </div>
+            <span className="lane-num">{String(loo.number).padStart(2, '0')}</span>
+            <button
+              type="button"
+              className="lane-name"
+              onClick={() => onToggleFocus(loo.id)}
+              title={`${loo.name} · ${loo.owner}. ${focusLooId === loo.id ? 'Clear focus.' : 'Click to focus this line.'}`}
+            >
+              {loo.name}
+            </button>
+            <span className={`role-tag role-${loo.role}`}>
+              {loo.role === 'main-effort' ? 'Main Effort'
+                : loo.role.charAt(0).toUpperCase() + loo.role.slice(1)}
+            </span>
           </div>
         ))}
       </div>
@@ -297,56 +299,44 @@ export const Diagram = ({
             ))}
           </div>
 
-          {/* lane rows with enduring LOO lines */}
+          {/* lanes with enduring LOO lines */}
           <div className="lanes" style={{ height: bodyH }}>
             {loos.map((loo) => (
               <div
                 key={loo.id}
-                className={[
-                  'lane-row',
-                  loo.role === 'main-effort' ? 'main-effort-row' : '',
-                  loo.role === 'paused' ? 'paused-row' : '',
-                  laneDim(loo) ? 'dimmed' : '',
-                ].filter(Boolean).join(' ')}
+                className={`lane-row role-line-${loo.role}${laneDim(loo) ? ' dimmed' : ''}`}
                 style={{ height: laneH }}
               >
-                <div className="loo-line" style={{ top: isDetail ? laneH - 14 : laneH * 0.62 }} />
+                <div className="loo-line" style={{ top: laneH * LINE_AT }} />
               </div>
             ))}
           </div>
 
-          {/* vertical grid */}
-          {monthTicks.map((tk) => (
-            <div key={`g-${tk.year}-${tk.month}`} className="grid-line" style={{ left: tk.x, top: HEAD_H, height: bodyH }} />
-          ))}
-          {weekTicks.map((tk) => (
-            <div key={`gw-${tk.x}`} className="grid-line week" style={{ left: tk.x, top: HEAD_H, height: bodyH }} />
-          ))}
-
-          {/* today */}
-          <div className="today-line" style={{ left: x(today), top: HEAD_H - 26, height: bodyH + 26 }}>
+          {/* today marker */}
+          <div className="today-line" style={{ left: x(today), top: HEAD_H - 20, height: bodyH + 20 }}>
             <span className="today-chip">Today</span>
           </div>
 
-          {/* dependency layer */}
-          <svg className="dep-layer" width={width} height={totalH} aria-hidden>
-            {deps.map((d) => {
-              const a = positions.get(d.fromMilestoneId!)!;
-              const b = positions.get(d.toMilestoneId)!;
-              const hl = selectedMilestoneId === d.toMilestoneId || selectedMilestoneId === d.fromMilestoneId;
-              const target = state.milestones.find((m) => m.id === d.toMilestoneId);
-              const bend = Math.max(8, Math.min(110, Math.abs(b.x - a.x) * 0.4));
-              return (
-                <g key={d.id}>
-                  <path
-                    className={`dep-path${hl ? ' highlight' : ''}${target?.status === 'blocked' ? ' into-blocked' : ''}`}
-                    d={`M ${a.x} ${a.y} C ${a.x + bend} ${a.y}, ${b.x - bend} ${b.y}, ${b.x - 8} ${b.y}`}
-                  />
-                  <circle className={`dep-dot${hl ? ' highlight' : ''}`} cx={b.x - 6} cy={b.y} r={3} />
-                </g>
-              );
-            })}
-          </svg>
+          {/* dependency layer: hidden until a milestone is selected */}
+          {visibleDeps.length > 0 && (
+            <svg className="dep-layer" width={width} height={totalH} aria-hidden>
+              {visibleDeps.map((d) => {
+                const a = positions.get(d.fromMilestoneId!)!;
+                const b = positions.get(d.toMilestoneId)!;
+                const hl = selectedMilestoneId === d.toMilestoneId || selectedMilestoneId === d.fromMilestoneId;
+                const bend = Math.max(8, Math.min(110, Math.abs(b.x - a.x) * 0.4));
+                return (
+                  <g key={d.id}>
+                    <path
+                      className={`dep-path${hl ? ' highlight' : ''}`}
+                      d={`M ${a.x} ${a.y} C ${a.x + bend} ${a.y}, ${b.x - bend} ${b.y}, ${b.x - 9} ${b.y}`}
+                    />
+                    <circle className={`dep-dot${hl ? ' highlight' : ''}`} cx={b.x - 7} cy={b.y} r={2.6} />
+                  </g>
+                );
+              })}
+            </svg>
+          )}
 
           {/* horizon markers */}
           {horizons.map(({ h, flagTop }) => {
@@ -371,8 +361,8 @@ export const Diagram = ({
             );
           })}
 
-          {/* objective chips pinned to horizons */}
-          {showObjectives && horizons.map(({ h }) =>
+          {/* objective diamonds at each LOO x horizon intersection */}
+          {horizons.map(({ h }) =>
             loos.map((loo, laneIdx) => {
               const obj = state.objectives.find((o) => o.horizonId === h.id && o.looId === loo.id);
               if (!obj) return null;
@@ -382,66 +372,101 @@ export const Diagram = ({
                 <button
                   type="button"
                   key={obj.id}
-                  className={`objective-chip${h.status === 'forming' ? ' forming' : ''}`}
+                  className={`objective-marker${h.status === 'forming' ? ' forming' : ''}`}
                   style={{
-                    left: x(h.date) + dx - 8,
-                    top: isDetail ? laneTop + laneH - 8 : laneTop + 6,
-                    transform: isDetail ? 'translate(-100%, -100%)' : 'translate(-100%, 0)',
-                    opacity: laneDim(loo) ? 0.3 : 1,
+                    left: x(h.date) + dx,
+                    top: laneTop + laneH * LINE_AT,
+                    opacity: laneDim(loo) ? 0.25 : 1,
                   }}
                   onClick={() => onSelectHorizon(h.id)}
                   title={`${loo.name} objective at ${fmtDayMonth(h.date)}: ${obj.statement}`}
                 >
-                  <span className="obj-eyebrow">Objective</span>
-                  <span className="obj-text">{obj.statement}</span>
+                  <span className="obj-diamond" aria-hidden />
+                  {showSummaries && <span className="obj-summary">{obj.summary}</span>}
                 </button>
               );
             }))}
 
-          {/* milestones */}
+          {/* milestones: dots on the line, labels beneath (or above when crowded) */}
           {loos.map((loo) => (placedByLane.get(loo.id) ?? []).map((pl) => {
             const { m } = pl;
-            const dragging = msDrag.drag?.id === m.id && msDrag.drag.dx !== 0;
             const dx = msDrag.drag?.id === m.id ? msDrag.drag.dx : 0;
+            const cx = pl.x + dx;
+            const cy = pl.laneTop + laneH * LINE_AT;
+            const dragging = msDrag.drag?.id === m.id && msDrag.drag.dx !== 0;
             const selected = selectedMilestoneId === m.id;
-            const dimmed = laneDim(loo);
+            const opacity = nodeOpacity(loo, m);
             const label = `${m.title}. ${STATUS_LABEL[m.status]}, ${fmtDayMonth(m.targetDate)}, ${m.owner}. Drag to reschedule.`;
 
-            if (!isDetail) {
+            if (selected && !sparse) {
               return (
                 <button
                   type="button"
                   key={m.id}
-                  className={`ms-node${sparse ? ' sparse' : ''} st-${m.status}${selected ? ' selected' : ''}${dragging ? ' dragging' : ''}`}
-                  style={{ left: pl.x + dx, top: pl.cy, opacity: dimmed ? 0.3 : 1 }}
+                  className={`ms-selected-box st-${m.status}${dragging ? ' dragging' : ''}`}
+                  style={{ left: cx, top: cy }}
                   aria-label={label}
                   title={label}
                   {...msDrag.handlers(m.id)}
                 >
-                  <span className={`ms-status st-icon-${m.status}`}>{statusIcon(m.status, 15)}</span>
-                  {!sparse && <span className="ms-title">{m.title}</span>}
+                  <span className={`st-icon-${m.status}`}><MarkerIcon status={m.status} size={15} /></span>
+                  <span className="msb-text">
+                    <span className="msb-title">{m.title}</span>
+                    {showMeta && <span className="msb-meta">{fmtDayMonth(m.targetDate)} · {m.owner}</span>}
+                  </span>
                 </button>
               );
             }
 
+            const tasks = showTasks && ['active', 'at-risk', 'blocked'].includes(m.status)
+              ? m.tasks.filter((t) => !t.done).slice(0, 2)
+              : [];
+
             return (
-              <button
-                type="button"
-                key={m.id}
-                className={`ms-card st-${m.status}${selected ? ' selected' : ''}${dragging ? ' dragging' : ''}`}
-                style={{ left: pl.x + dx, top: pl.top, opacity: dimmed ? 0.3 : 1 }}
-                aria-label={label}
-                title={label}
-                {...msDrag.handlers(m.id)}
-              >
-                <span className="ms-card-head">
-                  <span className={`ms-status st-icon-${m.status}`} title={STATUS_LABEL[m.status]}>
-                    {statusIcon(m.status, 15)}
-                  </span>
-                  <span className="ms-card-title">{m.title}</span>
-                </span>
-                <span className="ms-card-meta">{fmtDayMonth(m.targetDate)}</span>
-              </button>
+              <div key={m.id} className="ms-point" style={{ opacity }}>
+                <button
+                  type="button"
+                  className={`ms-dot st-icon-${m.status}${dragging ? ' dragging' : ''}`}
+                  style={{ left: cx, top: cy }}
+                  aria-label={label}
+                  title={label}
+                  {...msDrag.handlers(m.id)}
+                >
+                  <MarkerIcon status={m.status} size={sparse ? 12 : 14} />
+                </button>
+                {!sparse && (
+                  <button
+                    type="button"
+                    className={`ms-tag${pl.row === 1 ? ' above' : ''}${m.status === 'superseded' ? ' superseded' : ''}`}
+                    style={{
+                      left: cx,
+                      top: pl.row === 1 ? cy - 10 : cy + 10,
+                      width: labelW,
+                    }}
+                    onClick={() => onSelectMilestone(m.id)}
+                    title={label}
+                    tabIndex={-1}
+                    aria-hidden
+                  >
+                    <span className="ms-tag-title">{m.title}</span>
+                    {showMeta && (
+                      <span className="ms-tag-meta">
+                        {fmtDayMonth(m.targetDate)} · {m.owner}
+                        {m.progress > 0 && m.status !== 'complete' ? ` · ${m.progress}%` : ''}
+                        {' '}
+                        <ConfidenceMeter value={m.confidence} label={false} />
+                      </span>
+                    )}
+                    {tasks.length > 0 && (
+                      <span className="ms-tag-tasks">
+                        {tasks.map((t) => (
+                          <span key={t.id}>{t.week ? `${t.week}: ` : ''}{t.title}</span>
+                        ))}
+                      </span>
+                    )}
+                  </button>
+                )}
+              </div>
             );
           }))}
         </div>
@@ -449,3 +474,24 @@ export const Diagram = ({
     </div>
   );
 };
+
+/** Legend for the marker language. Rendered under the diagram. */
+export const DiagramLegend = () => (
+  <div className="diagram-legend" aria-hidden>
+    {([
+      ['complete', 'Completed'],
+      ['active', 'Active'],
+      ['future', 'Future'],
+      ['at-risk', 'At risk'],
+      ['blocked', 'Blocked'],
+      ['superseded', 'Superseded'],
+    ] as const).map(([status, text]) => (
+      <span key={status} className="legend-item">
+        <span className={`st-icon-${status}`}><MarkerIcon status={status} size={12} /></span>
+        {text}
+      </span>
+    ))}
+    <span className="legend-item"><span className="obj-diamond" /> Horizon objective</span>
+    <span className="legend-item"><span className="legend-continues" /> Line continues</span>
+  </div>
+);

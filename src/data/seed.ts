@@ -39,7 +39,7 @@ const M = (
 });
 
 export const seedState: CampaignState = {
-  schemaVersion: 3,
+  schemaVersion: 4,
 
   campaign: {
     id: 'campaign-1',
@@ -127,25 +127,35 @@ export const seedState: CampaignState = {
   objectives: [
     // Horizon 1
     { id: 'obj-h1-mv', horizonId: 'hz-1', looId: 'loo-mv', confidence: 'medium',
+      summary: 'Three validated customers',
       statement: 'Three credible customers have validated the core workflow, with at least one referenceable deployment.' },
     { id: 'obj-h1-pt', horizonId: 'hz-1', looId: 'loo-pt', confidence: 'medium',
+      summary: 'Production-ready V2',
       statement: 'The narrow V2 anchoring workflow is production-ready and proven on a live project.' },
     { id: 'obj-h1-cr', horizonId: 'hz-1', looId: 'loo-cr', confidence: 'medium',
+      summary: 'Paid deployment model proven',
       statement: 'Pilot pricing is validated and at least one customer has converted into ongoing paid use.' },
     { id: 'obj-h1-sr', horizonId: 'hz-1', looId: 'loo-sr', confidence: 'low',
+      summary: 'Enterprise route established',
       statement: 'TACEDGE has established a credible pathway into a major contractor or enterprise channel.' },
     { id: 'obj-h1-cc', horizonId: 'hz-1', looId: 'loo-cc', confidence: 'medium',
+      summary: 'Delivery capability in place',
       statement: 'Technical leadership, delivery discipline and sufficient runway are in place.' },
     // Horizon 2 — partially developed
     { id: 'obj-h2-mv', horizonId: 'hz-2', looId: 'loo-mv', confidence: 'low',
+      summary: 'Five live customers',
       statement: 'Five customers use the workflow on live projects; two are referenceable at enterprise level.' },
     { id: 'obj-h2-pt', horizonId: 'hz-2', looId: 'loo-pt', confidence: 'low',
+      summary: 'Second work type configured',
       statement: 'The configurable engine supports a second work type without bespoke engineering.' },
     { id: 'obj-h2-cr', horizonId: 'hz-2', looId: 'loo-cr', confidence: 'low',
+      summary: 'Sales motion running',
       statement: 'The pilot-to-subscription motion is validated and a sales motion v1 is running.' },
     { id: 'obj-h2-sr', horizonId: 'hz-2', looId: 'loo-sr', confidence: 'low',
+      summary: 'Enterprise channel validated',
       statement: 'An enterprise channel opportunity is validated with a named partner.' },
     { id: 'obj-h2-cc', horizonId: 'hz-2', looId: 'loo-cc', confidence: 'low',
+      summary: 'Stable cadence, secure runway',
       statement: 'Delivery cadence is stable and runway extends beyond the horizon.' },
   ],
 
@@ -282,7 +292,7 @@ export const seedState: CampaignState = {
       strategicImportance: 'The first evidence that pilots convert. The economics of the whole model hang on this.',
       successCriteria: ['Renewal agreed at or above pilot pricing.', 'Customer value evidence captured.'],
     }),
-    M('ms-cr-4', 'loo-cr', 'Pilot-to-subscription model validated', '2027-04-30', 'future', 'low', 'Mike', 0, {
+    M('ms-cr-4', 'loo-cr', 'Pilot-to-subscription proven', '2027-04-30', 'future', 'low', 'Mike', 0, {
       purpose: 'The pilot-to-subscription conversion path is documented and has worked at least twice.',
       strategicImportance: 'Turns one-off wins into a repeatable commercial motion.',
       successCriteria: ['Two conversions through the same documented path.'],
@@ -317,7 +327,7 @@ export const seedState: CampaignState = {
       strategicImportance: 'Superseded: the direct contractor pathway is outperforming the partner route.',
       notes: 'Superseded in June 2026 review. Direct contractor pathway carries the reach objective.',
     }),
-    M('ms-sr-5', 'loo-sr', 'Enterprise channel opportunity validated', '2027-05-14', 'future', 'low', 'Mike', 0, {
+    M('ms-sr-5', 'loo-sr', 'Enterprise channel validated', '2027-05-14', 'future', 'low', 'Mike', 0, {
       major: true,
       purpose: 'A named enterprise channel opportunity validated with real commitment, not interest.',
       strategicImportance: 'The Horizon 2 reach objective.',
@@ -325,13 +335,13 @@ export const seedState: CampaignState = {
     }),
 
     // ------------------------------------------------ Company Capability
-    M('ms-cc-1', 'loo-cc', 'Technical-lead profile confirmed', '2026-05-15', 'complete', 'high', 'Mike', 100, {
+    M('ms-cc-1', 'loo-cc', 'Tech lead profile confirmed', '2026-05-15', 'complete', 'high', 'Mike', 100, {
       purpose: 'Agree exactly what the technical lead must own before searching.',
       strategicImportance: 'A wrong hire here costs the campaign a year.',
       successCriteria: ['Profile and ownership boundaries documented.'],
       evidence: [{ id: 'ev-cc1-1', text: 'Technical lead profile v1 agreed.', date: '2026-05-15' }],
     }),
-    M('ms-cc-2', 'loo-cc', 'Technical lead secured', '2026-09-01', 'blocked', 'low', 'Mike', 20, {
+    M('ms-cc-2', 'loo-cc', 'Tech lead secured', '2026-09-01', 'blocked', 'low', 'Mike', 20, {
       major: true, founderAction: true,
       purpose: 'A technical lead is committed and started, owning V2 delivery.',
       strategicImportance:
@@ -392,14 +402,6 @@ export const seedState: CampaignState = {
     { id: 'dep-11', toMilestoneId: 'ms-pt-3', fromMilestoneId: 'ms-cc-2', note: 'Field hardening needs the technical lead.' },
     { id: 'dep-12', toMilestoneId: 'ms-sr-3', fromMilestoneId: 'ms-mv-3', note: 'Pathway qualification follows the pilot agreement.' },
     { id: 'dep-13', toMilestoneId: 'ms-mv-6', fromMilestoneId: 'ms-mv-5', note: 'Reference proof anchors the third customer.' },
-  ],
-
-  insights: [
-    { id: 'in-1', kind: 'congestion', text: 'September is overcommitted: four milestones land within three weeks.' },
-    { id: 'in-2', kind: 'founder', text: 'Three milestones depend on founder action this month.' },
-    { id: 'in-3', kind: 'sequencing', text: 'Pilot is scheduled five weeks before product field readiness.' },
-    { id: 'in-4', kind: 'resource', text: 'Product and Commercial objectives rely on the same technical resource.' },
-    { id: 'in-5', kind: 'momentum', text: 'Main Effort has no completed milestone in the current month.' },
   ],
 
   weekly: {

@@ -1,46 +1,60 @@
+import { useState } from 'react';
 import type { CampaignState } from '../types';
-import { fmtDateLong } from '../lib/time';
-import { ConfidenceMeter, Eyebrow } from './ui';
+import { fmtDate } from '../lib/time';
+import { ConfidenceMeter } from './ui';
+import { IconChevronRight } from './icons';
 
+/** Compact strategic context strip. The full Vision expands on demand. */
 export const ContextBanner = ({ state }: { state: CampaignState }) => {
+  const [visionOpen, setVisionOpen] = useState(false);
   const { campaign } = state;
   const mainEffort = state.loos.find((l) => l.role === 'main-effort' && !l.archived);
   const horizon = state.horizons.find((h) => h.id === campaign.activeHorizonId && !h.archived)
     ?? state.horizons.find((h) => !h.archived);
 
   return (
-    <section className="context-banner on-dark" aria-label="Strategic context">
-      <div className="banner-cell">
-        <Eyebrow>Vision</Eyebrow>
-        <p className="banner-vision">{campaign.vision.statement}</p>
+    <section className="context-strip" aria-label="Strategic context">
+      <div className="strip-row">
+        <div className="strip-item">
+          <span className="strip-label">Campaign</span>
+          <span className="strip-value">{campaign.theme}</span>
+        </div>
+        <div className="strip-item">
+          <span className="strip-label">Main Effort</span>
+          <span className="strip-value strip-main-effort">{mainEffort?.name ?? 'Not set'}</span>
+        </div>
+        <div className="strip-item">
+          <span className="strip-label">Active Horizon</span>
+          <span className="strip-value">
+            {horizon ? fmtDate(horizon.date) : 'None'}
+            {horizon && <span className="strip-sub"> · {horizon.theme}</span>}
+          </span>
+        </div>
+        <div className="strip-item">
+          <span className="strip-label">Confidence</span>
+          <span className="strip-value">
+            {horizon ? <ConfidenceMeter value={horizon.confidence} /> : '—'}
+          </span>
+        </div>
+        <div className="strip-spacer" />
+        <button
+          type="button"
+          className="btn btn-secondary btn-sm strip-vision-toggle"
+          onClick={() => setVisionOpen((o) => !o)}
+          aria-expanded={visionOpen}
+        >
+          View vision
+          <span className={`strip-chevron${visionOpen ? ' open' : ''}`} aria-hidden>
+            <IconChevronRight size={12} />
+          </span>
+        </button>
       </div>
-      <div className="banner-cell">
-        <Eyebrow>Current Campaign</Eyebrow>
-        <p className="banner-value">{campaign.theme}</p>
-      </div>
-      <div className="banner-cell">
-        <Eyebrow>Main Effort</Eyebrow>
-        <p className="banner-value">{mainEffort?.name ?? 'Not set'}</p>
-        {mainEffort && <p className="banner-sub">{mainEffort.owner}</p>}
-      </div>
-      <div className="banner-cell">
-        <Eyebrow>Active Horizon</Eyebrow>
-        <p className="banner-value">{horizon ? fmtDateLong(horizon.date) : 'None'}</p>
-        {horizon && <p className="banner-sub">{horizon.theme}</p>}
-      </div>
-      <div className="banner-cell">
-        <Eyebrow>Confidence</Eyebrow>
-        {horizon
-          ? <p className="banner-value"><ConfidenceMeter value={horizon.confidence} /></p>
-          : <p className="banner-value">—</p>}
-        {horizon && (
-          <p className="banner-sub">
-            {horizon.status === 'on-track' ? 'On track'
-              : horizon.status === 'at-risk' ? 'At risk'
-                : horizon.status === 'forming' ? 'Forming' : 'Archived'}
-          </p>
-        )}
-      </div>
+      {visionOpen && (
+        <p className="strip-vision">
+          {campaign.vision.statement}
+          <span className="strip-sub"> {campaign.vision.note}</span>
+        </p>
+      )}
     </section>
   );
 };

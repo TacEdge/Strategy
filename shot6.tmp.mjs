@@ -1,0 +1,25 @@
+import { chromium } from 'playwright-core';
+const OUT = '/tmp/claude-0/-home-user/8461a81e-9834-5775-b9bf-943a06604d45/scratchpad';
+const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome' });
+const page = await browser.newPage({ viewport: { width: 1600, height: 1000 } });
+const errors = [];
+page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
+page.on('pageerror', (e) => errors.push(String(e)));
+await page.goto('http://localhost:4173/', { waitUntil: 'networkidle' });
+await page.waitForTimeout(700);
+await page.screenshot({ path: `${OUT}/40-clarity-6m.png` });
+// close drawer to see clean default state
+await page.locator('[aria-label="Close milestone panel"]').click();
+await page.waitForTimeout(400);
+await page.screenshot({ path: `${OUT}/41-clarity-6m-clean.png` });
+await page.getByRole('button', { name: 'Year', exact: true }).click();
+await page.waitForTimeout(400);
+await page.screenshot({ path: `${OUT}/42-clarity-year.png` });
+await page.getByRole('button', { name: 'Quarter', exact: true }).click();
+await page.waitForTimeout(400);
+await page.screenshot({ path: `${OUT}/43-clarity-quarter.png` });
+await page.getByRole('button', { name: 'Month', exact: true }).click();
+await page.waitForTimeout(400);
+await page.screenshot({ path: `${OUT}/44-clarity-month.png` });
+console.log('console errors:', JSON.stringify(errors));
+await browser.close();

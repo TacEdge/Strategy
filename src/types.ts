@@ -1,0 +1,163 @@
+/**
+ * TACEDGE Strategy — strategic model types.
+ * Lines of Operation endure; Strategic Horizons synchronise them;
+ * milestones are conditions that must become true.
+ */
+
+export type LooRole = 'main-effort' | 'supporting' | 'sustaining' | 'paused';
+
+export type MilestoneStatus =
+  | 'complete'
+  | 'active'
+  | 'at-risk'
+  | 'blocked'
+  | 'future'
+  | 'superseded'
+  | 'archived';
+
+export type Confidence = 'high' | 'medium' | 'low';
+
+export type HorizonStatus = 'on-track' | 'at-risk' | 'forming' | 'archived';
+
+export interface Vision {
+  statement: string;
+  note: string;
+}
+
+export interface Campaign {
+  id: string;
+  name: string;
+  theme: string;
+  vision: Vision;
+  activeHorizonId: string;
+}
+
+export interface LineOfOperation {
+  id: string;
+  number: number;
+  name: string;
+  description: string;
+  owner: string;
+  role: LooRole;
+  archived: boolean;
+}
+
+export interface HorizonObjective {
+  id: string;
+  horizonId: string;
+  looId: string;
+  statement: string;
+  confidence: Confidence;
+}
+
+export interface StrategicHorizon {
+  id: string;
+  date: string; // ISO date
+  theme: string;
+  integratedState: string;
+  status: HorizonStatus;
+  confidence: Confidence;
+  assumptions: string[];
+  risks: string[];
+  assessment: string;
+  archived: boolean;
+}
+
+export interface Task {
+  id: string;
+  title: string;
+  done: boolean;
+  owner?: string;
+  week?: string; // month view sequencing, e.g. "Week of 21 Jul"
+}
+
+export interface Risk {
+  id: string;
+  text: string;
+  severity: 'high' | 'medium' | 'low';
+}
+
+export interface Decision {
+  id: string;
+  text: string;
+  due?: string;
+  resolved: boolean;
+}
+
+export interface EvidenceItem {
+  id: string;
+  text: string;
+  date?: string;
+}
+
+export interface ChangeHistoryEntry {
+  id: string;
+  at: string; // ISO datetime
+  summary: string;
+}
+
+/**
+ * A dependency feeding a milestone. Usually another milestone
+ * (fromMilestoneId); occasionally a named condition that is not
+ * yet tracked as a milestone (label).
+ */
+export interface Dependency {
+  id: string;
+  toMilestoneId: string;
+  fromMilestoneId?: string;
+  label?: string;
+  note?: string;
+}
+
+export interface Milestone {
+  id: string;
+  title: string;
+  looId: string;
+  targetDate: string; // ISO date
+  status: MilestoneStatus;
+  confidence: Confidence;
+  owner: string;
+  progress: number; // 0..100
+  purpose: string;
+  strategicImportance: string;
+  successCriteria: string[];
+  risks: Risk[];
+  decisions: Decision[];
+  tasks: Task[];
+  evidence: EvidenceItem[];
+  notes: string;
+  nextBestAction: string;
+  founderAction: boolean;
+  major: boolean; // shown in year view and wider
+  history: ChangeHistoryEntry[];
+}
+
+export interface Insight {
+  id: string;
+  text: string;
+  kind: 'congestion' | 'founder' | 'sequencing' | 'resource' | 'momentum';
+}
+
+export interface FounderRecommendation {
+  action: string;
+  milestoneId: string;
+  looId: string;
+  horizonObjectiveId: string;
+  why: string;
+  suggestedBlock: string;
+  successfulCompletion: string;
+  doNotPrioritise: string[];
+}
+
+export interface CampaignState {
+  schemaVersion: number;
+  campaign: Campaign;
+  loos: LineOfOperation[];
+  looOrder: string[];
+  horizons: StrategicHorizon[];
+  objectives: HorizonObjective[];
+  milestones: Milestone[];
+  dependencies: Dependency[];
+  insights: Insight[];
+  recommendation: FounderRecommendation;
+}

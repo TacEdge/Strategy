@@ -1,0 +1,97 @@
+/* ============================================================
+   TACEDGE design tokens — v1.0.0
+   Authoritative. Generated from tokens/*.json. Do not add colours.
+   Consuming projects import this file (or copy it verbatim) and
+   build components on the custom properties only.
+   ============================================================ */
+
+:root {
+  /* Colour — brand */
+  --te-forest: #112411;        /* primary-dark: hero green, dark surfaces, primary buttons */
+  --te-forest-hover: #1A3219;  /* primary-dark-hover */
+  --te-forest-line: #1B331A;   /* contour linework on forest surfaces */
+  --te-olive: #6E7D5C;         /* utility-sage: working mid-tone (large text/icons only) */
+  --te-olive-edge: #AEB89C;    /* sage-edge: green hairline, selected edge */
+  --te-sage: #B2B594;          /* pale-sage: quiet surface, labels on dark, brandmark */
+  --te-sage-tint: #E6EBD9;     /* soft green fill: chips, tinted panels */
+
+  /* Colour — neutrals */
+  --te-cream: #F7F5EC;         /* warm-cream: page background, the brand paper */
+  --te-card: #FFFFFF;          /* card-surface */
+  --te-tint: #EFF1E4;          /* quiet-tint: faint green-grey fill */
+  --te-stage: #DDE3D2;         /* backdrop behind device frames only */
+
+  /* Colour — ink */
+  --te-ink: #242A1F;           /* primary-text */
+  --te-ink-60: #5B6253;        /* secondary-text */
+  --te-ink-40: #646A5A;        /* muted-text: AA on cream, tint and sage-tint */
+
+  /* Colour — hairlines */
+  --te-rule: #CBD2C9;          /* divider */
+  --te-line: #E7E2D6;          /* border */
+  --te-line-2: #D9D3C4;        /* border-strong */
+  --te-cream-line: rgba(247, 245, 236, 0.16); /* hairline on forest */
+  --te-sage-line: rgba(178, 181, 148, 0.5);   /* icon ring on forest */
+  --te-olive-line: rgba(110, 125, 92, 0.28);  /* hairline on sage-tint */
+
+  /* Colour — status. Product UI and faithful mocks only. Never decorative. */
+  --te-ochre: #B07D2B;         /* warning */
+  --te-ochre-tint: #F5EBD4;
+  --te-brick: #9E3B2E;         /* error */
+  --te-brick-tint: #F3DDD6;
+
+  /* Colour — logo artwork only. PROVISIONAL (decisions-required D1). */
+  --te-logo-forest: #2B4721;
+
+  /* Focus */
+  --te-focus: var(--te-forest);          /* on light surfaces */
+  --te-focus-on-dark: var(--te-cream);   /* on forest surfaces */
+
+  /* Type families */
+  --te-display: 'Play', system-ui, sans-serif;
+  --te-ui: 'Be Vietnam Pro', system-ui, -apple-system, sans-serif;
+  --te-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
+
+  /* Type roles */
+  --te-t-h1: clamp(52px, 6.3vw, 92px);
+  --te-t-h2: clamp(33px, 4vw, 48px);
+  --te-t-h3: clamp(24px, 2.5vw, 34px);
+  --te-t-card-title: 26px;
+  --te-t-lead: clamp(18px, 1.5vw, 21px);
+  --te-t-body: 18px;
+  --te-t-card-body: 16px;
+  --te-t-label: 13px;
+  --te-t-caption: 14px;
+  --te-track-label: 0.16em;
+
+  /* Type scale */
+  --te-fs-2xs: 10px; --te-fs-xs: 11px; --te-fs-sm: 12px; --te-fs-base: 14px;
+  --te-fs-md: 15px; --te-fs-lg: 18px; --te-fs-xl: 26px; --te-fs-2xl: 30px;
+  --te-fs-3xl: 44px; --te-fs-4xl: 48px;
+
+  /* Spacing */
+  --te-sp-2xs: 4px; --te-sp-xs: 8px; --te-sp-sm: 12px; --te-sp-md: 16px;
+  --te-sp-lg: 20px; --te-sp-xl: 24px; --te-sp-2xl: 28px; --te-sp-3xl: 36px;
+  --te-sp-4xl: 48px; --te-sp-5xl: 56px;
+
+  /* Layout */
+  --te-content-max: 1200px;
+  --te-gutter: clamp(20px, 3.4vw, 32px);
+  --te-sp-section: clamp(64px, 9vw, 120px);
+  --te-sp-section-tight: clamp(56px, 7vw, 96px);
+
+  /* Shape */
+  --te-r-sm: 10px; --te-r-md: 12px; --te-r-lg: 14px; --te-r-xl: 20px;
+  --te-r-2xl: 24px; --te-r-pill: 999px;
+  --te-r-card: 16px; --te-r-img: 14px; --te-r-panel: 20px;
+  --te-r-panel-lg: 24px; --te-r-button: 12px;
+
+  /* Elevation — one soft shadow family */
+  --te-shadow-sm: 0 1px 2px rgba(27, 33, 23, 0.05);
+  --te-shadow-md: 0 2px 10px rgba(27, 33, 23, 0.06);
+  --te-shadow-lg: 0 8px 28px rgba(27, 33, 23, 0.10);
+  --te-shadow-device: 0 18px 40px rgba(0, 0, 0, 0.32);
+
+  /* Motion */
+  --te-motion: 140ms ease;
+}

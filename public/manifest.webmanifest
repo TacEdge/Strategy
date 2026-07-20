@@ -1,0 +1,14 @@
+{
+  "name": "TACEDGE Strategy",
+  "short_name": "Strategy",
+  "description": "Strategic orchestration on the Lines of Operation model.",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#F7F5EC",
+  "theme_color": "#112411",
+  "icons": [
+    { "src": "brand/app-icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "brand/app-icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "brand/app-icon.png", "sizes": "1254x1254", "type": "image/png" }
+  ]
+}

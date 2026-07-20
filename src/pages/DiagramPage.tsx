@@ -3,7 +3,6 @@ import { useStore, useLoos } from '../state/store';
 import { VIEWS, viewById, TIMELINE_START } from '../lib/views';
 import type { ViewId } from '../lib/views';
 import { parseDate, daysBetween, todayIso } from '../lib/time';
-import { ContextBanner } from '../components/ContextBanner';
 import { TimeControls } from '../components/TimeControls';
 import { Diagram, DiagramLegend } from '../components/Diagram';
 import { InsightsStrip } from '../components/InsightsStrip';
@@ -62,9 +61,10 @@ export const DiagramPage = ({
 
   useEffect(() => { scrollToDate(todayIso()); }, [scrollToDate]);
 
+  // Views are ordered near-term to long-term: zooming in steps toward Month.
   const zoom = (dir: -1 | 1) => {
     const idx = VIEWS.findIndex((v) => v.id === viewId);
-    setViewId(VIEWS[Math.min(VIEWS.length - 1, Math.max(0, idx + dir))].id);
+    setViewId(VIEWS[Math.min(VIEWS.length - 1, Math.max(0, idx - dir))].id);
   };
 
   const selectMilestone = (id: string) => {
@@ -78,8 +78,6 @@ export const DiagramPage = ({
 
   return (
     <div className="page">
-      {!expanded && <ContextBanner state={state} />}
-
       <TimeControls
         viewId={viewId}
         loos={allLoos}

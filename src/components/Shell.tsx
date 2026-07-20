@@ -12,10 +12,9 @@ const NAV: { key: NavKey; label: string; icon: ReactNode }[] = [
 ];
 
 export const Shell = ({
-  current, pageLabel, onNavigate, expanded, children,
+  current, onNavigate, expanded, children,
 }: {
   current: NavKey;
-  pageLabel: string;
   onNavigate: (key: NavKey) => void;
   expanded: boolean;
   children: ReactNode;
@@ -25,7 +24,7 @@ export const Shell = ({
       <div className="topbar-logo">
         <img src={lockupCream} alt="TACEDGE" />
         <span className="topbar-divider" aria-hidden />
-        <span className="topbar-page">{pageLabel}</span>
+        <span className="topbar-page">Strategy</span>
       </div>
       <div className="topbar-spacer" />
       <div className="topbar-search" role="search">

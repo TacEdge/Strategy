@@ -317,6 +317,14 @@ export const Diagram = ({
             ))}
           </div>
 
+          {/* faint date guides dropping from the month and week markers */}
+          {zoomedIn && monthTicks.map((tk) => (
+            <div key={`g-${tk.year}-${tk.month}`} className="guide-line" style={{ left: tk.x, top: HEAD_H, height: bodyH }} />
+          ))}
+          {zoomedIn && weekTicks.map((tk) => (
+            <div key={`gw-${tk.x}`} className="guide-line week" style={{ left: tk.x, top: HEAD_H, height: bodyH }} />
+          ))}
+
           {/* today marker */}
           <div className="today-line" style={{ left: x(today), top: HEAD_H - 20, height: bodyH + 20 }}>
             <span className="today-chip">Today</span>

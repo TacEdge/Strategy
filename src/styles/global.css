@@ -232,47 +232,6 @@ input, select, textarea { font: inherit; color: var(--te-ink); }
 .icon-btn.bordered { border-color: var(--te-line-2); background: var(--te-card); }
 .icon-btn.bordered:hover { background: var(--te-tint); }
 
-/* ============================== Context strip ============================== */
-
-.context-strip {
-  display: flex;
-  flex-direction: column;
-  gap: var(--te-sp-xs);
-  padding: 2px 4px;
-}
-.strip-row {
-  display: flex;
-  align-items: baseline;
-  gap: var(--te-sp-3xl);
-  flex-wrap: wrap;
-}
-.strip-item { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
-.strip-label {
-  font-family: var(--te-mono);
-  font-size: var(--te-fs-2xs);
-  font-weight: 500;
-  letter-spacing: var(--te-track-label);
-  text-transform: uppercase;
-  color: var(--te-ink-40);
-}
-.strip-value {
-  font-size: var(--te-fs-md);
-  font-weight: 600;
-  color: var(--te-ink);
-  white-space: nowrap;
-}
-.strip-sub { font-weight: 400; color: var(--te-ink-40); font-size: var(--te-fs-base); }
-.strip-spacer { flex: 1; }
-.strip-vision-toggle { align-self: center; }
-.strip-chevron { display: inline-grid; transition: transform var(--te-motion); }
-.strip-chevron.open { transform: rotate(90deg); }
-.strip-vision {
-  font-size: var(--te-fs-md);
-  line-height: 1.5;
-  color: var(--te-ink-60);
-  max-width: 72ch;
-}
-
 /* ============================== Toolbar / time controls ============================== */
 
 .diagram-toolbar {
@@ -478,6 +437,18 @@ input, select, textarea { font: inherit; color: var(--te-ink); }
   border-style: solid;
   border-width: 5px 0 5px 8px;
   border-color: transparent transparent transparent currentColor;
+}
+
+/* Faint vertical guides from the date markers. Deliberately quieter than
+   lane borders; the Today marker stays distinct (dashed olive). */
+.guide-line {
+  position: absolute;
+  border-left: 1px solid color-mix(in srgb, var(--te-line) 45%, transparent);
+  pointer-events: none;
+}
+.guide-line.week {
+  border-left-style: dotted;
+  border-left-color: color-mix(in srgb, var(--te-line) 35%, transparent);
 }
 
 .today-line {

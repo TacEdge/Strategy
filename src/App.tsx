@@ -19,12 +19,6 @@ const parseHash = (): Route => {
   return { name: 'diagram' };
 };
 
-const PAGE_LABEL: Record<Route['name'], string> = {
-  diagram: 'LOO Diagram',
-  review: 'Weekly Review',
-  milestone: 'Milestone',
-};
-
 export const App = () => {
   const [route, setRoute] = useState<Route>(parseHash);
   const [expanded, setExpanded] = useState(false);
@@ -59,7 +53,6 @@ export const App = () => {
     <StoreProvider>
       <Shell
         current={current}
-        pageLabel={PAGE_LABEL[route.name]}
         onNavigate={onNavigate}
         expanded={expanded && route.name === 'diagram'}
       >

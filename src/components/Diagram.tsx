@@ -272,7 +272,7 @@ export const Diagram = ({
               type="button"
               className="lane-name"
               onClick={() => onToggleFocus(loo.id)}
-              title={`${loo.name} · ${loo.owner}. ${focusLooId === loo.id ? 'Clear focus.' : 'Click to focus this line.'}`}
+              title={`${loo.name} — ${loo.description} Owner: ${loo.owner}. ${focusLooId === loo.id ? 'Clear focus.' : 'Click to focus this line.'}`}
             >
               {loo.name}
             </button>

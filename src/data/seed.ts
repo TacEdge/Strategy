@@ -39,7 +39,7 @@ const M = (
 });
 
 export const seedState: CampaignState = {
-  schemaVersion: 4,
+  schemaVersion: 5,
 
   campaign: {
     id: 'campaign-1',
@@ -54,28 +54,28 @@ export const seedState: CampaignState = {
 
   loos: [
     {
-      id: 'loo-mv', number: 1, name: 'Market Validation',
-      description: 'Prove that credible customers validate the core workflow and will deploy it on live work.',
+      id: 'loo-mv', number: 1, name: 'Customers',
+      description: 'Prove demand and secure reference customers.',
       owner: 'Mike', role: 'main-effort', archived: false,
     },
     {
-      id: 'loo-pt', number: 2, name: 'Product & Technology',
-      description: 'Make the narrow V2 anchoring workflow production-ready and proven on live projects.',
+      id: 'loo-pt', number: 2, name: 'Product',
+      description: 'Build and validate the platform.',
       owner: 'Technical Lead', role: 'supporting', archived: false,
     },
     {
-      id: 'loo-cr', number: 3, name: 'Commercial & Revenue',
-      description: 'Validate pilot pricing and convert pilots into ongoing paid use.',
+      id: 'loo-cr', number: 3, name: 'Revenue',
+      description: 'Convert customer value into recurring income.',
       owner: 'Mike', role: 'supporting', archived: false,
     },
     {
-      id: 'loo-sr', number: 4, name: 'Strategic Reach',
-      description: 'Establish credible pathways into major contractors and enterprise channels.',
+      id: 'loo-sr', number: 4, name: 'Partnerships',
+      description: 'Create leverage and routes to market.',
       owner: 'Mike', role: 'sustaining', archived: false,
     },
     {
-      id: 'loo-cc', number: 5, name: 'Company Capability',
-      description: 'Secure the technical leadership, delivery discipline and runway to deliver reliably.',
+      id: 'loo-cc', number: 5, name: 'Company',
+      description: 'Build the team, runway and delivery system.',
       owner: 'Mike', role: 'sustaining', archived: false,
     },
   ],
@@ -160,7 +160,7 @@ export const seedState: CampaignState = {
   ],
 
   milestones: [
-    // ------------------------------------------------ Market Validation
+    // ------------------------------------------------ Customers
     M('ms-mv-1', 'loo-mv', 'Hunter Civil workflow review', '2026-03-12', 'complete', 'high', 'Mike', 100, {
       major: true,
       purpose: 'Confirm the anchoring workflow matches how Hunter Civil actually runs anchoring work.',
@@ -220,7 +220,7 @@ export const seedState: CampaignState = {
       successCriteria: ['Three customers on live work.', 'At least one referenceable deployment.'],
     }),
 
-    // ------------------------------------------------ Product & Technology
+    // ------------------------------------------------ Product
     M('ms-pt-1', 'loo-pt', 'Narrow V2 scope locked', '2026-04-30', 'complete', 'high', 'Mike', 100, {
       major: true,
       purpose: 'Fix the V2 build to the narrow anchoring workflow and defend the boundary.',
@@ -265,7 +265,7 @@ export const seedState: CampaignState = {
       successCriteria: ['Second work type configured without code changes to the core.'],
     }),
 
-    // ------------------------------------------------ Commercial & Revenue
+    // ------------------------------------------------ Revenue
     M('ms-cr-1', 'loo-cr', 'Pilot pricing model agreed', '2026-08-31', 'active', 'medium', 'Mike', 55, {
       major: true, founderAction: true,
       purpose: 'A pilot price and structure that a contractor can approve without escalation.',
@@ -304,7 +304,7 @@ export const seedState: CampaignState = {
       successCriteria: ['Motion documented.', 'One deal run through it end to end.'],
     }),
 
-    // ------------------------------------------------ Strategic Reach
+    // ------------------------------------------------ Partnerships
     M('ms-sr-1', 'loo-sr', 'One NZ pathway established', '2026-06-12', 'complete', 'high', 'Mike', 100, {
       purpose: 'One credible route into NZ ground-engineering delivery, working and warm.',
       strategicImportance: 'Proof that reach can be built deliberately rather than opportunistically.',
@@ -334,7 +334,7 @@ export const seedState: CampaignState = {
       successCriteria: ['Named partner.', 'Committed next step with budget attached.'],
     }),
 
-    // ------------------------------------------------ Company Capability
+    // ------------------------------------------------ Company
     M('ms-cc-1', 'loo-cc', 'Tech lead profile confirmed', '2026-05-15', 'complete', 'high', 'Mike', 100, {
       purpose: 'Agree exactly what the technical lead must own before searching.',
       strategicImportance: 'A wrong hire here costs the campaign a year.',

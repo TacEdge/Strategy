@@ -8,7 +8,6 @@ import { IconChevronRight } from './icons';
 export const ContextBanner = ({ state }: { state: CampaignState }) => {
   const [visionOpen, setVisionOpen] = useState(false);
   const { campaign } = state;
-  const mainEffort = state.loos.find((l) => l.role === 'main-effort' && !l.archived);
   const horizon = state.horizons.find((h) => h.id === campaign.activeHorizonId && !h.archived)
     ?? state.horizons.find((h) => !h.archived);
 
@@ -18,10 +17,6 @@ export const ContextBanner = ({ state }: { state: CampaignState }) => {
         <div className="strip-item">
           <span className="strip-label">Campaign</span>
           <span className="strip-value">{campaign.theme}</span>
-        </div>
-        <div className="strip-item">
-          <span className="strip-label">Main Effort</span>
-          <span className="strip-value strip-main-effort">{mainEffort?.name ?? 'Not set'}</span>
         </div>
         <div className="strip-item">
           <span className="strip-label">Active Horizon</span>

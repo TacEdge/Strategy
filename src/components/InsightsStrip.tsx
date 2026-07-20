@@ -11,18 +11,17 @@ export const InsightsStrip = () => {
   const stats = useMemo(() => {
     const today = todayIso();
     const in30 = toIso(addDays(parseDate(today), 30));
-    const mainEffort = state.loos.find((l) => l.role === 'main-effort' && !l.archived);
     const open = state.milestones.filter((m) => OPEN.includes(m.status));
     return [
       {
-        label: 'Main Effort milestones · next 30 days',
-        value: open.filter((m) => m.looId === mainEffort?.id && m.targetDate >= today && m.targetDate <= in30).length,
+        label: 'Milestones due · next 30 days',
+        value: open.filter((m) => m.targetDate >= today && m.targetDate <= in30).length,
       },
       { label: 'Milestones at risk', value: open.filter((m) => m.status === 'at-risk').length },
       { label: 'Blocked milestones', value: open.filter((m) => m.status === 'blocked').length },
       { label: 'Founder-owned open milestones', value: open.filter((m) => m.founderAction).length },
     ];
-  }, [state.milestones, state.loos]);
+  }, [state.milestones]);
 
   return (
     <section className="insights-bar" aria-label="Campaign signals">

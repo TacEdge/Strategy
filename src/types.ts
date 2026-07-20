@@ -4,8 +4,6 @@
  * milestones are conditions that must become true.
  */
 
-export type LooRole = 'main-effort' | 'supporting' | 'sustaining' | 'paused';
-
 export type MilestoneStatus =
   | 'complete'
   | 'active'
@@ -38,7 +36,6 @@ export interface LineOfOperation {
   name: string;
   description: string;
   owner: string;
-  role: LooRole;
   archived: boolean;
 }
 

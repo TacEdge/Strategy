@@ -112,18 +112,11 @@ export const reducer = (state: CampaignState, action: Action): CampaignState => 
         ),
       };
 
-    case 'loo/update': {
-      // Only one Main Effort at a time.
-      const settingMain = action.patch.role === 'main-effort';
+    case 'loo/update':
       return {
         ...state,
-        loos: state.loos.map((l) => {
-          if (l.id === action.id) return { ...l, ...action.patch };
-          if (settingMain && l.role === 'main-effort') return { ...l, role: 'supporting' };
-          return l;
-        }),
+        loos: state.loos.map((l) => (l.id === action.id ? { ...l, ...action.patch } : l)),
       };
-    }
     case 'loo/add':
       return {
         ...state,

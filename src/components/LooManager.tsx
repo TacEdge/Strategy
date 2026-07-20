@@ -1,10 +1,7 @@
 import { useState } from 'react';
-import type { LooRole } from '../types';
 import { useStore, newId } from '../state/store';
-import { Modal, ConfirmDialog, ROLE_LABEL } from './ui';
+import { Modal, ConfirmDialog } from './ui';
 import { IconArrowUp, IconArrowDown, IconArchive, IconTrash, IconPlus, IconEdit } from './icons';
-
-const ROLES: LooRole[] = ['main-effort', 'supporting', 'sustaining', 'paused'];
 
 export const LooManager = ({ onClose }: { onClose: () => void }) => {
   const { state, dispatch } = useStore();
@@ -22,7 +19,7 @@ export const LooManager = ({ onClose }: { onClose: () => void }) => {
       type: 'loo/add',
       loo: {
         id: newId('loo'), number, name: `New Line of Operation`,
-        description: '', owner: 'Mike', role: 'sustaining', archived: false,
+        description: '', owner: 'Mike', archived: false,
       },
     });
   };
@@ -38,9 +35,7 @@ export const LooManager = ({ onClose }: { onClose: () => void }) => {
   return (
     <Modal title="Lines of Operation" onClose={onClose} wide>
       <p className="detail-text muted" style={{ fontSize: 14 }}>
-        Lines of Operation endure through time. One line carries the Main Effort;
-        setting a new Main Effort moves the previous one to Supporting.
-        Prefer pause or archive over deletion.
+        Lines of Operation endure through time. Prefer archive over deletion.
       </p>
       {ordered.map((loo, idx) => (
         <div key={loo.id} className={`loo-row${loo.archived ? ' archived' : ''}`}>
@@ -73,14 +68,6 @@ export const LooManager = ({ onClose }: { onClose: () => void }) => {
             aria-label={`${loo.name} owner`}
             title="Owner"
           />
-          <select
-            value={loo.role}
-            onChange={(e) => dispatch({ type: 'loo/update', id: loo.id, patch: { role: e.target.value as LooRole } })}
-            aria-label={`${loo.name} role`}
-            title="Role"
-          >
-            {ROLES.map((r) => <option key={r} value={r}>{ROLE_LABEL[r]}</option>)}
-          </select>
           <button
             type="button" className="icon-btn"
             onClick={() => { setRenaming(loo.id); setNameDraft(loo.name); }}

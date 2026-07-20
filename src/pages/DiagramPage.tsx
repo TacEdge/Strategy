@@ -95,10 +95,6 @@ export const DiagramPage = ({
           return next;
         })}
         onFocusAll={() => { setVisibleLooIds(new Set(allLoos.map((l) => l.id))); setFocusLooId(null); }}
-        onFocusMainEffort={() => {
-          const main = allLoos.find((l) => l.role === 'main-effort');
-          if (main) setVisibleLooIds(new Set([main.id]));
-        }}
         onToggleAllDeps={() => setShowAllDeps((s) => !s)}
         onToggleExpanded={onToggleExpanded}
         onAdd={setAddOpen}

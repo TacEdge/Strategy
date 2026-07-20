@@ -35,9 +35,7 @@ export const ReviewPage = ({
       .filter((h) => h.at >= weekAgo && h.summary.startsWith('Confidence changed'))
       .map((h) => ({ milestone: m, entry: h })));
 
-  const mainEffort = state.loos.find((l) => l.role === 'main-effort' && !l.archived);
   const founderOpen = open.filter((m) => m.founderAction && m.status !== 'complete');
-  const founderOffMain = founderOpen.filter((m) => m.looId !== mainEffort?.id);
 
   const horizon =
     state.horizons.find((h) => h.id === state.campaign.activeHorizonId && !h.archived)
@@ -86,9 +84,9 @@ export const ReviewPage = ({
           <p className="today-context-sub">{horizon.status === 'on-track' ? 'On track' : horizon.status === 'at-risk' ? 'At risk' : 'Forming'}</p>
         </div>
         <div className="today-context-cell">
-          <Eyebrow>Main Effort</Eyebrow>
-          <p className="today-context-value">{mainEffort?.name ?? 'Not set'}</p>
-          {mainEffort && <p className="today-context-sub">{mainEffort.owner}</p>}
+          <Eyebrow>Founder-owned open</Eyebrow>
+          <p className="today-context-value">{founderOpen.length} milestone{founderOpen.length === 1 ? '' : 's'}</p>
+          <p className="today-context-sub">Requiring founder action</p>
         </div>
       </section>
 
@@ -163,25 +161,9 @@ export const ReviewPage = ({
           <section className="ws-card" aria-label="Founder time allocation">
             <h2 className="ws-card-title">Founder allocation</h2>
             <p className="detail-text">
-              {founderOpen.length} open founder-owned milestone{founderOpen.length === 1 ? '' : 's'}.
+              {founderOpen.length} open founder-owned milestone{founderOpen.length === 1 ? '' : 's'}:{' '}
+              <span className="detail-text muted">{founderOpen.map((m) => m.title).join('; ')}.</span>
             </p>
-            {founderOffMain.length > 0 && (
-              <p className="detail-text muted" style={{ fontSize: 14 }}>
-                {founderOffMain.length} sit outside the Main Effort:{' '}
-                {founderOffMain.map((m) => m.title).join('; ')}.
-              </p>
-            )}
-            {(() => {
-              const doneOffMain = achieved.filter((m) => m.looId !== mainEffort?.id);
-              return (
-                <p className="detail-text muted" style={{ fontSize: 14 }}>
-                  {doneOffMain.length} of {achieved.length} completed milestones sit outside the Main Effort
-                  {doneOffMain.length > achieved.length / 2
-                    ? ' — check whether effort is following the stated priority.'
-                    : '.'}
-                </p>
-              );
-            })()}
             <div className="detail-section">
               <SectionHeading>Risks raised this horizon</SectionHeading>
               <ul className="detail-list">

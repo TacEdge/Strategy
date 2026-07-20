@@ -39,7 +39,7 @@ const M = (
 });
 
 export const seedState: CampaignState = {
-  schemaVersion: 5,
+  schemaVersion: 6,
 
   campaign: {
     id: 'campaign-1',
@@ -56,27 +56,27 @@ export const seedState: CampaignState = {
     {
       id: 'loo-mv', number: 1, name: 'Customers',
       description: 'Prove demand and secure reference customers.',
-      owner: 'Mike', role: 'main-effort', archived: false,
+      owner: 'Mike', archived: false,
     },
     {
       id: 'loo-pt', number: 2, name: 'Product',
       description: 'Build and validate the platform.',
-      owner: 'Technical Lead', role: 'supporting', archived: false,
+      owner: 'Technical Lead', archived: false,
     },
     {
       id: 'loo-cr', number: 3, name: 'Revenue',
       description: 'Convert customer value into recurring income.',
-      owner: 'Mike', role: 'supporting', archived: false,
+      owner: 'Mike', archived: false,
     },
     {
       id: 'loo-sr', number: 4, name: 'Partnerships',
       description: 'Create leverage and routes to market.',
-      owner: 'Mike', role: 'sustaining', archived: false,
+      owner: 'Mike', archived: false,
     },
     {
       id: 'loo-cc', number: 5, name: 'Company',
       description: 'Build the team, runway and delivery system.',
-      owner: 'Mike', role: 'sustaining', archived: false,
+      owner: 'Mike', archived: false,
     },
   ],
   looOrder: ['loo-mv', 'loo-pt', 'loo-cr', 'loo-sr', 'loo-cc'],

@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import type { ReactNode } from 'react';
-import type { Confidence, LooRole, MilestoneStatus } from '../types';
+import type { Confidence, MilestoneStatus } from '../types';
 import { statusIcon } from './icons';
 
 export const STATUS_LABEL: Record<MilestoneStatus, string> = {
@@ -11,13 +11,6 @@ export const STATUS_LABEL: Record<MilestoneStatus, string> = {
   future: 'Future',
   superseded: 'Superseded',
   archived: 'Archived',
-};
-
-export const ROLE_LABEL: Record<LooRole, string> = {
-  'main-effort': 'Main Effort',
-  supporting: 'Supporting',
-  sustaining: 'Sustaining',
-  paused: 'Paused',
 };
 
 export const CONFIDENCE_LABEL: Record<Confidence, string> = {
@@ -31,10 +24,6 @@ export const StatusBadge = ({ status, compact = false }: { status: MilestoneStat
     {statusIcon(status, 14)}
     {!compact && <span>{STATUS_LABEL[status]}</span>}
   </span>
-);
-
-export const RoleTag = ({ role }: { role: LooRole }) => (
-  <span className={`role-tag role-${role}`}>{ROLE_LABEL[role]}</span>
 );
 
 /** Confidence as a three-segment meter plus text — never colour alone. */

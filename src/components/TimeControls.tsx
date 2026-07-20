@@ -40,7 +40,6 @@ interface TimeControlsProps {
   onToday: () => void;
   onToggleLoo: (id: string) => void;
   onFocusAll: () => void;
-  onFocusMainEffort: () => void;
   onToggleAllDeps: () => void;
   onToggleExpanded: () => void;
   onAdd: (kind: 'milestone' | 'horizon') => void;
@@ -48,11 +47,10 @@ interface TimeControlsProps {
 
 export const TimeControls = ({
   viewId, loos, visibleLooIds, expanded, showAllDeps,
-  onView, onZoom, onToday, onToggleLoo, onFocusAll, onFocusMainEffort,
+  onView, onZoom, onToday, onToggleLoo, onFocusAll,
   onToggleAllDeps, onToggleExpanded, onAdd,
 }: TimeControlsProps) => {
   const [openMenu, setOpenMenu] = useState<'focus' | 'add' | null>(null);
-  const mainEffort = loos.find((l) => l.role === 'main-effort');
 
   return (
     <div className="diagram-toolbar">
@@ -95,11 +93,6 @@ export const TimeControls = ({
           <button type="button" className="menu-action" onClick={() => { onFocusAll(); setOpenMenu(null); }}>
             All LOOs
           </button>
-          {mainEffort && (
-            <button type="button" className="menu-action" onClick={() => { onFocusMainEffort(); setOpenMenu(null); }}>
-              Main Effort only
-            </button>
-          )}
           <div className="menu-divider" />
           {loos.map((loo) => (
             <label key={loo.id} className="filter-row">

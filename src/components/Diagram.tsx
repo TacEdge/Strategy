@@ -264,7 +264,7 @@ export const Diagram = ({
         {loos.map((loo) => (
           <div
             key={loo.id}
-            className={`lane-label role-lane-${loo.role}`}
+            className="lane-label"
             style={{ height: laneH, opacity: laneDim(loo) ? 0.35 : 1 }}
           >
             <span className="lane-num">{String(loo.number).padStart(2, '0')}</span>
@@ -276,10 +276,7 @@ export const Diagram = ({
             >
               {loo.name}
             </button>
-            <span className={`role-tag role-${loo.role}`}>
-              {loo.role === 'main-effort' ? 'Main Effort'
-                : loo.role.charAt(0).toUpperCase() + loo.role.slice(1)}
-            </span>
+            <span className="lane-desc">{loo.description}</span>
           </div>
         ))}
       </div>
@@ -312,7 +309,7 @@ export const Diagram = ({
             {loos.map((loo) => (
               <div
                 key={loo.id}
-                className={`lane-row role-line-${loo.role}${laneDim(loo) ? ' dimmed' : ''}`}
+                className={`lane-row${laneDim(loo) ? ' dimmed' : ''}`}
                 style={{ height: laneH }}
               >
                 <div className="loo-line" style={{ top: laneH * LINE_AT }} />

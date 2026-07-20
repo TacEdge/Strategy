@@ -1,11 +1,10 @@
 import type { ReactNode } from 'react';
-import { IconSearch, IconBell, IconFlag, IconMenu, IconCompass, IconLink, IconToday } from './icons';
+import { IconSearch, IconBell, IconFlag, IconMenu, IconCompass, IconLink } from './icons';
 import lockupCream from '../assets/brand/tacedge-lockup-cream.svg';
 
-export type NavKey = 'today' | 'campaign' | 'loos' | 'milestones' | 'reviews';
+export type NavKey = 'campaign' | 'loos' | 'milestones' | 'reviews';
 
 const NAV: { key: NavKey; label: string; icon: ReactNode }[] = [
-  { key: 'today', label: 'Today', icon: <IconToday size={16} /> },
   { key: 'campaign', label: 'Campaign', icon: <IconCompass size={16} /> },
   { key: 'loos', label: 'LOOs', icon: <IconMenu size={16} /> },
   { key: 'milestones', label: 'Milestones', icon: <IconFlag size={16} /> },
@@ -13,12 +12,11 @@ const NAV: { key: NavKey; label: string; icon: ReactNode }[] = [
 ];
 
 export const Shell = ({
-  current, pageLabel, onNavigate, onOpenNow, expanded, children,
+  current, pageLabel, onNavigate, expanded, children,
 }: {
   current: NavKey;
   pageLabel: string;
   onNavigate: (key: NavKey) => void;
-  onOpenNow: () => void;
   expanded: boolean;
   children: ReactNode;
 }) => (
@@ -30,9 +28,6 @@ export const Shell = ({
         <span className="topbar-page">{pageLabel}</span>
       </div>
       <div className="topbar-spacer" />
-      <button type="button" className="topbar-now" onClick={onOpenNow}>
-        <IconCompass size={15} /> What should I do now?
-      </button>
       <div className="topbar-search" role="search">
         <IconSearch size={15} />
         <input type="search" placeholder="Search milestones" aria-label="Search milestones" />

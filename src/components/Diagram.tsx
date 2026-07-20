@@ -157,7 +157,7 @@ export const Diagram = ({
       const rowEnds: number[] = [];
       const placed: Placed[] = ms.map((m) => {
         const cx = x(m.targetDate);
-        const w = isDetail ? 224 : sparse ? 30 : Math.min(230, 44 + m.title.length * 6.4);
+        const w = isDetail ? 212 : sparse ? 30 : Math.min(230, 44 + m.title.length * 6.4);
         const startX = cx - w / 2;
         let row = rowEnds.findIndex((end) => startX >= end + 8);
         const maxRows = 2;
@@ -392,8 +392,8 @@ export const Diagram = ({
                   onClick={() => onSelectHorizon(h.id)}
                   title={`${loo.name} objective at ${fmtDayMonth(h.date)}: ${obj.statement}`}
                 >
-                  <span className="obj-eyebrow">Objective · {fmtDayMonth(h.date)}</span>
-                  {obj.statement.length > 76 ? `${obj.statement.slice(0, 74)}…` : obj.statement}
+                  <span className="obj-eyebrow">Objective</span>
+                  <span className="obj-text">{obj.statement}</span>
                 </button>
               );
             }))}
@@ -424,9 +424,6 @@ export const Diagram = ({
               );
             }
 
-            const showTasks = isOperational
-              && ['active', 'at-risk', 'blocked'].includes(m.status);
-            const openDecisions = m.decisions.filter((d) => !d.resolved);
             return (
               <button
                 type="button"
@@ -442,35 +439,8 @@ export const Diagram = ({
                     {statusIcon(m.status, 15)}
                   </span>
                   <span className="ms-card-title">{m.title}</span>
-                  {m.founderAction && <span className="founder-mark" title="Founder action required">MF</span>}
                 </span>
-                <span className="ms-card-meta">
-                  <span>{fmtDayMonth(m.targetDate)}</span>
-                  <span className="owner">{m.owner}</span>
-                  <span title={`Confidence ${m.confidence}`}>C:{m.confidence.charAt(0).toUpperCase()}</span>
-                  <span>{m.progress}%</span>
-                </span>
-                {m.status !== 'future' && m.status !== 'superseded' && (
-                  <span className="progress-track" aria-hidden>
-                    <span className="progress-fill" style={{ width: `${m.progress}%` }} />
-                  </span>
-                )}
-                {showTasks && (m.tasks.length > 0 || openDecisions.length > 0) && (
-                  <ul className="ms-card-tasks">
-                    {m.tasks.slice(0, 3).map((tk) => (
-                      <li key={tk.id} className={tk.done ? 'done' : ''}>
-                        <span className="tk-dot" />
-                        <span>{tk.week ? `${tk.week}: ` : ''}{tk.title}</span>
-                      </li>
-                    ))}
-                    {openDecisions.slice(0, 1).map((d) => (
-                      <li key={d.id}>
-                        <span className="tk-dot" style={{ borderColor: 'var(--te-ochre)' }} />
-                        <span className="ms-card-decision">Decide: {d.text}</span>
-                      </li>
-                    ))}
-                  </ul>
-                )}
+                <span className="ms-card-meta">{fmtDayMonth(m.targetDate)}</span>
               </button>
             );
           }))}

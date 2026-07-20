@@ -1,11 +1,8 @@
 # TACEDGE Strategy
 
-Strategic orchestration and founder decision support. The LOO Diagram is
-the strategic map; the Today view is the operational answer. The product
-exists to answer one question: what is the most valuable thing we should
-be doing now or today?
-
-Working high-fidelity prototype. Product-facing name is TACEDGE.
+Strategic orchestration and founder decision support, built on the
+Lines of Operation model. Working high-fidelity prototype. Product-facing
+name is TACEDGE.
 
 ## Run
 
@@ -30,34 +27,16 @@ npm run preview    # serve the build
   objects with purpose, importance, success criteria, dependencies, risks,
   decisions, tasks, evidence, notes, next best action and change history.
 - **Dependencies** — cross-LOO, drawn as restrained curves on the diagram.
-- **Recommendation engine** — `src/lib/recommend.ts`, a pure deterministic
-  function over campaign state that walks the daily decision chain: active
-  horizon, Integrated Horizon State, Main Effort, least secure objective,
-  most material milestone, current blockers, best action for the time
-  actually available, and what consciously not to work on. Every
-  recommendation exposes its reasoning ("How this was decided"). Built to
-  be replaced or augmented by an AI reasoning layer without UI changes.
-
 ## Views
 
-- **Today** (`#/`, the landing route) — strategic context, one primary
-  recommendation with completion condition and unlocks, two sequenced next
-  actions, an explicit "Not today" list, waiting-on-others, and capacity
-  controls (time, energy, blocks, day type) that reshape the
-  recommendation. A 30-minute window gets a genuinely completable
-  30-minute action, not a shortened project.
-- **LOO Diagram** (`#/campaign`) — the strategic map: lanes, horizons,
-  objectives, milestones, dependencies, semantic zoom, editing.
+- **LOO Diagram** (`#/`, the landing route) — the strategic map: lanes,
+  horizons, objectives, milestones, dependencies, semantic zoom, editing.
+  Milestone cards are deliberately minimal (status, title, date); full
+  detail lives in the selection drawer and milestone workspace.
 - **Weekly Review** (`#/review`) — movement toward the horizon, progress
-  by LOO, achieved/slipped/confidence changes, founder allocation,
-  recommended Main Effort, and the three outcomes for the next seven days.
+  by LOO, achieved/slipped milestones, founder allocation, and the three
+  outcomes for the next seven days.
 - **Milestone workspace** (`#/milestone/:id`).
-- **What should I do now?** — persistent in the top bar and available from
-  the diagram, horizons, and milestone workspaces. Accepts time, energy
-  and a free-text note.
-- **Daily closeout** — a two-minute end-of-day review; the stated blocker
-  becomes tomorrow's primary constraint and the carry-forward appears on
-  tomorrow's Today view.
 
 Types live in `src/types.ts`; seeded campaign data in `src/data/seed.ts`;
 state in `src/state/store.tsx` (reducer + localStorage persistence, keyed

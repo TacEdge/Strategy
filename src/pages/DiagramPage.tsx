@@ -14,13 +14,12 @@ import { LooManager } from '../components/LooManager';
 import { MilestoneListModal } from '../components/MilestoneListModal';
 
 export const DiagramPage = ({
-  expanded, onToggleExpanded, onOpenMilestonePage, onOpenNow,
+  expanded, onToggleExpanded, onOpenMilestonePage,
   modal, onCloseModal,
 }: {
   expanded: boolean;
   onToggleExpanded: () => void;
   onOpenMilestonePage: (id: string) => void;
-  onOpenNow: () => void;
   modal: 'loos' | 'milestones' | null;
   onCloseModal: () => void;
 }) => {
@@ -108,7 +107,6 @@ export const DiagramPage = ({
         onToggleExpanded={onToggleExpanded}
         onAddMilestone={() => setAddOpen('milestone')}
         onAddHorizon={() => setAddOpen('horizon')}
-        onPriority={onOpenNow}
       />
 
       <Diagram
@@ -140,7 +138,6 @@ export const DiagramPage = ({
           horizonId={selectedHorizonId}
           onClose={() => setSelectedHorizonId(null)}
           onSelectMilestone={selectMilestone}
-          onOpenNow={onOpenNow}
         />
       )}
       {addOpen === 'milestone' && (
@@ -150,7 +147,7 @@ export const DiagramPage = ({
         <AddHorizonModal onClose={() => setAddOpen(null)} onCreated={selectHorizon} />
       )}
 
-      {modal === 'loos' && <LooManager onClose={onCloseModal} onOpenNow={onOpenNow} />}
+      {modal === 'loos' && <LooManager onClose={onCloseModal} />}
       {modal === 'milestones' && (
         <MilestoneListModal onClose={onCloseModal} onOpen={onOpenMilestonePage} />
       )}

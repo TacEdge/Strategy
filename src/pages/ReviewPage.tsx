@@ -1,13 +1,11 @@
 import { useMemo } from 'react';
 import { useStore, useLoos } from '../state/store';
-import { recommend } from '../lib/recommend';
 import { fmtDateLong, fmtDate, parseDate, daysBetween, todayIso, nowStamp } from '../lib/time';
 import { SectionHeading, Eyebrow, StatusBadge, ProgressBar, ConfidenceMeter } from '../components/ui';
 
 /**
- * Weekly command review: movement toward the active horizon, progress by
- * LOO, slippage, confidence changes, founder allocation, and the three
- * outcomes that ground the coming week's daily recommendations.
+ * Weekly review: movement toward the active horizon, progress by LOO,
+ * slippage, founder allocation, and the three outcomes for the week.
  */
 export const ReviewPage = ({
   onOpenMilestone, onOpenDiagram,
@@ -17,7 +15,6 @@ export const ReviewPage = ({
 }) => {
   const { state, dispatch } = useStore();
   const loos = useLoos();
-  const result = useMemo(() => recommend(state), [state]);
 
   const weekAgo = useMemo(() => {
     const d = parseDate(todayIso());
@@ -42,22 +39,9 @@ export const ReviewPage = ({
   const founderOpen = open.filter((m) => m.founderAction && m.status !== 'complete');
   const founderOffMain = founderOpen.filter((m) => m.looId !== mainEffort?.id);
 
-  // Deterministic recommended Main Effort for the coming week: keep the
-  // current one while it still has open milestones before the horizon;
-  // otherwise the LOO with the least secure horizon objective.
-  const horizon = result?.horizon;
-  const mainEffortOpen = open.filter((m) =>
-    m.looId === mainEffort?.id && m.status !== 'complete'
-    && (!horizon || m.targetDate <= horizon.date));
-  const confRank = { low: 0, medium: 1, high: 2 } as const;
-  const leastSecure = horizon
-    ? [...state.objectives]
-      .filter((o) => o.horizonId === horizon.id)
-      .sort((a, b) => confRank[a.confidence] - confRank[b.confidence])[0]
-    : undefined;
-  const recommendedMainEffort = mainEffortOpen.length > 0
-    ? mainEffort
-    : state.loos.find((l) => l.id === leastSecure?.looId) ?? mainEffort;
+  const horizon =
+    state.horizons.find((h) => h.id === state.campaign.activeHorizonId && !h.archived)
+    ?? state.horizons.filter((h) => !h.archived).sort((a, b) => a.date.localeCompare(b.date))[0];
 
   const setOutcome = (i: number, text: string) => {
     const outcomes = [...state.weekly.outcomes];
@@ -65,7 +49,7 @@ export const ReviewPage = ({
     dispatch({ type: 'weekly/update', patch: { outcomes, updatedAt: nowStamp() } });
   };
 
-  if (!result || !horizon) {
+  if (!horizon) {
     return <div className="page"><p className="empty-note">No campaign data to review.</p></div>;
   }
 
@@ -102,11 +86,9 @@ export const ReviewPage = ({
           <p className="today-context-sub">{horizon.status === 'on-track' ? 'On track' : horizon.status === 'at-risk' ? 'At risk' : 'Forming'}</p>
         </div>
         <div className="today-context-cell">
-          <Eyebrow>Recommended Main Effort</Eyebrow>
-          <p className="today-context-value">{recommendedMainEffort?.name ?? 'Not set'}</p>
-          <p className="today-context-sub">
-            {recommendedMainEffort?.id === mainEffort?.id ? 'Unchanged for the coming week' : 'Change proposed — confirm in LOOs'}
-          </p>
+          <Eyebrow>Main Effort</Eyebrow>
+          <p className="today-context-value">{mainEffort?.name ?? 'Not set'}</p>
+          {mainEffort && <p className="today-context-sub">{mainEffort.owner}</p>}
         </div>
       </section>
 
@@ -211,7 +193,7 @@ export const ReviewPage = ({
           <section className="ws-card" aria-label="Three outcomes for the next seven days">
             <h2 className="ws-card-title">Next seven days</h2>
             <p className="detail-text muted" style={{ fontSize: 13 }}>
-              The three most important outcomes. Daily recommendations are grounded here.
+              The three most important outcomes for the coming week.
             </p>
             {[0, 1, 2].map((i) => (
               <label key={i} className="field">

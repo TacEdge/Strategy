@@ -18,9 +18,9 @@ export const VIEWS: ViewSpec[] = [
   { id: '5y', label: '5 years', pxPerDay: 0.42, detail: 'macro', laneHeight: 96, showWeeks: false },
   { id: '3y', label: '3 years', pxPerDay: 0.72, detail: 'macro', laneHeight: 96, showWeeks: false },
   { id: 'year', label: 'Year', pxPerDay: 1.9, detail: 'macro', laneHeight: 118, showWeeks: false },
-  { id: '6m', label: '6 months', pxPerDay: 3.8, detail: 'detail', laneHeight: 148, showWeeks: false },
-  { id: 'quarter', label: 'Quarter', pxPerDay: 7.4, detail: 'detail', laneHeight: 148, showWeeks: false },
-  { id: 'month', label: 'Month', pxPerDay: 15, detail: 'operational', laneHeight: 184, showWeeks: true },
+  { id: '6m', label: '6 months', pxPerDay: 3.8, detail: 'detail', laneHeight: 132, showWeeks: false },
+  { id: 'quarter', label: 'Quarter', pxPerDay: 7.4, detail: 'detail', laneHeight: 132, showWeeks: false },
+  { id: 'month', label: 'Month', pxPerDay: 15, detail: 'operational', laneHeight: 132, showWeeks: true },
 ];
 
 export const viewById = (id: ViewId): ViewSpec =>

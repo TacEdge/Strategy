@@ -19,8 +19,6 @@ export type Confidence = 'high' | 'medium' | 'low';
 
 export type HorizonStatus = 'on-track' | 'at-risk' | 'forming' | 'archived';
 
-export type EnergyLevel = 'high' | 'medium' | 'low';
-
 export interface Vision {
   statement: string;
   note: string;
@@ -32,10 +30,6 @@ export interface Campaign {
   theme: string;
   vision: Vision;
   activeHorizonId: string;
-  /** The most important company constraint right now. */
-  primaryConstraint: string;
-  /** Attractive but lower-value work that should not consume founder time. */
-  notToday: string[];
 }
 
 export interface LineOfOperation {
@@ -115,19 +109,6 @@ export interface Dependency {
   note?: string;
 }
 
-/**
- * A concrete, completable action on a milestone at a given time scale.
- * The recommendation engine picks the largest action that genuinely fits
- * the available window — a 30-minute action is a different action, not a
- * shortened project.
- */
-export interface CandidateAction {
-  id: string;
-  block: number; // minutes
-  text: string;
-  completion: string;
-}
-
 export interface Milestone {
   id: string;
   title: string;
@@ -149,61 +130,12 @@ export interface Milestone {
   founderAction: boolean;
   major: boolean; // shown in year view and wider
   history: ChangeHistoryEntry[];
-  /** Time-scaled candidate actions for the recommendation engine. */
-  actions?: CandidateAction[];
-  /** What becomes possible once this milestone is achieved. */
-  unlocks?: string[];
-  consequenceOfDelay?: string;
 }
 
 export interface Insight {
   id: string;
   text: string;
   kind: 'congestion' | 'founder' | 'sequencing' | 'resource' | 'momentum';
-}
-
-/** Produced by the recommendation engine (src/lib/recommend.ts). */
-export interface FounderRecommendation {
-  action: CandidateAction;
-  milestoneId: string;
-  looId: string;
-  horizonId: string;
-  objectiveId: string;
-  whyThis: string;
-  whyNow: string;
-  whyFounder: string;
-  unlocked: string[];
-  consequenceOfDelay: string;
-  notToday: string[];
-}
-
-/** Something that needs another person or event before the founder can act. */
-export interface WaitingItem {
-  id: string;
-  text: string;
-  who?: string;
-}
-
-/** Today's stated working capacity. The recommendation responds to it. */
-export interface CapacityProfile {
-  minutes: number; // 30 | 60 | 90 | 240 (half day) | 420 (full day)
-  blocks: number; // focused work blocks available
-  energy: EnergyLevel;
-  meetings: string; // fixed commitments, free text
-  together: boolean; // working with another founder
-  constrainedDay: boolean; // constrained by military work
-}
-
-export interface DailyCloseout {
-  id: string;
-  date: string; // ISO date
-  becameTrue: string;
-  changed: string;
-  primaryBlocker: string;
-  newInformation: string;
-  recommendationCorrect: boolean | null;
-  mainEffortCorrect: boolean;
-  carryForward: string;
 }
 
 export interface WeeklyPlan {
@@ -222,8 +154,5 @@ export interface CampaignState {
   milestones: Milestone[];
   dependencies: Dependency[];
   insights: Insight[];
-  waiting: WaitingItem[];
-  capacity: CapacityProfile;
-  closeouts: DailyCloseout[];
   weekly: WeeklyPlan;
 }

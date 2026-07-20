@@ -4,7 +4,7 @@ import { VIEWS } from '../lib/views';
 import type { ViewId } from '../lib/views';
 import {
   IconZoomIn, IconZoomOut, IconToday, IconChevronLeft, IconChevronRight,
-  IconFilter, IconExpand, IconPlus, IconCompass,
+  IconFilter, IconExpand, IconPlus,
 } from './icons';
 
 interface TimeControlsProps {
@@ -21,13 +21,12 @@ interface TimeControlsProps {
   onToggleExpanded: () => void;
   onAddMilestone: () => void;
   onAddHorizon: () => void;
-  onPriority: () => void;
 }
 
 export const TimeControls = ({
   viewId, loos, visibleLooIds, expanded,
   onView, onZoom, onToday, onPan, onToggleLoo, onShowAllLoos,
-  onToggleExpanded, onAddMilestone, onAddHorizon, onPriority,
+  onToggleExpanded, onAddMilestone, onAddHorizon,
 }: TimeControlsProps) => {
   const [filterOpen, setFilterOpen] = useState(false);
   const popRef = useRef<HTMLDivElement>(null);
@@ -118,9 +117,6 @@ export const TimeControls = ({
       </button>
       <button type="button" className="btn btn-secondary" onClick={onAddHorizon}>
         <IconPlus size={14} /> Add horizon
-      </button>
-      <button type="button" className="priority-btn" onClick={onPriority}>
-        <IconCompass size={16} /> What should I do now?
       </button>
     </div>
   );

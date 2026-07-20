@@ -215,10 +215,10 @@ export const Diagram = ({
     let lastRow = 0;
     return list.map((h) => {
       const hx = x(h.date);
-      const row = hx - lastEnd < 230 ? (lastRow + 1) % 2 : 0;
+      const row = hx - lastEnd < 130 ? (lastRow + 1) % 2 : 0;
       lastEnd = hx;
       lastRow = row;
-      return { h, flagTop: 2 + row * 38 };
+      return { h, flagTop: row * 24 };
     });
   }, [state.horizons, px]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -250,6 +250,7 @@ export const Diagram = ({
   const nodeOpacity = (loo: LineOfOperation, m: Milestone) => {
     if (laneDim(loo)) return 0.25;
     if (relatedIds && !relatedIds.has(m.id)) return 0.4;
+    if (selectedHorizonId) return 0.55; // horizon selected: spine and objectives lead
     if (m.status === 'superseded') return 0.5;
     return 1;
   };
@@ -351,29 +352,46 @@ export const Diagram = ({
             </svg>
           )}
 
-          {/* horizon markers: select first, then drag to move */}
+          {/* Strategic Horizon spines. The calendar header stays clean: a
+              compact head marker sits at the top of the diagram body, and
+              the line itself is clickable. Select first, then drag the
+              head to move the horizon. */}
           {horizons.map(({ h, flagTop }) => {
             const hzSelected = selectedHorizonId === h.id;
             const dx = hzSelected && hzDrag.drag?.id === h.id ? hzDrag.drag.dx : 0;
             const hx = x(h.date) + dx;
             const forming = h.status === 'forming';
+            const title = hzSelected
+              ? `Strategic Horizon: ${h.theme}. Drag to change date.`
+              : `Strategic Horizon: ${h.theme}. Select for detail; select first to move.`;
+            const label = `Strategic Horizon ${fmtDayMonth(h.date)} ${parseDate(h.date).getFullYear()}: ${h.theme}`;
             return (
               <div key={h.id}>
-                <div className={`horizon-line${forming ? ' forming' : ''}`} style={{ left: hx, top: HEAD_H, height: bodyH }} />
+                <div
+                  className={`horizon-line${forming ? ' forming' : ''}${hzSelected ? ' selected' : ''}`}
+                  style={{ left: hx, top: HEAD_H, height: bodyH }}
+                />
                 <button
                   type="button"
-                  className={`horizon-flag${forming ? ' forming' : ''}${hzSelected ? ' selected' : ''}`}
-                  style={{ left: hx, top: flagTop }}
-                  title={hzSelected
-                    ? `Strategic Horizon: ${h.theme}. Drag to change date.`
-                    : `Strategic Horizon: ${h.theme}. Select for detail; select first to move.`}
-                  aria-label={`Strategic Horizon ${fmtDayMonth(h.date)}: ${h.theme}`}
+                  className="horizon-hit"
+                  style={{ left: hx - 5, top: HEAD_H, height: bodyH }}
+                  title={title}
+                  aria-hidden
+                  tabIndex={-1}
+                  {...selectProps(() => onSelectHorizon(h.id))}
+                />
+                <button
+                  type="button"
+                  className={`horizon-head${forming ? ' forming' : ''}${hzSelected ? ' selected' : ''}`}
+                  style={{ left: hx, top: HEAD_H + 5 + flagTop }}
+                  title={title}
+                  aria-label={label}
                   {...(hzSelected
                     ? hzDrag.handlers(h.id)
                     : selectProps(() => onSelectHorizon(h.id)))}
                 >
+                  <span className="hz-icon" aria-hidden />
                   <span className="hz-date">{fmtDayMonth(h.date)} {parseDate(h.date).getFullYear()}</span>
-                  <span className="hz-theme">{h.theme}</span>
                 </button>
               </div>
             );
@@ -390,7 +408,7 @@ export const Diagram = ({
                 <button
                   type="button"
                   key={obj.id}
-                  className={`objective-marker${h.status === 'forming' ? ' forming' : ''}`}
+                  className={`objective-marker${h.status === 'forming' ? ' forming' : ''}${selectedHorizonId === h.id ? ' hz-selected' : ''}`}
                   style={{
                     left: x(h.date) + dx,
                     top: laneTop + laneH * LINE_AT,

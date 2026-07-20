@@ -39,7 +39,7 @@ const M = (
 });
 
 export const seedState: CampaignState = {
-  schemaVersion: 6,
+  schemaVersion: 7,
 
   campaign: {
     id: 'campaign-1',
@@ -87,7 +87,7 @@ export const seedState: CampaignState = {
       date: '2026-12-31',
       theme: 'Prove the Narrow Model',
       integratedState:
-        'By 31 December 2026, TACEDGE has validated a narrow production-ready ground-engineering product through credible paid deployments, demonstrated measurable customer value, secured the technical capability to deliver reliably and established a viable path toward recurring enterprise revenue.',
+        'By 31 December 2026, TACEDGE has validated a narrow production-ready product through credible paid deployments, demonstrated customer value and established the delivery capability required to continue scaling.',
       status: 'on-track',
       confidence: 'medium',
       assumptions: [
@@ -128,19 +128,19 @@ export const seedState: CampaignState = {
     // Horizon 1
     { id: 'obj-h1-mv', horizonId: 'hz-1', looId: 'loo-mv', confidence: 'medium',
       summary: 'Three validated customers',
-      statement: 'Three credible customers have validated the core workflow, with at least one referenceable deployment.' },
+      statement: 'Three credible customers have validated the core workflow.' },
     { id: 'obj-h1-pt', horizonId: 'hz-1', looId: 'loo-pt', confidence: 'medium',
       summary: 'Production-ready V2',
-      statement: 'The narrow V2 anchoring workflow is production-ready and proven on a live project.' },
+      statement: 'The narrow V2 workflow is production-ready.' },
     { id: 'obj-h1-cr', horizonId: 'hz-1', looId: 'loo-cr', confidence: 'medium',
       summary: 'Paid deployment model proven',
-      statement: 'Pilot pricing is validated and at least one customer has converted into ongoing paid use.' },
+      statement: 'The paid deployment model has been proven.' },
     { id: 'obj-h1-sr', horizonId: 'hz-1', looId: 'loo-sr', confidence: 'low',
       summary: 'Enterprise route established',
-      statement: 'TACEDGE has established a credible pathway into a major contractor or enterprise channel.' },
+      statement: 'A credible enterprise route has been established.' },
     { id: 'obj-h1-cc', horizonId: 'hz-1', looId: 'loo-cc', confidence: 'medium',
       summary: 'Delivery capability in place',
-      statement: 'Technical leadership, delivery discipline and sufficient runway are in place.' },
+      statement: 'Delivery capability and sufficient runway are in place.' },
     // Horizon 2 — partially developed
     { id: 'obj-h2-mv', horizonId: 'hz-2', looId: 'loo-mv', confidence: 'low',
       summary: 'Five live customers',

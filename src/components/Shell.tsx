@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { IconSearch, IconBell, IconFlag, IconMenu, IconCompass, IconLink, IconToday } from './icons';
+import lockupCream from '../assets/brand/tacedge-lockup-cream.svg';
 
 export type NavKey = 'today' | 'campaign' | 'loos' | 'milestones' | 'reviews';
 
@@ -24,7 +25,7 @@ export const Shell = ({
   <div className={`app${expanded ? ' diagram-expanded' : ''}`}>
     <header className="topbar on-dark">
       <div className="topbar-logo">
-        <img src="/brand/tacedge-lockup-cream.svg" alt="TACEDGE" />
+        <img src={lockupCream} alt="TACEDGE" />
         <span className="topbar-divider" aria-hidden />
         <span className="topbar-page">{pageLabel}</span>
       </div>

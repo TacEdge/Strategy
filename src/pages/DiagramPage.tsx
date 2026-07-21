@@ -33,6 +33,8 @@ export const DiagramPage = ({
   );
   const [focusLooId, setFocusLooId] = useState<string | null>(null);
   const [showAllDeps, setShowAllDeps] = useState(false);
+  // Labels default on up to Year view, off at 3y/5y; the user can override.
+  const [labelsOverride, setLabelsOverride] = useState<boolean | null>(null);
   // Neutral by default: drawers open only on user selection or a deep link.
   const [selectedMilestoneId, setSelectedMilestoneId] = useState<string | null>(
     () => (initialMilestoneId && state.milestones.some((m) => m.id === initialMilestoneId)
@@ -47,6 +49,7 @@ export const DiagramPage = ({
   const scrollRef = useRef<HTMLDivElement | null>(null);
 
   const view = viewById(viewId);
+  const showLabels = labelsOverride ?? !['3y', '5y'].includes(viewId);
 
   // Newly created LOOs become visible.
   useEffect(() => {
@@ -93,6 +96,8 @@ export const DiagramPage = ({
         visibleLooIds={visibleLooIds}
         expanded={expanded}
         showAllDeps={showAllDeps}
+        showLabels={showLabels}
+        onToggleLabels={() => setLabelsOverride(!showLabels)}
         onView={setViewId}
         onToday={() => scrollToDate(todayIso())}
         onToggleLoo={(id) => setVisibleLooIds((prev) => {
@@ -114,6 +119,7 @@ export const DiagramPage = ({
         selectedHorizonId={selectedHorizonId}
         focusLooId={focusLooId}
         showAllDeps={showAllDeps}
+        showLabels={showLabels}
         scrollRef={scrollRef}
         onSelectMilestone={selectMilestone}
         onSelectHorizon={selectHorizon}

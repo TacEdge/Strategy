@@ -112,6 +112,8 @@ export interface Dependency {
 export interface Milestone {
   id: string;
   title: string;
+  /** Concise diagram label, 1-3 words. The full title lives in the drawer. */
+  shortLabel?: string;
   looId: string;
   targetDate: string; // ISO date
   status: MilestoneStatus;

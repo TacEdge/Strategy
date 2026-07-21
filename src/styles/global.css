@@ -585,6 +585,13 @@ input, select, textarea { font: inherit; color: var(--te-ink); }
   cursor: pointer;
 }
 .ms-tag.above { transform: translate(-50%, -100%); }
+/* Long-range views: lighter, more compact annotation */
+.ms-tag.compact .ms-tag-title {
+  font-size: 10px;
+  line-height: 1.25;
+  color: var(--te-ink-40);
+  -webkit-line-clamp: 2;
+}
 .ms-tag-title {
   font-size: var(--te-fs-xs);
   font-weight: 500;

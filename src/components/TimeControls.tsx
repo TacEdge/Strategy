@@ -33,6 +33,8 @@ interface TimeControlsProps {
   visibleLooIds: Set<string>;
   expanded: boolean;
   showAllDeps: boolean;
+  showLabels: boolean;
+  onToggleLabels: () => void;
   onView: (id: ViewId) => void;
   onToday: () => void;
   onToggleLoo: (id: string) => void;
@@ -43,8 +45,8 @@ interface TimeControlsProps {
 }
 
 export const TimeControls = ({
-  viewId, loos, visibleLooIds, expanded, showAllDeps,
-  onView, onToday, onToggleLoo, onFocusAll,
+  viewId, loos, visibleLooIds, expanded, showAllDeps, showLabels,
+  onToggleLabels, onView, onToday, onToggleLoo, onFocusAll,
   onToggleAllDeps, onToggleExpanded, onAdd,
 }: TimeControlsProps) => {
   const [openMenu, setOpenMenu] = useState<'focus' | 'add' | null>(null);
@@ -71,6 +73,18 @@ export const TimeControls = ({
             {v.label}
           </button>
         ))}
+      </div>
+
+      <div className="toolbar-group">
+        <button
+          type="button"
+          className={`btn-quiet labels-toggle${showLabels ? ' on' : ''}`}
+          onClick={onToggleLabels}
+          aria-pressed={showLabels}
+          title={showLabels ? 'Hide milestone labels' : 'Show milestone labels'}
+        >
+          Labels: {showLabels ? 'On' : 'Off'}
+        </button>
       </div>
 
       <div className="filter-pop">

@@ -21,6 +21,7 @@ interface DiagramProps {
   selectedHorizonId: string | null;
   focusLooId: string | null;
   showAllDeps: boolean;
+  showLabels: boolean;
   scrollRef: RefObject<HTMLDivElement | null>;
   onSelectMilestone: (id: string) => void;
   onSelectHorizon: (id: string, focusLooId?: string) => void;
@@ -79,7 +80,7 @@ const useDragDays = (
 };
 
 export const Diagram = ({
-  state, loos, view, selectedMilestoneId, selectedHorizonId, focusLooId, showAllDeps, scrollRef,
+  state, loos, view, selectedMilestoneId, selectedHorizonId, focusLooId, showAllDeps, showLabels, scrollRef,
   onSelectMilestone, onSelectHorizon, onMoveMilestone, onMoveHorizon, onToggleFocus,
 }: DiagramProps) => {
   const t0 = parseDate(TIMELINE_START);
@@ -170,7 +171,7 @@ export const Diagram = ({
   }, [view.showWeeks, px, t0, t1]);
 
   // ---- milestone placement: centre track, alternate above when crowded ----
-  const labelW = showMeta ? 132 : 118;
+  const labelW = sparse ? 82 : showMeta ? 132 : 110;
   const placedByLane = useMemo(() => {
     const map = new Map<string, Placed[]>();
     loos.forEach((loo, laneIdx) => {
@@ -183,7 +184,7 @@ export const Diagram = ({
       const rowEnds: number[] = [];
       const placed: Placed[] = ms.map((m) => {
         const cx = x(m.targetDate);
-        const w = sparse ? 26 : labelW + 8;
+        const w = showLabels ? labelW + 8 : 26;
         const startX = cx - w / 2;
         let row = rowEnds.findIndex((end) => startX >= end + 6);
         if (row === -1) {
@@ -195,7 +196,7 @@ export const Diagram = ({
       map.set(loo.id, placed);
     });
     return map;
-  }, [state.milestones, loos, laneH, zoomedIn, sparse, labelW, px]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [state.milestones, loos, laneH, zoomedIn, showLabels, labelW, px]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const positions = useMemo(() => {
     const p = new Map<string, { x: number; y: number }>();
@@ -468,7 +469,7 @@ export const Diagram = ({
                 >
                   <span className={`st-icon-${m.status}`}><MarkerIcon status={m.status} size={15} /></span>
                   <span className="msb-text">
-                    <span className="msb-title">{m.title}</span>
+                    <span className="msb-title">{m.shortLabel ?? m.title}</span>
                     {showMeta && <span className="msb-meta">{fmtDayMonth(m.targetDate)} · {m.owner}</span>}
                   </span>
                 </button>
@@ -493,13 +494,13 @@ export const Diagram = ({
                 >
                   <MarkerIcon status={m.status} size={sparse ? 12 : 14} />
                 </button>
-                {!sparse && (
+                {showLabels && (
                   <button
                     type="button"
-                    className={`ms-tag${pl.row === 1 ? ' above' : ''}${m.status === 'superseded' ? ' superseded' : ''}`}
+                    className={`ms-tag${sparse ? ' compact' : ''}${pl.row === 1 ? ' above' : ''}${m.status === 'superseded' ? ' superseded' : ''}`}
                     style={{
                       left: cx,
-                      top: pl.row === 1 ? cy - 10 : cy + 10,
+                      top: pl.row === 1 ? cy - (sparse ? 8 : 10) : cy + (sparse ? 8 : 10),
                       width: labelW,
                     }}
                     {...selectProps(() => onSelectMilestone(m.id))}
@@ -507,7 +508,7 @@ export const Diagram = ({
                     tabIndex={-1}
                     aria-hidden
                   >
-                    <span className="ms-tag-title">{m.title}</span>
+                    <span className="ms-tag-title">{m.shortLabel ?? m.title}</span>
                     {showMeta && (
                       <span className="ms-tag-meta">
                         {fmtDayMonth(m.targetDate)} · {m.owner}

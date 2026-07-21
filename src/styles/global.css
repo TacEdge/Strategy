@@ -266,10 +266,11 @@ input, select, textarea { font: inherit; color: var(--te-ink); }
 }
 .view-switch .view-today:hover { background: var(--te-tint); color: var(--te-forest); }
 
-/* Zoom: dedicated card with generous tablet touch targets */
-.toolbar-group.zoom-group { gap: 8px; padding: 4px; }
+/* Zoom: dedicated card. Tablet touch comfort comes from wide buttons and
+   horizontal spacing; height matches the neighbouring toolbar cards. */
+.toolbar-group.zoom-group { gap: 8px; padding: 3px; }
 .toolbar-group.zoom-group .zoom-btn {
-  width: 44px; height: 44px;
+  width: 48px; height: 30px;
   border-radius: var(--te-r-sm);
 }
 .toolbar-group.zoom-group .zoom-btn:hover { background: var(--te-tint); color: var(--te-ink); }

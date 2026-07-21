@@ -547,7 +547,7 @@ export const DiagramLegend = () => (
       ['superseded', 'Superseded'],
     ] as const).map(([status, text]) => (
       <span key={status} className="legend-item">
-        <span className={`st-icon-${status}`}><MarkerIcon status={status} size={12} /></span>
+        <span className={`st-icon-${status}`}><MarkerIcon status={status} size={14} /></span>
         {text}
       </span>
     ))}

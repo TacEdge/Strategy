@@ -685,18 +685,24 @@ input, select, textarea { font: inherit; color: var(--te-ink); }
 .legend-item {
   display: inline-flex; align-items: center; gap: 6px;
   font-size: var(--te-fs-xs);
+  line-height: 1;
   color: var(--te-ink-40);
 }
+/* Icon wrappers centre their contents; SVGs drop baseline whitespace so
+   every marker sits on the same visual centre as its label. */
+.legend-item > span:first-child { display: inline-flex; align-items: center; justify-content: center; }
+.legend-item svg { display: block; }
 .legend-item .obj-diamond { outline: none; }
 .legend-item .legend-endstate { outline: none; width: 11px; height: 11px; }
 .legend-continues {
-  display: inline-block; width: 22px;
+  display: inline-block; width: 22px; height: 2px;
   border-top: 2px dashed var(--te-olive-edge);
   position: relative;
 }
 .legend-continues::after {
   content: '';
-  position: absolute; right: -2px; top: -5px;
+  position: absolute; right: -2px; top: 50%;
+  transform: translateY(-5px);
   border-style: solid;
   border-width: 4px 0 4px 6px;
   border-color: transparent transparent transparent var(--te-olive-edge);

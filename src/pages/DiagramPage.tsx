@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useStore, useLoos } from '../state/store';
-import { VIEWS, viewById, TIMELINE_START } from '../lib/views';
+import { viewById, TIMELINE_START } from '../lib/views';
 import type { ViewId } from '../lib/views';
 import { parseDate, daysBetween, todayIso } from '../lib/time';
 import { TimeControls } from '../components/TimeControls';
@@ -72,12 +72,6 @@ export const DiagramPage = ({
 
   useEffect(() => { scrollToDate(todayIso()); }, [scrollToDate]);
 
-  // Views are ordered near-term to long-term: zooming in steps toward Month.
-  const zoom = (dir: -1 | 1) => {
-    const idx = VIEWS.findIndex((v) => v.id === viewId);
-    setViewId(VIEWS[Math.min(VIEWS.length - 1, Math.max(0, idx - dir))].id);
-  };
-
   const [horizonFocusLooId, setHorizonFocusLooId] = useState<string | null>(null);
 
   const selectMilestone = (id: string) => {
@@ -100,7 +94,6 @@ export const DiagramPage = ({
         expanded={expanded}
         showAllDeps={showAllDeps}
         onView={setViewId}
-        onZoom={zoom}
         onToday={() => scrollToDate(todayIso())}
         onToggleLoo={(id) => setVisibleLooIds((prev) => {
           const next = new Set(prev);

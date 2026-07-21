@@ -3,9 +3,7 @@ import type { ReactNode } from 'react';
 import type { LineOfOperation } from '../types';
 import { VIEWS } from '../lib/views';
 import type { ViewId } from '../lib/views';
-import {
-  IconZoomIn, IconZoomOut, IconToday, IconFilter, IconExpand, IconPlus,
-} from './icons';
+import { IconToday, IconFilter, IconExpand, IconPlus } from './icons';
 
 /** Small anchored menu that closes on outside click or Escape. */
 const Menu = ({
@@ -36,7 +34,6 @@ interface TimeControlsProps {
   expanded: boolean;
   showAllDeps: boolean;
   onView: (id: ViewId) => void;
-  onZoom: (dir: -1 | 1) => void;
   onToday: () => void;
   onToggleLoo: (id: string) => void;
   onFocusAll: () => void;
@@ -47,7 +44,7 @@ interface TimeControlsProps {
 
 export const TimeControls = ({
   viewId, loos, visibleLooIds, expanded, showAllDeps,
-  onView, onZoom, onToday, onToggleLoo, onFocusAll,
+  onView, onToday, onToggleLoo, onFocusAll,
   onToggleAllDeps, onToggleExpanded, onAdd,
 }: TimeControlsProps) => {
   const [openMenu, setOpenMenu] = useState<'focus' | 'add' | null>(null);
@@ -74,11 +71,6 @@ export const TimeControls = ({
             {v.label}
           </button>
         ))}
-      </div>
-
-      <div className="toolbar-group zoom-group" role="group" aria-label="Zoom">
-        <button type="button" className="icon-btn zoom-btn" onClick={() => onZoom(-1)} title="Zoom out" aria-label="Zoom out"><IconZoomOut size={19} /></button>
-        <button type="button" className="icon-btn zoom-btn" onClick={() => onZoom(1)} title="Zoom in" aria-label="Zoom in"><IconZoomIn size={19} /></button>
       </div>
 
       <div className="filter-pop">

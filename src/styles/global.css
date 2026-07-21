@@ -287,6 +287,9 @@ input, select, textarea { font: inherit; color: var(--te-ink); }
 }
 .toolbar-group .icon-btn { width: 30px; height: 30px; }
 .toolbar-group .btn-quiet { padding: 5px 12px; font-size: var(--te-fs-sm); font-weight: 600; }
+/* Optical centring: the label's visual centre sits a touch above the
+   geometric line box, so the icon gets a 1px lift to match. */
+.toolbar-group .btn-quiet svg { position: relative; top: -1px; }
 .toolbar-spacer { flex: 1; }
 
 .filter-pop { position: relative; }

@@ -55,6 +55,14 @@ export const TimeControls = ({
   return (
     <div className="diagram-toolbar">
       <div className="view-switch" role="group" aria-label="Time range">
+        <button
+          type="button"
+          className="view-today"
+          onClick={onToday}
+          title="Scroll to today"
+        >
+          <IconToday size={13} /> Today
+        </button>
         {VIEWS.map((v) => (
           <button
             type="button"
@@ -68,12 +76,9 @@ export const TimeControls = ({
         ))}
       </div>
 
-      <div className="toolbar-group" role="group" aria-label="Zoom">
-        <button type="button" className="icon-btn" onClick={() => onZoom(-1)} title="Zoom out" aria-label="Zoom out"><IconZoomOut size={15} /></button>
-        <button type="button" className="icon-btn" onClick={() => onZoom(1)} title="Zoom in" aria-label="Zoom in"><IconZoomIn size={15} /></button>
-        <button type="button" className="btn-quiet" onClick={onToday} title="Scroll to today">
-          <IconToday size={14} /> Today
-        </button>
+      <div className="toolbar-group zoom-group" role="group" aria-label="Zoom">
+        <button type="button" className="icon-btn zoom-btn" onClick={() => onZoom(-1)} title="Zoom out" aria-label="Zoom out"><IconZoomOut size={19} /></button>
+        <button type="button" className="icon-btn zoom-btn" onClick={() => onZoom(1)} title="Zoom in" aria-label="Zoom in"><IconZoomIn size={19} /></button>
       </div>
 
       <div className="filter-pop">

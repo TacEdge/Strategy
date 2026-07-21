@@ -138,11 +138,24 @@ export const Diagram = ({
 
   // Guide density steps with the view: monthly to Year, quarterly at 3
   // years, 6-monthly at 5 years — always aligned with the header markers.
+  // January is drawn by the stronger year separator, not a guide.
   const guideTicks = useMemo(() => {
-    if (view.id === '3y') return monthTicks.filter((tk) => tk.month % 3 === 0);
-    if (view.id === '5y') return monthTicks.filter((tk) => tk.month % 6 === 0);
-    return monthTicks;
+    if (view.id === '3y') return monthTicks.filter((tk) => tk.month % 3 === 0 && tk.month !== 0);
+    if (view.id === '5y') return monthTicks.filter((tk) => tk.month === 6);
+    return monthTicks.filter((tk) => tk.month !== 0);
   }, [monthTicks, view.id]);
+
+  // Calendar-year bands: alternate a whisper of tint so years read as the
+  // parent grouping, with a slightly stronger separator at each boundary.
+  const yearBands = useMemo(() => {
+    const bands: { year: number; x0: number; x1: number }[] = [];
+    for (let y = t0.getFullYear(); y <= t1.getFullYear(); y++) {
+      const start = new Date(y, 0, 1) < t0 ? t0 : new Date(y, 0, 1);
+      const end = new Date(y + 1, 0, 1) > t1 ? t1 : new Date(y + 1, 0, 1);
+      bands.push({ year: y, x0: daysBetween(t0, start) * px, x1: daysBetween(t0, end) * px });
+    }
+    return bands;
+  }, [px, t0, t1]);
 
   const weekTicks = useMemo(() => {
     if (!view.showWeeks) return [];
@@ -291,6 +304,14 @@ export const Diagram = ({
         onPointerCancel={onBgPointerUp}
       >
         <div className="timeline" style={{ width, height: totalH }}>
+          {/* calendar-year grouping: alternating bands and boundary separators */}
+          {yearBands.filter((b) => b.year % 2 === 1).map((b) => (
+            <div key={`yb-${b.year}`} className="year-band" style={{ left: b.x0, width: b.x1 - b.x0, top: 0, height: totalH }} />
+          ))}
+          {yearBands.slice(1).map((b) => (
+            <div key={`ys-${b.year}`} className="year-sep" style={{ left: b.x0, top: 0, height: totalH }} />
+          ))}
+
           {/* time header */}
           <div className="time-head" style={{ width }}>
             {visibleTicks.map((tk) => (

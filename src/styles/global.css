@@ -413,7 +413,24 @@ input, select, textarea { font: inherit; color: var(--te-ink); }
   color: var(--te-ink-40);
   white-space: nowrap;
 }
-.month-tick .year { color: var(--te-ink-60); font-weight: 700; }
+.month-tick .year {
+  color: var(--te-ink);
+  font-size: var(--te-fs-xs);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+
+/* Calendar-year grouping */
+.year-band {
+  position: absolute;
+  background: color-mix(in srgb, var(--te-tint) 40%, transparent);
+  pointer-events: none;
+}
+.year-sep {
+  position: absolute;
+  border-left: 1px solid color-mix(in srgb, var(--te-line-2) 90%, transparent);
+  pointer-events: none;
+}
 .week-tick {
   position: absolute; bottom: 0; height: 14px;
   border-left: 1px solid var(--te-line);

@@ -137,6 +137,14 @@ export const Diagram = ({
     ? monthTicks.filter((tk) => tk.month % 3 === 0)
     : monthTicks;
 
+  // Guide density steps with the view: monthly to Year, quarterly at 3
+  // years, 6-monthly at 5 years — always aligned with the header markers.
+  const guideTicks = useMemo(() => {
+    if (view.id === '3y') return monthTicks.filter((tk) => tk.month % 3 === 0);
+    if (view.id === '5y') return monthTicks.filter((tk) => tk.month % 6 === 0);
+    return monthTicks;
+  }, [monthTicks, view.id]);
+
   const weekTicks = useMemo(() => {
     if (!view.showWeeks) return [];
     const ticks: { x: number; label: string }[] = [];
@@ -319,10 +327,10 @@ export const Diagram = ({
           </div>
 
           {/* faint date guides dropping from the month and week markers */}
-          {zoomedIn && monthTicks.map((tk) => (
+          {guideTicks.map((tk) => (
             <div key={`g-${tk.year}-${tk.month}`} className="guide-line" style={{ left: tk.x, top: HEAD_H, height: bodyH }} />
           ))}
-          {zoomedIn && weekTicks.map((tk) => (
+          {weekTicks.map((tk) => (
             <div key={`gw-${tk.x}`} className="guide-line week" style={{ left: tk.x, top: HEAD_H, height: bodyH }} />
           ))}
 

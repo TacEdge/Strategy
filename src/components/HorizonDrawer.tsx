@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { HorizonStatus, Confidence } from '../types';
 import { useStore, useLoos } from '../state/store';
 import { fmtDateLong, fmtDayMonth } from '../lib/time';
@@ -14,9 +14,11 @@ const HZ_STATUS: { value: HorizonStatus; label: string }[] = [
 ];
 
 export const HorizonDrawer = ({
-  horizonId, onClose, onSelectMilestone,
+  horizonId, focusLooId = null, onClose, onSelectMilestone,
 }: {
   horizonId: string;
+  /** Opened from an objective diamond: scroll to and highlight that LOO's objective. */
+  focusLooId?: string | null;
   onClose: () => void;
   onSelectMilestone: (id: string) => void;
 }) => {
@@ -24,6 +26,12 @@ export const HorizonDrawer = ({
   const loos = useLoos();
   const h = state.horizons.find((x) => x.id === horizonId);
   const [confirm, setConfirm] = useState<'archive' | 'delete' | null>(null);
+  const focusRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (focusLooId) focusRef.current?.scrollIntoView({ block: 'center' });
+  }, [focusLooId, horizonId]);
+
   if (!h) return null;
 
   const objectives = loos
@@ -103,7 +111,12 @@ export const HorizonDrawer = ({
         <div className="detail-section">
           <SectionHeading>LOO objectives at this horizon</SectionHeading>
           {objectives.map(({ loo, obj }) => (
-            <div key={obj!.id} className="detail-section" style={{ paddingBottom: 8 }}>
+            <div
+              key={obj!.id}
+              className={`detail-section${focusLooId === loo.id ? ' obj-focus' : ''}`}
+              style={{ paddingBottom: 8 }}
+              ref={focusLooId === loo.id ? focusRef : undefined}
+            >
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <span className="eyebrow" style={{ fontSize: 10 }}>
                   {String(loo.number).padStart(2, '0')} · {loo.name}

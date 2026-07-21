@@ -23,7 +23,7 @@ interface DiagramProps {
   showAllDeps: boolean;
   scrollRef: RefObject<HTMLDivElement | null>;
   onSelectMilestone: (id: string) => void;
-  onSelectHorizon: (id: string) => void;
+  onSelectHorizon: (id: string, focusLooId?: string) => void;
   onMoveMilestone: (id: string, iso: string) => void;
   onMoveHorizon: (id: string, iso: string) => void;
   onToggleFocus: (looId: string) => void;
@@ -97,7 +97,6 @@ export const Diagram = ({
   const zoomedIn = ['6m', 'quarter', 'month'].includes(view.id);
   const showMeta = ['quarter', 'month'].includes(view.id);
   const showTasks = view.id === 'month';
-  const showSummaries = zoomedIn;
 
   const msDrag = useDragDays(
     px,
@@ -215,20 +214,12 @@ export const Diagram = ({
       d.toMilestoneId === selectedMilestoneId || d.fromMilestoneId === selectedMilestoneId);
   }, [state.dependencies, positions, zoomedIn, showAllDeps, selectedMilestoneId]);
 
-  const horizons = useMemo(() => {
-    const list = state.horizons
+  const horizons = useMemo(
+    () => state.horizons
       .filter((h) => !h.archived)
-      .sort((a, b) => a.date.localeCompare(b.date));
-    let lastEnd = -Infinity;
-    let lastRow = 0;
-    return list.map((h) => {
-      const hx = x(h.date);
-      const row = hx - lastEnd < 130 ? (lastRow + 1) % 2 : 0;
-      lastEnd = hx;
-      lastRow = row;
-      return { h, flagTop: row * 24 };
-    });
-  }, [state.horizons, px]); // eslint-disable-line react-hooks/exhaustive-deps
+      .sort((a, b) => a.date.localeCompare(b.date)),
+    [state.horizons],
+  );
 
   // ---- background panning ----
   const panning = useRef<{ startX: number; scroll: number } | null>(null);
@@ -360,18 +351,18 @@ export const Diagram = ({
             </svg>
           )}
 
-          {/* Strategic Horizon spines. The calendar header stays clean: a
-              compact head marker sits at the top of the diagram body, and
-              the line itself is clickable. Select first, then drag the
-              head to move the horizon. */}
-          {horizons.map(({ h, flagTop }) => {
+          {/* Strategic Horizon spines. The calendar header stays clean: one
+              large Endstate diamond sits at the top of the vertical line —
+              its position against the calendar carries the timing. Select
+              first, then drag the diamond to move the horizon. */}
+          {horizons.map((h) => {
             const hzSelected = selectedHorizonId === h.id;
             const dx = hzSelected && hzDrag.drag?.id === h.id ? hzDrag.drag.dx : 0;
             const hx = x(h.date) + dx;
             const forming = h.status === 'forming';
             const title = hzSelected
-              ? `Strategic Horizon: ${h.theme}. Drag to change date.`
-              : `Strategic Horizon: ${h.theme}. Select for detail; select first to move.`;
+              ? `Strategic Horizon: ${h.theme} · ${fmtDayMonth(h.date)} ${parseDate(h.date).getFullYear()}. Drag to change date.`
+              : `Strategic Horizon: ${h.theme} · ${fmtDayMonth(h.date)} ${parseDate(h.date).getFullYear()}. Select for the Endstate.`;
             const label = `Strategic Horizon ${fmtDayMonth(h.date)} ${parseDate(h.date).getFullYear()}: ${h.theme}`;
             return (
               <div key={h.id}>
@@ -390,23 +381,24 @@ export const Diagram = ({
                 />
                 <button
                   type="button"
-                  className={`horizon-head${forming ? ' forming' : ''}${hzSelected ? ' selected' : ''}`}
-                  style={{ left: hx, top: HEAD_H + 5 + flagTop }}
+                  className={`horizon-endstate${forming ? ' forming' : ''}${hzSelected ? ' selected' : ''}`}
+                  style={{ left: hx, top: HEAD_H + 14 }}
                   title={title}
                   aria-label={label}
                   {...(hzSelected
                     ? hzDrag.handlers(h.id)
                     : selectProps(() => onSelectHorizon(h.id)))}
                 >
-                  <span className="hz-icon" aria-hidden />
-                  <span className="hz-date">{fmtDayMonth(h.date)} {parseDate(h.date).getFullYear()}</span>
+                  <span className="endstate-diamond" aria-hidden />
                 </button>
               </div>
             );
           })}
 
-          {/* objective diamonds at each LOO x horizon intersection */}
-          {horizons.map(({ h }) =>
+          {/* Objective diamonds at each LOO x horizon intersection. The
+              short label appears on hover/focus or while the horizon is
+              selected; clicking opens the drawer at that LOO objective. */}
+          {horizons.map((h) =>
             loos.map((loo, laneIdx) => {
               const obj = state.objectives.find((o) => o.horizonId === h.id && o.looId === loo.id);
               if (!obj) return null;
@@ -422,11 +414,11 @@ export const Diagram = ({
                     top: laneTop + laneH * LINE_AT,
                     opacity: laneDim(loo) ? 0.25 : 1,
                   }}
-                  {...selectProps(() => onSelectHorizon(h.id))}
+                  {...selectProps(() => onSelectHorizon(h.id, loo.id))}
                   title={`${loo.name} objective at ${fmtDayMonth(h.date)}: ${obj.statement}`}
                 >
                   <span className="obj-diamond" aria-hidden />
-                  {showSummaries && <span className="obj-summary">{obj.summary}</span>}
+                  <span className="obj-summary">{obj.summary}</span>
                 </button>
               );
             }))}
@@ -537,7 +529,8 @@ export const DiagramLegend = () => (
         {text}
       </span>
     ))}
-    <span className="legend-item"><span className="obj-diamond" /> Horizon objective</span>
+    <span className="legend-item"><span className="endstate-diamond legend-endstate" /> Horizon endstate</span>
+    <span className="legend-item"><span className="obj-diamond" /> LOO objective</span>
     <span className="legend-item"><span className="legend-continues" /> Line continues</span>
   </div>
 );

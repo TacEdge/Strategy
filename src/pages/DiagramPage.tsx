@@ -78,12 +78,16 @@ export const DiagramPage = ({
     setViewId(VIEWS[Math.min(VIEWS.length - 1, Math.max(0, idx - dir))].id);
   };
 
+  const [horizonFocusLooId, setHorizonFocusLooId] = useState<string | null>(null);
+
   const selectMilestone = (id: string) => {
     setSelectedHorizonId(null);
+    setHorizonFocusLooId(null);
     setSelectedMilestoneId((cur) => (cur === id ? null : id));
   };
-  const selectHorizon = (id: string) => {
+  const selectHorizon = (id: string, focusLooId?: string) => {
     setSelectedMilestoneId(null);
+    setHorizonFocusLooId(focusLooId ?? null);
     setSelectedHorizonId(id);
   };
 
@@ -138,8 +142,9 @@ export const DiagramPage = ({
       {selectedHorizonId && (
         <HorizonDrawer
           horizonId={selectedHorizonId}
-          onClose={() => setSelectedHorizonId(null)}
-          onSelectMilestone={(id) => { setSelectedHorizonId(null); setSelectedMilestoneId(id); }}
+          focusLooId={horizonFocusLooId}
+          onClose={() => { setSelectedHorizonId(null); setHorizonFocusLooId(null); }}
+          onSelectMilestone={(id) => { setSelectedHorizonId(null); setHorizonFocusLooId(null); setSelectedMilestoneId(id); }}
         />
       )}
       {addOpen === 'milestone' && (

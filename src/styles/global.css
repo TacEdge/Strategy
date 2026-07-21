@@ -214,7 +214,10 @@ input, select, textarea { font: inherit; color: var(--te-ink); }
 .btn-primary:hover { background: var(--te-forest-hover); }
 .btn-secondary { background: var(--te-card); color: var(--te-ink); border-color: var(--te-line-2); }
 .btn-secondary:hover { background: var(--te-tint); }
-.btn-quiet { background: none; color: var(--te-ink-60); padding: 9px 12px; }
+.btn-quiet {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: none; color: var(--te-ink-60); padding: 9px 12px;
+}
 .btn-quiet:hover { background: var(--te-tint); color: var(--te-ink); }
 .btn-danger { background: var(--te-card); color: var(--te-brick); border-color: var(--te-brick); }
 .btn-danger:hover { background: var(--te-brick-tint); }

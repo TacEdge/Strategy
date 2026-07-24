@@ -34,13 +34,13 @@ export const AddMilestoneModal = ({
     <Modal title="Add milestone" onClose={onClose}>
       <p className="detail-text muted" style={{ fontSize: 14 }}>
         A milestone is a condition that must become true, not an activity.
-        Write the end state: "Fulton Hogan agrees to a defined pilot", not "Meet Fulton Hogan".
+        Write the end state: "Customer agrees to a defined pilot", not "Meet the customer".
       </p>
       <Field label="Condition to become true">
         <input
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          placeholder="e.g. Second design partner agrees to a defined pilot"
+          placeholder="e.g. First reference customer agrees to a defined pilot"
           onKeyDown={(e) => { if (e.key === 'Enter') create(); }}
           autoFocus
         />
@@ -74,7 +74,7 @@ export const AddHorizonModal = ({
   const { dispatch } = useStore();
   const loos = useLoos();
   const [theme, setTheme] = useState('');
-  const [date, setDate] = useState('2028-06-30');
+  const [date, setDate] = useState(toIso(addDays(parseDate(todayIso()), 365)));
 
   const create = () => {
     const t = theme.trim();
@@ -111,7 +111,7 @@ export const AddHorizonModal = ({
         <input
           value={theme}
           onChange={(e) => setTheme(e.target.value)}
-          placeholder="e.g. Scale Beyond Anchoring"
+          placeholder="e.g. Prove the Model"
           onKeyDown={(e) => { if (e.key === 'Enter') create(); }}
           autoFocus
         />

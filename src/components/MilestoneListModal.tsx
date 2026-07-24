@@ -12,6 +12,11 @@ export const MilestoneListModal = ({
 
   return (
     <Modal title="Milestones" onClose={onClose} wide>
+      {ms.length === 0 && (
+        <p className="detail-text muted" style={{ fontSize: 14 }}>
+          No milestones yet. Add the first milestone to begin building the campaign.
+        </p>
+      )}
       {ms.map((m) => {
         const loo = state.loos.find((l) => l.id === m.looId);
         return (

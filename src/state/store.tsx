@@ -191,13 +191,73 @@ export const reducer = (state: CampaignState, action: Action): CampaignState => 
   }
 };
 
+/**
+ * Migration v8 -> v9: rename the default Lines of Operation
+ * (Customers -> Market, Revenue -> Commercial, refreshed sublines) and
+ * delete the notional seeded records. Seeded records are identified by
+ * their fixture ID patterns; user-created records use timestamped IDs
+ * and are preserved with their relationships, ordering and history.
+ */
+const SEED_ID = [/^ms-(mv|pt|cr|sr|cc)-\d+$/, /^dep-\d+$/, /^hz-\d+$/, /^obj-h\d+-/];
+const isSeedId = (id: string) => SEED_ID.some((r) => r.test(id));
+
+const SEEDED_OUTCOMES = [
+  'Fulton Hogan pilot scope agreed in principle',
+  'Technical-lead package decision made and candidates re-engaged',
+  'Pilot pricing structure tested with the design partner',
+];
+
+const migrateV8toV9 = (s: CampaignState): CampaignState => {
+  const removedMilestones = new Set(
+    s.milestones.filter((m) => isSeedId(m.id)).map((m) => m.id),
+  );
+  return {
+    ...s,
+    schemaVersion: 9,
+    campaign: {
+      ...s.campaign,
+      theme: s.campaign.theme === 'Prove the Narrow V2 Model' ? '' : s.campaign.theme,
+      activeHorizonId: isSeedId(s.campaign.activeHorizonId) ? '' : s.campaign.activeHorizonId,
+    },
+    loos: s.loos.map((l) => {
+      // Only rename defaults still carrying the old default name; a LOO the
+      // user renamed or created stays untouched.
+      if (l.id === 'loo-mv' && l.name === 'Customers') {
+        return { ...l, name: 'Market', description: 'Prove demand and secure reference customers.' };
+      }
+      if (l.id === 'loo-cr' && l.name === 'Revenue') {
+        return { ...l, name: 'Commercial', description: 'Convert customer value into repeatable recurring revenue.' };
+      }
+      if (l.id === 'loo-pt' && l.name === 'Product' && l.description === 'Build and validate the platform.') {
+        return { ...l, description: 'Build and validate a trusted field-to-record platform.' };
+      }
+      if (l.id === 'loo-sr' && l.name === 'Partnerships' && l.description === 'Create leverage and routes to market.') {
+        return { ...l, description: 'Create leverage, capability and routes to market.' };
+      }
+      return l;
+    }),
+    horizons: s.horizons.filter((h) => !isSeedId(h.id)),
+    objectives: s.objectives.filter((o) => !isSeedId(o.id) && !isSeedId(o.horizonId)),
+    milestones: s.milestones.filter((m) => !isSeedId(m.id)),
+    dependencies: s.dependencies.filter((d) =>
+      !isSeedId(d.id)
+      && !removedMilestones.has(d.toMilestoneId)
+      && (!d.fromMilestoneId || !removedMilestones.has(d.fromMilestoneId))),
+    weekly: {
+      ...s.weekly,
+      outcomes: s.weekly.outcomes.map((o) => (SEEDED_OUTCOMES.includes(o) ? '' : o)),
+    },
+  };
+};
+
 const load = (): CampaignState => {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return seedState;
     const parsed = JSON.parse(raw) as CampaignState;
-    if (parsed.schemaVersion !== seedState.schemaVersion) return seedState;
-    return parsed;
+    if (parsed.schemaVersion === seedState.schemaVersion) return parsed;
+    if (parsed.schemaVersion === 8) return migrateV8toV9(parsed);
+    return seedState;
   } catch {
     return seedState;
   }

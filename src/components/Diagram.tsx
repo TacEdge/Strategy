@@ -259,6 +259,8 @@ export const Diagram = ({
     onClick: fn,
   });
 
+  const isEmpty = state.milestones.filter((m) => m.status !== 'archived').length === 0;
+
   const laneDim = (loo: LineOfOperation) => focusLooId !== null && focusLooId !== loo.id;
   const nodeOpacity = (loo: LineOfOperation, m: Milestone) => {
     if (laneDim(loo)) return 0.25;
@@ -531,6 +533,12 @@ export const Diagram = ({
           }))}
         </div>
       </div>
+
+      {isEmpty && (
+        <div className="diagram-empty" aria-live="polite">
+          No milestones yet. Add the first milestone to begin building the campaign.
+        </div>
+      )}
     </div>
   );
 };

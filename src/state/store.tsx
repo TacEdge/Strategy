@@ -5,7 +5,6 @@ import type { ReactNode, Dispatch } from 'react';
 import type {
   CampaignState, Milestone, LineOfOperation, StrategicHorizon,
   HorizonObjective, Dependency, ChangeHistoryEntry, WeeklyPlan,
-  FinanceAssumptions,
 } from '../types';
 import { seedState } from '../data/seed';
 import { nowStamp, fmtDate } from '../lib/time';
@@ -43,7 +42,6 @@ export type Action =
   | { type: 'dependency/add'; dependency: Dependency }
   | { type: 'dependency/remove'; id: string }
   | { type: 'weekly/update'; patch: Partial<WeeklyPlan> }
-  | { type: 'finance/update'; patch: Partial<FinanceAssumptions> }
   | { type: 'campaign/reset' };
 
 const withHistory = (m: Milestone, summary: string): Milestone => ({
@@ -182,8 +180,6 @@ export const reducer = (state: CampaignState, action: Action): CampaignState => 
     case 'dependency/remove':
       return { ...state, dependencies: state.dependencies.filter((d) => d.id !== action.id) };
 
-    case 'finance/update':
-      return { ...state, finance: { ...state.finance, ...action.patch } };
     case 'weekly/update':
       return { ...state, weekly: { ...state.weekly, ...action.patch } };
 

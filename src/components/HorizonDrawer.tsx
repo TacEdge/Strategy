@@ -2,8 +2,6 @@ import { useEffect, useRef, useState } from 'react';
 import type { HorizonStatus, Confidence } from '../types';
 import { useStore, useLoos } from '../state/store';
 import { fmtDateLong, fmtDayMonth } from '../lib/time';
-import { projectCash, cashAt, fmtMoney } from '../lib/finance';
-import { TIMELINE_END } from '../lib/views';
 import {
   ConfidenceMeter, ConfirmDialog, Field, SectionHeading, CONFIDENCE_LABEL, StatusBadge,
 } from './ui';
@@ -177,57 +175,6 @@ export const HorizonDrawer = ({
             })}
           </div>
         )}
-
-        <div className="detail-section">
-          <SectionHeading>Financial targets at this horizon</SectionHeading>
-          <div className="meta-grid">
-            <Field label="Revenue target $/mo">
-              <input
-                type="number"
-                min={0}
-                value={h.targetRevenueMonthly ?? ''}
-                placeholder="0"
-                onChange={(e) => patch({ targetRevenueMonthly: e.target.value === '' ? undefined : Math.max(0, Number(e.target.value)) })}
-              />
-            </Field>
-            <Field label="Cash floor $">
-              <input
-                type="number"
-                min={0}
-                value={h.targetCashFloor ?? ''}
-                placeholder="0"
-                onChange={(e) => patch({ targetCashFloor: e.target.value === '' ? undefined : Math.max(0, Number(e.target.value)) })}
-              />
-            </Field>
-          </div>
-          {(() => {
-            const points = projectCash(state, TIMELINE_END);
-            const at = cashAt(points, h.date);
-            const revenueOk = h.targetRevenueMonthly === undefined || at.revenueMonthly >= h.targetRevenueMonthly;
-            const cashOk = h.targetCashFloor === undefined || at.cash >= h.targetCashFloor;
-            return (
-              <div className="fin-projection">
-                <span className="fin-line">
-                  Projected at {fmtDayMonth(h.date)}: {fmtMoney(at.revenueMonthly)}/mo revenue · {fmtMoney(at.cash)} cash
-                </span>
-                {h.targetRevenueMonthly !== undefined && (
-                  <span className={`fin-line ${revenueOk ? 'ok' : 'short'}`}>
-                    Revenue {revenueOk
-                      ? 'meets target'
-                      : `short ${fmtMoney(h.targetRevenueMonthly - at.revenueMonthly)}/mo`} (target {fmtMoney(h.targetRevenueMonthly)}/mo)
-                  </span>
-                )}
-                {h.targetCashFloor !== undefined && (
-                  <span className={`fin-line ${cashOk ? 'ok' : 'short'}`}>
-                    Cash {cashOk
-                      ? 'above floor'
-                      : `below floor by ${fmtMoney(h.targetCashFloor - at.cash)}`} (floor {fmtMoney(h.targetCashFloor)})
-                  </span>
-                )}
-              </div>
-            );
-          })()}
-        </div>
 
         <div className="detail-section">
           <SectionHeading>Key assumptions</SectionHeading>

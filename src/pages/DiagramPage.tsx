@@ -8,7 +8,6 @@ import { Diagram, DiagramLegend } from '../components/Diagram';
 import { MilestoneDrawer } from '../components/MilestoneDrawer';
 import { HorizonDrawer } from '../components/HorizonDrawer';
 import { AddMilestoneModal, AddHorizonModal } from '../components/AddModals';
-import { FinanceModal } from '../components/FinanceModal';
 import { LooManager } from '../components/LooManager';
 import { MilestoneListModal } from '../components/MilestoneListModal';
 
@@ -47,7 +46,6 @@ export const DiagramPage = ({
       ? initialHorizonId : null),
   );
   const [addOpen, setAddOpen] = useState<'milestone' | 'horizon' | null>(null);
-  const [financeOpen, setFinanceOpen] = useState(false);
   const scrollRef = useRef<HTMLDivElement | null>(null);
 
   const view = viewById(viewId);
@@ -128,7 +126,6 @@ export const DiagramPage = ({
         onMoveMilestone={(id, iso) => dispatch({ type: 'milestone/move-date', id, targetDate: iso })}
         onMoveHorizon={(id, iso) => dispatch({ type: 'horizon/update', id, patch: { date: iso } })}
         onToggleFocus={(id) => setFocusLooId((cur) => (cur === id ? null : id))}
-        onEditFinance={() => setFinanceOpen(true)}
       />
 
       <DiagramLegend />
@@ -155,8 +152,6 @@ export const DiagramPage = ({
       {addOpen === 'horizon' && (
         <AddHorizonModal onClose={() => setAddOpen(null)} onCreated={selectHorizon} />
       )}
-
-      {financeOpen && <FinanceModal onClose={() => setFinanceOpen(false)} />}
 
       {modal === 'loos' && <LooManager onClose={onCloseModal} />}
       {modal === 'milestones' && (

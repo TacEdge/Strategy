@@ -61,9 +61,6 @@ export interface StrategicHorizon {
   risks: string[];
   assessment: string;
   archived: boolean;
-  /** Financial targets at this horizon. */
-  targetRevenueMonthly?: number;
-  targetCashFloor?: number;
 }
 
 export interface Task {
@@ -135,18 +132,6 @@ export interface Milestone {
   founderAction: boolean;
   major: boolean; // shown in year view and wider
   history: ChangeHistoryEntry[];
-  /** Recurring revenue (NZD/month) switched on when this becomes true. */
-  revenueMonthly?: number;
-  /** One-off revenue (NZD) received at the target date. */
-  revenueOneOff?: number;
-  /** One-off cost (NZD) to reach this milestone. */
-  costToReach?: number;
-}
-
-/** Campaign-level cash assumptions driving the projected runway line. */
-export interface FinanceAssumptions {
-  startingCash: number; // NZD, as of today
-  monthlyBurn: number; // NZD per month, before milestone revenue
 }
 
 export interface WeeklyPlan {
@@ -164,6 +149,5 @@ export interface CampaignState {
   objectives: HorizonObjective[];
   milestones: Milestone[];
   dependencies: Dependency[];
-  finance: FinanceAssumptions;
   weekly: WeeklyPlan;
 }

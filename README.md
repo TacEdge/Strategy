@@ -27,6 +27,11 @@ npm run preview    # serve the build
   objects with purpose, importance, success criteria, dependencies, risks,
   decisions, tasks, evidence, notes, next best action and change history.
 - **Dependencies** — cross-LOO, drawn as restrained curves on the diagram.
+- **Financial baseline** — milestones carry optional revenue and cost
+  figures, horizons carry revenue and cash-floor targets, and a projected
+  cash strip under the lanes (starting cash minus burn plus milestone
+  revenue) shows the runway consequence of the plan. Strategic-scale
+  finance, not accounting.
 ## Views
 
 - **LOO Diagram** (`#/`, the landing route) — the strategic map: lanes,

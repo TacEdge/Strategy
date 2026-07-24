@@ -39,7 +39,7 @@ const M = (
 });
 
 export const seedState: CampaignState = {
-  schemaVersion: 8,
+  schemaVersion: 9,
 
   campaign: {
     id: 'campaign-1',
@@ -101,6 +101,8 @@ export const seedState: CampaignState = {
       ],
       assessment:
         'The horizon holds if the Fulton Hogan pilot is agreed by mid September and the technical lead is secured. Both are live this quarter.',
+      targetRevenueMonthly: 5000,
+      targetCashFloor: 60000,
       archived: false,
     },
     {
@@ -120,6 +122,8 @@ export const seedState: CampaignState = {
       ],
       assessment:
         'Partially developed. Objectives are directional until Horizon 1 evidence confirms the model.',
+      targetRevenueMonthly: 20000,
+      targetCashFloor: 40000,
       archived: false,
     },
   ],
@@ -205,6 +209,7 @@ export const seedState: CampaignState = {
       notes: 'Sponsor is engaged. The open question is which project hosts the pilot.',
     }),
     M('ms-mv-4', 'loo-mv', 'First live V2 design partner', '2026-11-16', 'future', 'medium', 'Mike', 0, {
+      revenueOneOff: 8000,
       shortLabel: 'V2 Partner',
       major: true,
       purpose: 'A design partner runs the V2 workflow on live production work, not a trial environment.',
@@ -246,6 +251,7 @@ export const seedState: CampaignState = {
       ],
     }),
     M('ms-pt-3', 'loo-pt', 'Field-ready anchoring workflow', '2026-09-30', 'at-risk', 'medium', 'Technical Lead', 35, {
+      costToReach: 8000,
       shortLabel: 'Field Ready',
       major: true,
       purpose: 'The anchoring workflow works reliably in field conditions: offline, gloves, glare, interruptions.',
@@ -294,6 +300,7 @@ export const seedState: CampaignState = {
       nextBestAction: 'Test the pilot pricing structure with the design partner.',
     }),
     M('ms-cr-2', 'loo-cr', 'First paid V2 pilot', '2026-10-30', 'future', 'medium', 'Mike', 0, {
+      revenueOneOff: 15000,
       shortLabel: 'Paid Pilot',
       major: true,
       purpose: 'A customer pays for a V2 pilot under the agreed pricing model.',
@@ -301,6 +308,7 @@ export const seedState: CampaignState = {
       successCriteria: ['Invoice issued and paid for a defined pilot.'],
     }),
     M('ms-cr-3', 'loo-cr', 'First paid renewal', '2027-02-15', 'future', 'low', 'Mike', 0, {
+      revenueMonthly: 4500,
       shortLabel: 'First Renewal',
       major: true,
       purpose: 'A pilot customer renews into ongoing paid use.',
@@ -308,12 +316,14 @@ export const seedState: CampaignState = {
       successCriteria: ['Renewal agreed at or above pilot pricing.', 'Customer value evidence captured.'],
     }),
     M('ms-cr-4', 'loo-cr', 'Pilot-to-subscription proven', '2027-04-30', 'future', 'low', 'Mike', 0, {
+      revenueMonthly: 9000,
       shortLabel: 'Subscription Proven',
       purpose: 'The pilot-to-subscription conversion path is documented and has worked at least twice.',
       strategicImportance: 'Turns one-off wins into a repeatable commercial motion.',
       successCriteria: ['Two conversions through the same documented path.'],
     }),
     M('ms-cr-5', 'loo-cr', 'Sales motion v1', '2027-06-30', 'future', 'low', 'Mike', 0, {
+      revenueMonthly: 6000,
       shortLabel: 'Sales Motion',
       major: true,
       purpose: 'A documented, repeatable sales motion from introduction to paid pilot.',
@@ -365,6 +375,7 @@ export const seedState: CampaignState = {
       evidence: [{ id: 'ev-cc1-1', text: 'Technical lead profile v1 agreed.', date: '2026-05-15' }],
     }),
     M('ms-cc-2', 'loo-cc', 'Tech lead secured', '2026-09-01', 'blocked', 'low', 'Mike', 20, {
+      costToReach: 15000,
       shortLabel: 'Lead Secured',
       major: true, founderAction: true,
       purpose: 'A technical lead is committed and started, owning V2 delivery.',
@@ -431,6 +442,11 @@ export const seedState: CampaignState = {
     { id: 'dep-12', toMilestoneId: 'ms-sr-3', fromMilestoneId: 'ms-mv-3', note: 'Pathway qualification follows the pilot agreement.' },
     { id: 'dep-13', toMilestoneId: 'ms-mv-6', fromMilestoneId: 'ms-mv-5', note: 'Reference proof anchors the third customer.' },
   ],
+
+  finance: {
+    startingCash: 180000,
+    monthlyBurn: 22000,
+  },
 
   weekly: {
     outcomes: [

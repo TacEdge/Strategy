@@ -149,6 +149,51 @@ export const MilestoneDrawer = ({
           </div>
         )}
 
+        <div className="detail-section">
+          <SectionHeading>Financials</SectionHeading>
+          <div className="meta-grid" style={{ gridTemplateColumns: '1fr 1fr 1fr' }}>
+            <Field label="One-off revenue $">
+              <input
+                type="number"
+                min={0}
+                value={m.revenueOneOff ?? ''}
+                placeholder="0"
+                onChange={(e) => patch(
+                  { revenueOneOff: e.target.value === '' ? undefined : Math.max(0, Number(e.target.value)) },
+                  'Financials updated.',
+                )}
+              />
+            </Field>
+            <Field label="Monthly revenue $">
+              <input
+                type="number"
+                min={0}
+                value={m.revenueMonthly ?? ''}
+                placeholder="0"
+                onChange={(e) => patch(
+                  { revenueMonthly: e.target.value === '' ? undefined : Math.max(0, Number(e.target.value)) },
+                  'Financials updated.',
+                )}
+              />
+            </Field>
+            <Field label="Cost to reach $">
+              <input
+                type="number"
+                min={0}
+                value={m.costToReach ?? ''}
+                placeholder="0"
+                onChange={(e) => patch(
+                  { costToReach: e.target.value === '' ? undefined : Math.max(0, Number(e.target.value)) },
+                  'Financials updated.',
+                )}
+              />
+            </Field>
+          </div>
+          <p className="detail-text muted" style={{ fontSize: 12 }}>
+            Feeds the projected cash line. Monthly revenue accrues from the target date.
+          </p>
+        </div>
+
         {m.purpose && (
           <div className="detail-section">
             <SectionHeading>Purpose</SectionHeading>

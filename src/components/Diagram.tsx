@@ -8,10 +8,13 @@ import {
 } from '../lib/time';
 import { MarkerIcon } from './icons';
 import { STATUS_LABEL, ConfidenceMeter } from './ui';
+import { projectCash, cashOutIso, fmtCashOut, fmtMoney } from '../lib/finance';
 
 const HEAD_H = 40;
 /** The LOO line runs at this fraction of lane height; labels hang below. */
 const LINE_AT = 0.42;
+/** Height of the financial baseline strip under the lanes. */
+const STRIP_H = 96;
 
 interface DiagramProps {
   state: CampaignState;
@@ -28,6 +31,7 @@ interface DiagramProps {
   onMoveMilestone: (id: string, iso: string) => void;
   onMoveHorizon: (id: string, iso: string) => void;
   onToggleFocus: (looId: string) => void;
+  onEditFinance: () => void;
 }
 
 interface Placed {
@@ -81,7 +85,7 @@ const useDragDays = (
 
 export const Diagram = ({
   state, loos, view, selectedMilestoneId, selectedHorizonId, focusLooId, showAllDeps, showLabels, scrollRef,
-  onSelectMilestone, onSelectHorizon, onMoveMilestone, onMoveHorizon, onToggleFocus,
+  onSelectMilestone, onSelectHorizon, onMoveMilestone, onMoveHorizon, onToggleFocus, onEditFinance,
 }: DiagramProps) => {
   const t0 = parseDate(TIMELINE_START);
   const t1 = parseDate(TIMELINE_END);
@@ -90,7 +94,8 @@ export const Diagram = ({
   const x = (iso: string) => daysBetween(t0, parseDate(iso)) * px;
   const laneH = view.laneHeight;
   const bodyH = loos.length * laneH;
-  const totalH = HEAD_H + bodyH;
+  const gridH = bodyH + STRIP_H; // vertical structures run through the cash strip
+  const totalH = HEAD_H + gridH;
   const today = todayIso();
 
   // Semantic density by view: dots -> labelled dots -> dates/owners -> tasks.
@@ -157,6 +162,26 @@ export const Diagram = ({
     }
     return bands;
   }, [px, t0, t1]);
+
+  // ---- projected cash line (financial baseline strip) ----
+  const cashPoints = useMemo(
+    () => projectCash(state, TIMELINE_END),
+    [state.milestones, state.finance], // eslint-disable-line react-hooks/exhaustive-deps
+  );
+  const cashOut = cashOutIso(cashPoints);
+  const cashGeom = useMemo(() => {
+    const values = cashPoints.map((p) => p.cash);
+    const dMax = Math.max(...values, state.finance.startingCash) * 1.08;
+    const dMin = Math.min(0, ...values) * 1.15;
+    const padT = 12;
+    const padB = 10;
+    const yOf = (v: number) => padT + ((dMax - v) / (dMax - dMin || 1)) * (STRIP_H - padT - padB);
+    const line = cashPoints.map((p) => `${x(p.iso).toFixed(1)},${yOf(p.cash).toFixed(1)}`).join(' ');
+    const x0 = x(cashPoints[0].iso);
+    const xn = x(cashPoints[cashPoints.length - 1].iso);
+    const area = `${x0},${yOf(0)} ${line} ${xn},${yOf(0)}`;
+    return { yOf, line, area, zeroY: yOf(0) };
+  }, [cashPoints, px, state.finance.startingCash]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const weekTicks = useMemo(() => {
     if (!view.showWeeks) return [];
@@ -293,6 +318,18 @@ export const Diagram = ({
             <span className="lane-desc">{loo.description}</span>
           </div>
         ))}
+        <div className="lane-label strip-rail" style={{ height: STRIP_H }}>
+          <span className="rail-title">Cash · Projected</span>
+          <span className="strip-rail-line">
+            {fmtMoney(state.finance.startingCash)} today · burn {fmtMoney(state.finance.monthlyBurn)}/mo
+          </span>
+          <span className="strip-rail-line strong">
+            {cashOut ? `Cash out ${fmtCashOut(cashPoints)}` : 'Runway beyond 2031'}
+          </span>
+          <button type="button" className="strip-assumptions" onClick={onEditFinance}>
+            Edit assumptions
+          </button>
+        </div>
       </div>
 
       {/* Scrollable timeline */}
@@ -341,14 +378,31 @@ export const Diagram = ({
 
           {/* faint date guides dropping from the month and week markers */}
           {guideTicks.map((tk) => (
-            <div key={`g-${tk.year}-${tk.month}`} className="guide-line" style={{ left: tk.x, top: HEAD_H, height: bodyH }} />
+            <div key={`g-${tk.year}-${tk.month}`} className="guide-line" style={{ left: tk.x, top: HEAD_H, height: gridH }} />
           ))}
           {weekTicks.map((tk) => (
-            <div key={`gw-${tk.x}`} className="guide-line week" style={{ left: tk.x, top: HEAD_H, height: bodyH }} />
+            <div key={`gw-${tk.x}`} className="guide-line week" style={{ left: tk.x, top: HEAD_H, height: gridH }} />
           ))}
 
+          {/* financial baseline strip: projected cash on the same time axis */}
+          <div className="cash-strip" style={{ top: HEAD_H + bodyH, height: STRIP_H, width }}>
+            <svg width={width} height={STRIP_H} aria-hidden>
+              <polygon className="cash-area" points={cashGeom.area} />
+              <line className="cash-zero" x1={x(cashPoints[0].iso)} y1={cashGeom.zeroY} x2={width} y2={cashGeom.zeroY} />
+              <polyline className="cash-line" points={cashGeom.line} />
+              {cashOut && (
+                <circle className="cash-out-dot" cx={x(cashOut)} cy={cashGeom.zeroY} r={4} />
+              )}
+            </svg>
+            {cashOut && (
+              <span className="cash-out-label" style={{ left: x(cashOut) + 8, top: cashGeom.zeroY - 18 }}>
+                Cash out · {fmtCashOut(cashPoints)}
+              </span>
+            )}
+          </div>
+
           {/* today marker */}
-          <div className="today-line" style={{ left: x(today), top: HEAD_H - 20, height: bodyH + 20 }}>
+          <div className="today-line" style={{ left: x(today), top: HEAD_H - 20, height: gridH + 20 }}>
             <span className="today-chip">Today</span>
           </div>
 
@@ -390,12 +444,12 @@ export const Diagram = ({
               <div key={h.id}>
                 <div
                   className={`horizon-line${forming ? ' forming' : ''}${hzSelected ? ' selected' : ''}`}
-                  style={{ left: hx, top: HEAD_H, height: bodyH }}
+                  style={{ left: hx, top: HEAD_H, height: gridH }}
                 />
                 <button
                   type="button"
                   className="horizon-hit"
-                  style={{ left: hx - 5, top: HEAD_H, height: bodyH }}
+                  style={{ left: hx - 5, top: HEAD_H, height: gridH }}
                   title={title}
                   aria-hidden
                   tabIndex={-1}

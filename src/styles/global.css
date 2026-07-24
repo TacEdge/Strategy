@@ -679,6 +679,57 @@ input, select, textarea { font: inherit; color: var(--te-ink); }
   padding: 0 4px;
 }
 
+/* Financial baseline strip: projected cash under the LOO lanes */
+.cash-strip {
+  position: absolute; left: 0; z-index: 7;
+  border-top: 1px solid var(--te-line-2);
+  pointer-events: none;
+}
+.cash-line { fill: none; stroke: var(--te-forest); stroke-width: 1.6; }
+.cash-area { fill: color-mix(in srgb, var(--te-sage-tint) 45%, transparent); stroke: none; }
+.cash-zero { stroke: var(--te-ink-40); stroke-width: 1; stroke-dasharray: 3 3; opacity: 0.6; }
+.cash-out-dot { fill: var(--te-brick); }
+.cash-out-label {
+  position: absolute;
+  font-family: var(--te-mono);
+  font-size: var(--te-fs-2xs);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--te-brick);
+  white-space: nowrap;
+  background: color-mix(in srgb, var(--te-card) 85%, transparent);
+  border-radius: var(--te-r-pill);
+  padding: 0 6px;
+}
+
+.lane-label.strip-rail {
+  border-top: 1px solid var(--te-line-2);
+  border-bottom: none;
+  gap: 2px;
+}
+.strip-rail-line { font-size: var(--te-fs-xs); color: var(--te-ink-40); line-height: 1.4; }
+.strip-rail-line.strong { color: var(--te-ink); font-weight: 600; }
+.strip-assumptions {
+  font-size: var(--te-fs-xs);
+  font-weight: 600;
+  color: var(--te-forest);
+  background: none; border: none; padding: 0;
+  cursor: pointer;
+  text-align: left;
+}
+.strip-assumptions:hover { text-decoration: underline; }
+
+/* Horizon drawer projection readout */
+.fin-projection {
+  display: flex; flex-direction: column; gap: 3px;
+  background: var(--te-tint);
+  border-radius: var(--te-r-md);
+  padding: 8px 12px;
+}
+.fin-line { font-size: var(--te-fs-sm); color: var(--te-ink-60); line-height: 1.45; }
+.fin-line.ok { color: var(--te-forest); font-weight: 600; }
+.fin-line.short { color: var(--te-ochre); font-weight: 600; }
+
 /* Dependency layer: shown for the selected chain only */
 .dep-layer { position: absolute; inset: 0; z-index: 6; pointer-events: none; overflow: visible; }
 .dep-path { fill: none; stroke: var(--te-olive); stroke-width: 1.2; opacity: 0.4; }

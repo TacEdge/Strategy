@@ -9,7 +9,6 @@ import { MilestoneDrawer } from '../components/MilestoneDrawer';
 import { HorizonDrawer } from '../components/HorizonDrawer';
 import { AddMilestoneModal, AddHorizonModal } from '../components/AddModals';
 import { LooManager } from '../components/LooManager';
-import { MilestoneListModal } from '../components/MilestoneListModal';
 
 export const DiagramPage = ({
   expanded, onToggleExpanded, onOpenMilestonePage,
@@ -22,7 +21,7 @@ export const DiagramPage = ({
   /** Deep-link selection from the URL; the app otherwise opens neutral. */
   initialMilestoneId?: string | null;
   initialHorizonId?: string | null;
-  modal: 'loos' | 'milestones' | null;
+  modal: 'loos' | null;
   onCloseModal: () => void;
 }) => {
   const { state, dispatch } = useStore();
@@ -154,9 +153,6 @@ export const DiagramPage = ({
       )}
 
       {modal === 'loos' && <LooManager onClose={onCloseModal} />}
-      {modal === 'milestones' && (
-        <MilestoneListModal onClose={onCloseModal} onOpen={onOpenMilestonePage} />
-      )}
     </div>
   );
 };

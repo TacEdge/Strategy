@@ -6,7 +6,7 @@ import type { CampaignState } from '../types';
  * campaign starts empty and real data is added by the user.
  */
 export const seedState: CampaignState = {
-  schemaVersion: 9,
+  schemaVersion: 10,
 
   campaign: {
     id: 'campaign-1',

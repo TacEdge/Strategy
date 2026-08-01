@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
-import type { Milestone, MilestoneStatus, Confidence } from '../types';
+import type { Milestone, MilestoneStatus, Confidence, MilestonePriority } from '../types';
 import { useStore, useLoos } from '../state/store';
 import { fmtDate } from '../lib/time';
 import {
   StatusBadge, ConfidenceMeter, ProgressBar, ConfirmDialog, Field, SectionHeading,
-  STATUS_LABEL, CONFIDENCE_LABEL,
+  STATUS_LABEL, CONFIDENCE_LABEL, PRIORITY_LABEL,
 } from './ui';
 import { IconClose, IconCopy, IconArchive, IconTrash, IconEdit } from './icons';
 
@@ -93,6 +93,19 @@ export const MilestoneDrawer = ({
               onChange={(e) => patch({ status: e.target.value as MilestoneStatus })}
             >
               {EDIT_STATUSES.map((s) => <option key={s} value={s}>{STATUS_LABEL[s]}</option>)}
+            </select>
+          </Field>
+          <Field label="Priority">
+            <select
+              value={m.priority}
+              onChange={(e) => patch(
+                { priority: e.target.value as MilestonePriority },
+                `Priority set to ${e.target.value}.`,
+              )}
+            >
+              {(['critical', 'important', 'routine'] as MilestonePriority[]).map((pr) => (
+                <option key={pr} value={pr}>{PRIORITY_LABEL[pr]}</option>
+              ))}
             </select>
           </Field>
           <Field label="Confidence">

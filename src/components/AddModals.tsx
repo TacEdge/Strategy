@@ -20,6 +20,7 @@ export const AddMilestoneModal = ({
     const id = newId('ms');
     const milestone: Milestone = {
       id, title: t, looId, targetDate: date, status: 'future', confidence: 'medium',
+      priority: 'important',
       owner, progress: 0, purpose: '', strategicImportance: '', successCriteria: [],
       risks: [], decisions: [], tasks: [], evidence: [], notes: '', nextBestAction: '',
       founderAction: false, major: false,

@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import type { ReactNode } from 'react';
-import type { Confidence, MilestoneStatus } from '../types';
+import type { Confidence, MilestoneStatus, MilestonePriority } from '../types';
 import { statusIcon } from './icons';
 
 export const STATUS_LABEL: Record<MilestoneStatus, string> = {
@@ -17,6 +17,12 @@ export const CONFIDENCE_LABEL: Record<Confidence, string> = {
   high: 'High',
   medium: 'Medium',
   low: 'Low',
+};
+
+export const PRIORITY_LABEL: Record<MilestonePriority, string> = {
+  critical: 'Critical',
+  important: 'Important',
+  routine: 'Routine',
 };
 
 export const StatusBadge = ({ status, compact = false }: { status: MilestoneStatus; compact?: boolean }) => (

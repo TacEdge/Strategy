@@ -15,6 +15,9 @@ export type MilestoneStatus =
 
 export type Confidence = 'high' | 'medium' | 'low';
 
+/** Command-assigned priority band; ordering within a band is automatic. */
+export type MilestonePriority = 'critical' | 'important' | 'routine';
+
 export type HorizonStatus = 'on-track' | 'at-risk' | 'forming' | 'archived';
 
 export interface Vision {
@@ -118,6 +121,7 @@ export interface Milestone {
   targetDate: string; // ISO date
   status: MilestoneStatus;
   confidence: Confidence;
+  priority: MilestonePriority;
   owner: string;
   progress: number; // 0..100
   purpose: string;

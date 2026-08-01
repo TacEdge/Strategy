@@ -250,13 +250,27 @@ const migrateV8toV9 = (s: CampaignState): CampaignState => {
   };
 };
 
+/**
+ * Migration v9 -> v10: milestones gain a command-assigned priority band.
+ * Existing milestones default to Important; everything else is untouched.
+ */
+const migrateV9toV10 = (s: CampaignState): CampaignState => ({
+  ...s,
+  schemaVersion: 10,
+  milestones: s.milestones.map((m) => {
+    const prior = (m as Partial<Milestone>).priority;
+    return { ...m, priority: prior ?? 'important' };
+  }),
+});
+
 const load = (): CampaignState => {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return seedState;
     const parsed = JSON.parse(raw) as CampaignState;
     if (parsed.schemaVersion === seedState.schemaVersion) return parsed;
-    if (parsed.schemaVersion === 8) return migrateV8toV9(parsed);
+    if (parsed.schemaVersion === 9) return migrateV9toV10(parsed);
+    if (parsed.schemaVersion === 8) return migrateV9toV10(migrateV8toV9(parsed));
     return seedState;
   } catch {
     return seedState;

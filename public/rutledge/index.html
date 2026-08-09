@@ -1,0 +1,1121 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rutledge Drilling — Pilot Canvas · TACEDGE</title>
+<link rel="icon" href="../brand/app-icon-192.png">
+<style>
+  @font-face { font-family: 'Play'; src: url('fonts/play-700.woff2') format('woff2'); font-weight: 700; font-display: swap; }
+  @font-face { font-family: 'Be Vietnam Pro'; src: url('fonts/be-vietnam-pro-400.woff2') format('woff2'); font-weight: 400; font-display: swap; }
+  @font-face { font-family: 'Be Vietnam Pro'; src: url('fonts/be-vietnam-pro-600.woff2') format('woff2'); font-weight: 600; font-display: swap; }
+  @font-face { font-family: 'JetBrains Mono'; src: url('fonts/jetbrains-mono-500.woff2') format('woff2'); font-weight: 500; font-display: swap; }
+
+  :root {
+    --paper: #FAFAF6;
+    --card: #FFFFFF;
+    --ink: #20251E;
+    --ink-2: #5B6253;
+    --ink-3: #8A8F80;
+    --line: #DDDCD2;
+    --line-2: #ECEBE2;
+    --forest: #112411;
+    --olive: #6E7D5C;
+    --sage: #E6EBD9;
+    --sage-2: #F2F4EA;
+    --cream: #F7F5EC;
+    --warn: #9E3B2E;
+    --r: 3px;
+    --fs: 15px;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { font-size: var(--fs); scroll-behavior: smooth; }
+  body {
+    font-family: 'Be Vietnam Pro', -apple-system, sans-serif;
+    background: var(--paper); color: var(--ink);
+    line-height: 1.45;
+  }
+  body.meeting { --fs: 17px; }
+
+  .mono { font-family: 'JetBrains Mono', monospace; font-weight: 500; text-transform: uppercase; letter-spacing: 0.12em; }
+
+  /* ---------- header ---------- */
+  header.top {
+    position: sticky; top: 0; z-index: 50;
+    background: var(--forest); color: var(--cream);
+    display: flex; align-items: center; gap: 14px;
+    padding: 9px 18px;
+  }
+  header.top .brand { font-family: 'JetBrains Mono', monospace; font-weight: 500; letter-spacing: 0.22em; font-size: 0.8rem; }
+  header.top .title { flex: 1; text-align: center; font-family: 'Play', sans-serif; font-weight: 700; font-size: 1.02rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  header.top .hctl { display: flex; align-items: center; gap: 8px; flex-wrap: nowrap; }
+  header.top input[type="date"] {
+    background: transparent; border: 1px solid rgba(247,245,236,0.35); color: var(--cream);
+    border-radius: var(--r); padding: 3px 6px; font: inherit; font-size: 0.78rem; color-scheme: dark;
+  }
+  .badge-scoping {
+    font-family: 'JetBrains Mono', monospace; font-size: 0.62rem; letter-spacing: 0.14em;
+    border: 1px solid #B2B594; color: #B2B594; border-radius: 999px; padding: 2px 9px;
+  }
+  .hbtn {
+    background: rgba(247,245,236,0.08); border: 1px solid rgba(247,245,236,0.3); color: var(--cream);
+    font: inherit; font-size: 0.78rem; padding: 4px 10px; border-radius: var(--r); cursor: pointer;
+  }
+  .hbtn:hover { background: rgba(247,245,236,0.18); }
+  .hbtn.primary { background: var(--cream); color: var(--forest); border-color: var(--cream); font-weight: 600; }
+  .savestate { font-size: 0.7rem; color: #B2B594; white-space: nowrap; min-width: 92px; text-align: right; }
+
+  nav.steps {
+    position: sticky; top: 46px; z-index: 40;
+    background: var(--card); border-bottom: 1px solid var(--line);
+    display: flex; overflow-x: auto; padding: 0 10px;
+  }
+  nav.steps a {
+    display: block; padding: 9px 13px; text-decoration: none; color: var(--ink-2);
+    font-family: 'JetBrains Mono', monospace; font-size: 0.68rem; letter-spacing: 0.1em;
+    border-bottom: 2px solid transparent; white-space: nowrap;
+  }
+  nav.steps a .n { color: var(--olive); margin-right: 5px; }
+  nav.steps a.active { color: var(--forest); border-bottom-color: var(--forest); font-weight: 500; }
+  body.meeting nav.steps a { padding: 12px 15px; font-size: 0.74rem; }
+
+  /* ---------- layout ---------- */
+  main { max-width: 1180px; margin: 0 auto; padding: 26px 22px 90px; }
+  section.canvas { padding: 26px 0 10px; border-bottom: 1px solid var(--line); scroll-margin-top: 96px; }
+  section.canvas:last-of-type { border-bottom: none; }
+  .sechead { display: flex; align-items: baseline; gap: 12px; margin-bottom: 4px; }
+  .sechead .num { font-family: 'JetBrains Mono', monospace; font-weight: 500; color: var(--olive); font-size: 0.8rem; }
+  .sechead h2 { font-family: 'Play', sans-serif; font-weight: 700; font-size: 1.45rem; color: var(--forest); }
+  .prompt { color: var(--ink-2); font-size: 0.94rem; margin-bottom: 16px; font-style: italic; }
+
+  .grid { display: grid; gap: 12px; }
+  .g2 { grid-template-columns: 1fr 1fr; }
+  .g3 { grid-template-columns: 1fr 1fr 1fr; }
+  .g4 { grid-template-columns: repeat(4, 1fr); }
+  @media (max-width: 860px) { .g3, .g4 { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 560px) { .g2, .g3, .g4 { grid-template-columns: 1fr; } }
+
+  .field label, .flabel {
+    display: block; font-family: 'JetBrains Mono', monospace; font-size: 0.62rem; font-weight: 500;
+    letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-2); margin-bottom: 4px;
+  }
+  input[type="text"], input[type="date"], input[type="number"], textarea, select {
+    width: 100%; font: inherit; font-size: 0.92rem; color: var(--ink);
+    background: var(--card); border: 1px solid var(--line); border-radius: var(--r);
+    padding: 7px 9px; outline: none;
+  }
+  body.meeting input[type="text"], body.meeting textarea, body.meeting select { font-size: 1rem; padding: 9px 11px; }
+  input:focus, textarea:focus, select:focus { border-color: var(--olive); box-shadow: 0 0 0 2px var(--sage); }
+  textarea { resize: vertical; min-height: 64px; }
+  textarea.big { min-height: 96px; }
+
+  .card {
+    background: var(--card); border: 1px solid var(--line); border-radius: var(--r);
+    padding: 14px 16px; margin-bottom: 12px;
+  }
+  .subhead {
+    font-family: 'JetBrains Mono', monospace; font-size: 0.66rem; letter-spacing: 0.14em;
+    text-transform: uppercase; color: var(--olive); margin: 18px 0 8px;
+  }
+
+  /* chips */
+  .chips { display: flex; flex-wrap: wrap; gap: 7px; }
+  .chip {
+    font: inherit; font-size: 0.84rem; cursor: pointer; user-select: none;
+    border: 1px solid var(--line); background: var(--card); color: var(--ink);
+    border-radius: 999px; padding: 5px 13px;
+  }
+  body.meeting .chip { font-size: 0.94rem; padding: 7px 15px; }
+  .chip.on { background: var(--forest); border-color: var(--forest); color: var(--cream); }
+  .chip.ghost { border-style: dashed; color: var(--ink-2); }
+  .chip.small { font-size: 0.74rem; padding: 3px 10px; }
+
+  .addbtn {
+    font: inherit; font-size: 0.8rem; cursor: pointer;
+    border: 1px dashed var(--olive); background: var(--sage-2); color: var(--forest);
+    border-radius: var(--r); padding: 6px 13px; margin-top: 8px;
+  }
+  .addbtn:hover { background: var(--sage); }
+  .iconbtn {
+    font: inherit; font-size: 0.76rem; line-height: 1; cursor: pointer;
+    border: 1px solid var(--line); background: var(--card); color: var(--ink-2);
+    border-radius: var(--r); padding: 4px 7px;
+  }
+  .iconbtn:hover { border-color: var(--olive); color: var(--forest); }
+  .iconbtn.danger:hover { border-color: var(--warn); color: var(--warn); }
+
+  /* ---------- workflow builder ---------- */
+  .wf-strip { display: flex; gap: 8px; overflow-x: auto; padding: 6px 2px 10px; align-items: stretch; }
+  .wf-stage {
+    min-width: 150px; flex: 0 0 auto; cursor: pointer;
+    border: 1px solid var(--line); border-radius: var(--r); background: var(--card);
+    padding: 9px 11px; position: relative;
+  }
+  .wf-stage .idx { font-family: 'JetBrains Mono', monospace; font-size: 0.6rem; color: var(--olive); }
+  .wf-stage .nm { font-weight: 600; font-size: 0.9rem; margin-top: 2px; word-break: break-word; }
+  .wf-stage .meta { font-size: 0.7rem; color: var(--ink-3); margin-top: 3px; min-height: 1em; }
+  .wf-stage.sel { border-color: var(--forest); box-shadow: 0 0 0 2px var(--sage); background: var(--sage-2); }
+  .wf-arrow { align-self: center; color: var(--ink-3); flex: 0 0 auto; }
+  .wf-detail { border: 1px solid var(--olive); border-radius: var(--r); background: var(--card); padding: 16px; }
+  .wf-detail .dhead { display: flex; gap: 10px; align-items: center; margin-bottom: 14px; flex-wrap: wrap; }
+  .wf-detail .dhead input { font-weight: 600; font-size: 1rem; max-width: 340px; }
+  .wf-detail .dhead .spacer { flex: 1; }
+
+  /* ---------- tables ---------- */
+  .tblwrap { overflow-x: auto; }
+  table.canvas-t { width: 100%; border-collapse: collapse; background: var(--card); border: 1px solid var(--line); }
+  table.canvas-t th {
+    font-family: 'JetBrains Mono', monospace; font-size: 0.6rem; font-weight: 500;
+    letter-spacing: 0.1em; text-transform: uppercase; color: var(--cream); background: var(--forest);
+    text-align: left; padding: 7px 8px; white-space: nowrap;
+  }
+  table.canvas-t td { border-top: 1px solid var(--line-2); padding: 4px 5px; vertical-align: top; }
+  table.canvas-t td input, table.canvas-t td select, table.canvas-t td textarea {
+    border-color: transparent; background: transparent; padding: 5px 5px; font-size: 0.85rem;
+  }
+  table.canvas-t td input:hover, table.canvas-t td select:hover, table.canvas-t td textarea:hover { border-color: var(--line); }
+  table.canvas-t td input:focus, table.canvas-t td select:focus, table.canvas-t td textarea:focus { border-color: var(--olive); background: var(--card); }
+  table.canvas-t td.rowctl { width: 34px; text-align: center; vertical-align: middle; }
+
+  /* ---------- friction ---------- */
+  .pain {
+    border: 1px solid var(--line); border-left: 3px solid var(--line); border-radius: var(--r);
+    background: var(--card); padding: 12px 14px; margin-bottom: 10px;
+  }
+  .pain.marked { border-left-color: var(--forest); background: var(--sage-2); }
+  .pain .row1 { display: flex; gap: 10px; align-items: flex-start; }
+  .pain .row1 textarea { flex: 1; min-height: 40px; }
+  .pain .row2 { display: grid; grid-template-columns: 1.1fr 0.9fr 0.8fr 1.1fr 1fr auto; gap: 8px; margin-top: 8px; align-items: end; }
+  @media (max-width: 900px) { .pain .row2 { grid-template-columns: 1fr 1fr; } }
+  .pilotmark {
+    font: inherit; font-size: 0.72rem; cursor: pointer; white-space: nowrap;
+    font-family: 'JetBrains Mono', monospace; letter-spacing: 0.08em; text-transform: uppercase;
+    border: 1px solid var(--line); background: var(--card); color: var(--ink-2);
+    border-radius: 999px; padding: 6px 12px;
+  }
+  .pilotmark.on { background: var(--forest); border-color: var(--forest); color: var(--cream); }
+  .opps { border: 1px solid var(--olive); background: var(--sage-2); border-radius: var(--r); padding: 14px 16px; }
+  .opps ol { margin-left: 20px; }
+  .opps li { padding: 3px 0; font-size: 0.92rem; }
+  .opps .tag { font-family: 'JetBrains Mono', monospace; font-size: 0.62rem; color: var(--olive); margin-left: 8px; text-transform: uppercase; letter-spacing: 0.08em; }
+
+  /* ---------- pilot ccc ---------- */
+  .ccc { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+  @media (max-width: 760px) { .ccc { grid-template-columns: 1fr; } }
+  .ccc .col { border: 1px solid var(--line); border-radius: var(--r); background: var(--card); overflow: hidden; }
+  .ccc .col h4 {
+    font-family: 'Play', sans-serif; font-size: 0.95rem; color: var(--cream); background: var(--forest);
+    padding: 8px 12px; font-weight: 700;
+  }
+  .ccc .col .sub { font-size: 0.74rem; color: var(--ink-2); padding: 8px 12px 0; }
+  .ccc .col .items { padding: 8px 12px 12px; }
+  .ccc .item { display: flex; gap: 6px; align-items: center; margin-bottom: 6px; }
+  .ccc .item input { font-size: 0.86rem; }
+  .oosbox { border: 1px dashed var(--warn); border-radius: var(--r); background: #FDF9F7; padding: 14px 16px; }
+  .oosbox .flabel { color: var(--warn); }
+
+  .bigq { border: 1px solid var(--olive); border-radius: var(--r); background: var(--sage-2); padding: 14px 16px; }
+  .bigq .flabel { color: var(--forest); font-size: 0.7rem; }
+  .bigq textarea { background: var(--card); }
+
+  /* ---------- blueprint ---------- */
+  #blueprint-doc { background: var(--card); border: 1px solid var(--line); border-radius: var(--r); padding: 26px 30px; }
+  #blueprint-doc .bhead { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--forest); padding-bottom: 12px; margin-bottom: 16px; gap: 12px; flex-wrap: wrap; }
+  #blueprint-doc .bhead img { height: 30px; }
+  #blueprint-doc .bhead .bt { text-align: right; }
+  #blueprint-doc .bhead .bt .t1 { font-family: 'Play', sans-serif; font-weight: 700; color: var(--forest); font-size: 1.15rem; }
+  #blueprint-doc .bhead .bt .t2 { font-family: 'JetBrains Mono', monospace; font-size: 0.62rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--olive); }
+  .bsec { margin-bottom: 16px; }
+  .bsec h5 { font-family: 'JetBrains Mono', monospace; font-size: 0.64rem; font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase; color: var(--olive); border-bottom: 1px solid var(--line-2); padding-bottom: 3px; margin-bottom: 7px; }
+  .bsec p, .bsec li { font-size: 0.9rem; }
+  .bsec ul, .bsec ol { margin-left: 20px; }
+  .bkv { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px 18px; }
+  .bkv .k { font-family: 'JetBrains Mono', monospace; font-size: 0.58rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-3); }
+  .bkv .v { font-size: 0.9rem; min-height: 1.2em; }
+  .bccc { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+  @media (max-width: 700px) { .bccc { grid-template-columns: 1fr; } }
+  .bccc .c { border: 1px solid var(--line-2); border-top: 3px solid var(--forest); padding: 8px 10px; }
+  .bccc .c h6 { font-family: 'Play', sans-serif; color: var(--forest); font-size: 0.85rem; margin-bottom: 4px; }
+  .bccc .c li { font-size: 0.82rem; }
+  .bcaveat { font-size: 0.8rem; font-style: italic; color: var(--ink-2); border-left: 3px solid var(--olive); padding: 6px 10px; background: var(--sage-2); }
+  .empty-note { color: var(--ink-3); font-style: italic; font-size: 0.82rem; }
+
+  /* docs request */
+  .docreq { display: grid; grid-template-columns: 1fr auto; gap: 6px 12px; align-items: center; }
+  .docreq .nm { font-size: 0.9rem; padding: 4px 0; display: flex; align-items: center; gap: 8px; }
+  .tri { display: flex; gap: 4px; }
+  .tri button {
+    font: inherit; font-size: 0.68rem; font-family: 'JetBrains Mono', monospace; text-transform: uppercase; letter-spacing: 0.06em;
+    cursor: pointer; border: 1px solid var(--line); background: var(--card); color: var(--ink-2);
+    padding: 4px 9px; border-radius: 999px;
+  }
+  .tri button.on { background: var(--forest); border-color: var(--forest); color: var(--cream); }
+  .tri button.on.na { background: var(--ink-3); border-color: var(--ink-3); }
+
+  footer.page {
+    max-width: 1180px; margin: 0 auto; padding: 18px 22px 40px;
+    display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+    color: var(--ink-3); font-size: 0.72rem; border-top: 1px solid var(--line);
+  }
+
+  .toast {
+    position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%);
+    background: var(--forest); color: var(--cream); border-radius: 999px;
+    padding: 8px 20px; font-size: 0.82rem; opacity: 0; pointer-events: none; transition: opacity 0.25s; z-index: 90;
+  }
+  .toast.show { opacity: 1; }
+
+  .mmtoggle { display: flex; align-items: center; gap: 6px; }
+
+  /* ---------- print ---------- */
+  .print-only { display: none; }
+  @media print {
+    @page { size: A4; margin: 14mm 12mm 16mm; }
+    html { font-size: 10.2px; scroll-behavior: auto; }
+    body { background: #fff; }
+    header.top, nav.steps, .addbtn, .iconbtn, .pilotmark, .tri, .noprint, .toast, footer.page, .wf-arrow { display: none !important; }
+    main { max-width: none; padding: 0; }
+    section.canvas { border-bottom: none; padding: 10px 0; break-inside: auto; }
+    .card, .pain, .wf-stage, .wf-detail, .opps, .ccc .col, .bsec, .bigq, .oosbox, table.canvas-t tr { break-inside: avoid; }
+    input, textarea, select { border-color: #ccc !important; box-shadow: none !important; background: #fff !important; }
+    .wf-strip { flex-wrap: wrap; overflow: visible; }
+    section#s7 { break-before: page; }
+    .print-only { display: block; }
+    .printfoot {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      display: flex; justify-content: space-between;
+      font-family: 'JetBrains Mono', monospace; font-size: 7.5px; letter-spacing: 0.1em;
+      text-transform: uppercase; color: #666; border-top: 0.5px solid #bbb; padding-top: 3px;
+      background: #fff;
+    }
+    body.print-blueprint section.canvas { display: none; }
+    body.print-blueprint section#s7 { display: block; break-before: auto; }
+  }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <span class="brand">TACEDGE</span>
+  <span class="title">Rutledge Drilling — Pilot Canvas</span>
+  <div class="hctl">
+    <input type="date" id="meetingDate" title="Meeting date">
+    <span class="badge-scoping">SCOPING</span>
+    <label class="mmtoggle hbtn" title="Larger text and simpler controls for live facilitation">
+      <input type="checkbox" id="meetingMode" style="accent-color:#B2B594"> Meeting mode
+    </label>
+    <button class="hbtn" id="btnSave">Save</button>
+    <button class="hbtn" id="btnExport">Export</button>
+    <button class="hbtn" id="btnImport">Import</button>
+    <button class="hbtn primary" id="btnPrint">Print</button>
+    <span class="savestate" id="saveState">—</span>
+  </div>
+</header>
+
+<nav class="steps" id="steps">
+  <a href="#s1"><span class="n">01</span>CONTEXT</a>
+  <a href="#s2"><span class="n">02</span>CURRENT WORKFLOW</a>
+  <a href="#s3"><span class="n">03</span>QA + EVIDENCE</a>
+  <a href="#s4"><span class="n">04</span>FRICTION</a>
+  <a href="#s5"><span class="n">05</span>PILOT</a>
+  <a href="#s6"><span class="n">06</span>SUCCESS</a>
+  <a href="#s7"><span class="n">07</span>BLUEPRINT</a>
+</nav>
+
+<main>
+
+  <!-- ============ 01 CONTEXT ============ -->
+  <section class="canvas" id="s1">
+    <div class="sechead"><span class="num">01</span><h2>Project Context</h2></div>
+    <p class="prompt">Let's start with a real piece of work.</p>
+
+    <div class="grid g2" style="margin-bottom:12px">
+      <div class="field"><label>Rutledge participants</label><input type="text" data-path="context.rutledgeParticipants"></div>
+      <div class="field"><label>TACEDGE participants</label><input type="text" data-path="context.tacedgeParticipants"></div>
+    </div>
+    <div class="grid g3" style="margin-bottom:12px">
+      <div class="field"><label>Candidate project</label><input type="text" data-path="context.project"></div>
+      <div class="field"><label>Client / Principal</label><input type="text" data-path="context.client"></div>
+      <div class="field"><label>Location</label><input type="text" data-path="context.location"></div>
+      <div class="field"><label>State / Territory</label><input type="text" data-path="context.state"></div>
+      <div class="field"><label>Project stage</label><input type="text" data-path="context.stage" placeholder="e.g. tendered, awarded, underway"></div>
+      <div class="field"><label>Expected start date</label><input type="text" data-path="context.startDate"></div>
+      <div class="field"><label>Expected duration</label><input type="text" data-path="context.duration"></div>
+    </div>
+
+    <div class="flabel">Work type</div>
+    <div class="chips" id="workTypeChips"></div>
+    <div style="margin-top:8px; display:flex; gap:8px; max-width:420px" class="noprint">
+      <input type="text" id="customWorkType" placeholder="Add another work type…">
+      <button class="addbtn" style="margin-top:0" id="btnAddWorkType">Add</button>
+    </div>
+
+    <div class="grid g4" style="margin-top:16px">
+      <div class="field"><label>Approx. number of work items</label><input type="text" data-path="context.approxItems"></div>
+      <div class="field"><label>Typical crew size</label><input type="text" data-path="context.crewSize"></div>
+      <div class="field"><label>Who manages QA?</label><input type="text" data-path="context.qaManager"></div>
+      <div class="field"><label>Who accepts / signs off the work?</label><input type="text" data-path="context.signoff"></div>
+    </div>
+
+    <div class="field" style="margin-top:14px"><label>Anything important about this project?</label>
+      <textarea class="big" data-path="context.notes"></textarea>
+    </div>
+  </section>
+
+  <!-- ============ 02 CURRENT WORKFLOW ============ -->
+  <section class="canvas" id="s2">
+    <div class="sechead"><span class="num">02</span><h2>How does the work happen today?</h2></div>
+    <p class="prompt">Follow one work item from design through to closeout. These stages are suggestions — rename, add, remove or reorder them to match how Rutledge actually works.</p>
+    <div class="wf-strip" id="wfStrip"></div>
+    <button class="addbtn noprint" id="btnAddStage">+ Add stage</button>
+    <div id="wfDetailWrap" style="margin-top:14px"></div>
+  </section>
+
+  <!-- ============ 03 QA + EVIDENCE ============ -->
+  <section class="canvas" id="s3">
+    <div class="sechead"><span class="num">03</span><h2>What has to be proven?</h2></div>
+    <p class="prompt">Identify the records required to demonstrate that the work was completed correctly. This is a requirements-mapping exercise — record the exact standard, specification or reference where known.</p>
+
+    <div class="subhead">Governing documents / specifications</div>
+    <div class="tblwrap"><table class="canvas-t" id="docTable">
+      <thead><tr><th>Document name</th><th>Reference</th><th>Revision</th><th>Date</th><th>Provided to TACEDGE?</th><th class="noprint"></th></tr></thead>
+      <tbody></tbody>
+    </table></div>
+    <button class="addbtn noprint" id="btnAddDoc">+ Add governing document</button>
+
+    <div class="subhead">QA requirements</div>
+    <div class="noprint" style="margin-bottom:8px">
+      <span style="font-size:0.78rem;color:var(--ink-2)">Prompts (not confirmed Rutledge requirements — tap to add): </span>
+      <span class="chips" id="qaPrompts" style="display:inline-flex;margin-top:4px"></span>
+    </div>
+    <div class="tblwrap"><table class="canvas-t" id="qaTable">
+      <thead><tr>
+        <th style="min-width:150px">Requirement</th><th style="min-width:130px">Source</th><th style="min-width:110px">Reference</th>
+        <th>When captured</th><th>Who captures it</th><th style="min-width:120px">Evidence</th>
+        <th>Review / hold point</th><th>Current method</th><th style="min-width:140px">TACEDGE opportunity</th><th class="noprint"></th>
+      </tr></thead>
+      <tbody></tbody>
+    </table></div>
+    <button class="addbtn noprint" id="btnAddReq">+ Add requirement</button>
+  </section>
+
+  <!-- ============ 04 FRICTION ============ -->
+  <section class="canvas" id="s4">
+    <div class="sechead"><span class="num">04</span><h2>Where does the current process hurt?</h2></div>
+    <p class="prompt">Find the places where information is chased, duplicated, delayed or reconstructed.</p>
+    <div id="frictionWrap"></div>
+    <div class="subhead">Top pilot opportunities</div>
+    <div class="opps" id="oppsBox"></div>
+  </section>
+
+  <!-- ============ 05 PILOT ============ -->
+  <section class="canvas" id="s5">
+    <div class="sechead"><span class="num">05</span><h2>Define the smallest useful pilot</h2></div>
+    <p class="prompt">Enough scope to prove value — not enough scope to create unnecessary complexity.</p>
+
+    <div class="grid g4" style="margin-bottom:14px">
+      <div class="field"><label>Pilot project</label><input type="text" data-path="pilot.project"></div>
+      <div class="field"><label>Pilot work type</label><input type="text" data-path="pilot.workType"></div>
+      <div class="field"><label>Pilot start date</label><input type="text" data-path="pilot.start"></div>
+      <div class="field"><label>Expected duration</label><input type="text" data-path="pilot.duration"></div>
+      <div class="field"><label>Expected number of work items</label><input type="text" data-path="pilot.items"></div>
+      <div class="field"><label>Field users</label><input type="text" data-path="pilot.fieldUsers"></div>
+      <div class="field"><label>PM / QA users</label><input type="text" data-path="pilot.pmUsers"></div>
+      <div class="field"><label>Engineer involvement</label><input type="text" data-path="pilot.engineer"></div>
+    </div>
+
+    <div class="subhead">Pilot workflow — stages included</div>
+    <p style="font-size:0.8rem;color:var(--ink-2);margin-bottom:8px">Select which stages from the current workflow (Section 02) the pilot covers.</p>
+    <div class="chips" id="pilotStageChips"></div>
+
+    <div class="subhead">Configure → Capture → Confirm</div>
+    <div class="ccc" id="cccWrap"></div>
+
+    <div class="subhead">Out of scope</div>
+    <div class="oosbox">
+      <div class="flabel">What TACEDGE will NOT attempt to solve during the pilot</div>
+      <div id="oosItems"></div>
+      <button class="addbtn noprint" id="btnAddOos">+ Add exclusion</button>
+    </div>
+  </section>
+
+  <!-- ============ 06 SUCCESS ============ -->
+  <section class="canvas" id="s6">
+    <div class="sechead"><span class="num">06</span><h2>How will we know if this worked?</h2></div>
+    <p class="prompt">Baselines and targets are entered together in the meeting — nothing here is assumed.</p>
+    <div class="tblwrap"><table class="canvas-t" id="successTable">
+      <thead><tr><th style="min-width:200px">Measure</th><th>Current baseline</th><th>Pilot target</th><th>How measured</th><th>Owner</th><th class="noprint"></th></tr></thead>
+      <tbody></tbody>
+    </table></div>
+    <button class="addbtn noprint" id="btnAddMeasure">+ Add measure</button>
+
+    <div class="grid g2" style="margin-top:16px">
+      <div class="bigq">
+        <div class="flabel">At the end of the pilot, what would make Rutledge say this is worth continuing?</div>
+        <textarea class="big" data-path="success.continueIf"></textarea>
+      </div>
+      <div class="bigq" style="border-color:var(--warn)">
+        <div class="flabel" style="color:var(--warn)">What would make Rutledge decide it is NOT worth continuing?</div>
+        <textarea class="big" data-path="success.stopIf"></textarea>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 07 BLUEPRINT ============ -->
+  <section class="canvas" id="s7">
+    <div class="sechead"><span class="num">07</span><h2>Pilot Blueprint</h2></div>
+    <p class="prompt noprint">This page assembles itself from everything captured above. Refine the opportunity summary, then print or export.</p>
+
+    <div class="field noprint" style="margin-bottom:14px"><label>Opportunity — 1–3 sentence summary</label>
+      <textarea data-path="blueprint.opportunity" placeholder="Summarise the opportunity in Rutledge's terms once the conversation has taken shape…"></textarea>
+    </div>
+
+    <div style="display:flex;justify-content:flex-end;margin-bottom:8px" class="noprint">
+      <button class="addbtn" style="margin-top:0" id="btnPrintBlueprint">Print blueprint only</button>
+    </div>
+    <div id="blueprint-doc"></div>
+
+    <div class="subhead">Next actions</div>
+    <div class="tblwrap"><table class="canvas-t" id="actionTable">
+      <thead><tr><th style="min-width:260px">Action</th><th>Owner</th><th>Due</th><th>Status</th><th class="noprint"></th></tr></thead>
+      <tbody></tbody>
+    </table></div>
+    <button class="addbtn noprint" id="btnAddAction">+ Add action</button>
+
+    <div class="subhead">Documents to request</div>
+    <div class="card">
+      <div class="docreq" id="docReqWrap"></div>
+      <div class="noprint" style="margin-top:10px; display:flex; gap:8px; max-width:420px">
+        <input type="text" id="customDocReq" placeholder="Add another document…">
+        <button class="addbtn" style="margin-top:0" id="btnAddDocReq">Add</button>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="page">
+  <span>TACEDGE × Rutledge Drilling · Pilot scoping canvas</span>
+  <span>All data is stored locally in this browser. Export JSON to keep a copy.</span>
+</footer>
+
+<div class="printfoot print-only">
+  <span>TACEDGE × Rutledge Drilling · Pilot Scoping — Commercial in Confidence</span>
+  <span id="printDate"></span>
+</div>
+
+<div class="toast" id="toast">Saved locally ✓</div>
+<input type="file" id="importFile" accept="application/json" style="display:none">
+
+<script>
+'use strict';
+/* ============================================================
+   Rutledge Pilot Canvas — single-file app, localStorage-backed.
+   No backend, no build step. Everything autosaves.
+   ============================================================ */
+
+const LS_KEY = 'tacedge_rutledge_canvas_v1';
+const uid = () => Math.random().toString(36).slice(2, 9);
+
+const WORK_TYPES = ['Ground Anchors','Rock Bolts','Soil Nails','Drilling','Grouting','Testing','Slope Stabilisation','Other'];
+const TOOLS = ['Paper','Excel','PDF','Email','WhatsApp','Photo','Existing software','Other'];
+const SOURCES = ['','Design','Project Specification','ITP','Australian Standard','Austroads','State / Principal Specification','Engineer Requirement','Client Requirement','Internal Rutledge Requirement','Other'];
+const FREQ = ['','Rare','Sometimes','Often','Every job'];
+const IMPACT = ['','Low','Medium','High'];
+const PAIN_TYPES = ['','Double handling','Missing information','Re-keying','Chasing evidence','Late QA','Unclear status','Approval delay','Closeout reconstruction','Compliance risk','Other'];
+const QA_PROMPTS = ['Anchor / work item ID','Location','Hole diameter','Hole depth','Ground conditions','Installation details','Grout details','Grout volume','Batch / material information','Photos','Testing','Engineer acceptance'];
+const FRICTION_CATS = [
+  { key: 'field', label: 'Field' },
+  { key: 'office', label: 'Office' },
+  { key: 'engineer', label: 'Engineer / QA' },
+  { key: 'closeout', label: 'Closeout' },
+];
+
+const stage = (name) => ({ id: uid(), name, who:'', input:'', action:'', record:'', tools:[], toolOther:'', output:'', approval:'', delay:'', notes:'' });
+const pain = () => ({ id: uid(), desc:'', who:'', freq:'', impact:'', type:'', cost:'', pilot:false });
+
+function defaultState() {
+  return {
+    v: 1,
+    meta: { meetingDate: '', meeting: false },
+    context: {
+      rutledgeParticipants:'', tacedgeParticipants:'', project:'', client:'', location:'', state:'',
+      stage:'', startDate:'', duration:'', workTypes:[], customWorkTypes:[],
+      approxItems:'', crewSize:'', qaManager:'', signoff:'', notes:'',
+    },
+    workflow: {
+      selected: null,
+      stages: ['Design / Instruction','Planning','Field Execution','QA / Evidence','Engineering Review','Closeout'].map(stage),
+    },
+    qa: { rows: [], docs: [] },
+    friction: { field: [], office: [], engineer: [], closeout: [] },
+    pilot: {
+      project:'', workType:'', start:'', duration:'', items:'', fieldUsers:'', pmUsers:'', engineer:'',
+      stagesIncluded: [], configure: [], capture: [], confirm: [], outOfScope: [],
+    },
+    success: {
+      measures: [
+        'Reduced duplicate data entry','Reduced missing QA information','Reduced time spent chasing evidence',
+        'Faster QA review','Faster closeout','Better visibility of work status','Improved field usability',
+        'Improved confidence in the QA record',
+      ].map(m => ({ id: uid(), measure: m, baseline:'', target:'', how:'', owner:'' })),
+      continueIf:'', stopIf:'',
+    },
+    blueprint: {
+      opportunity:'',
+      actions: [
+        ['Rutledge — provide example ITP / QA documentation','Rutledge'],
+        ['Rutledge — provide applicable project specifications','Rutledge'],
+        ['Rutledge — identify candidate pilot project','Rutledge'],
+        ['TACEDGE — map requirements','TACEDGE'],
+        ['TACEDGE — configure Rutledge tenant','TACEDGE'],
+        ['TACEDGE — demonstrate configured workflow','TACEDGE'],
+        ['Joint — confirm pilot commencement','Joint'],
+      ].map(([a, o]) => ({ id: uid(), action: a, owner: o, due:'', status:'' })),
+    },
+    docsRequest: [
+      'Example completed QA pack','ITP','Project specification','Anchor / drilling records','Grout records',
+      'Testing records','Relevant drawings','Photo / evidence requirements','Engineer acceptance records',
+      'Closeout documentation',
+    ].map(n => ({ id: uid(), name: n, status: '' })),
+  };
+}
+
+/* ---------- state + persistence ---------- */
+let S;
+try {
+  const raw = localStorage.getItem(LS_KEY);
+  S = raw ? Object.assign(defaultState(), JSON.parse(raw)) : defaultState();
+} catch { S = defaultState(); }
+
+let saveTimer = null;
+function save(immediate) {
+  const doIt = () => {
+    try {
+      localStorage.setItem(LS_KEY, JSON.stringify(S));
+      setSaveState('Saved locally ✓');
+    } catch { setSaveState('Save failed'); }
+  };
+  setSaveState('Saving…');
+  clearTimeout(saveTimer);
+  if (immediate) doIt(); else saveTimer = setTimeout(doIt, 400);
+}
+function setSaveState(t) { document.getElementById('saveState').textContent = t; }
+
+const get = (path) => path.split('.').reduce((o, k) => (o ? o[k] : undefined), S);
+function set(path, v) {
+  const ks = path.split('.');
+  let o = S;
+  for (let i = 0; i < ks.length - 1; i++) o = o[ks[i]];
+  o[ks[ks.length - 1]] = v;
+  save();
+}
+
+/* ---------- tiny DOM helpers ---------- */
+function el(tag, attrs = {}, ...kids) {
+  const n = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) {
+    if (k === 'class') n.className = v;
+    else if (k.startsWith('on')) n.addEventListener(k.slice(2), v);
+    else if (k === 'value') n.value = v;
+    else if (k === 'checked') n.checked = v;
+    else n.setAttribute(k, v);
+  }
+  for (const kid of kids.flat()) {
+    if (kid == null) continue;
+    n.append(kid.nodeType ? kid : document.createTextNode(kid));
+  }
+  return n;
+}
+const txtInput = (obj, key, attrs = {}) =>
+  el('input', { type: 'text', value: obj[key] || '', oninput: (e) => { obj[key] = e.target.value; save(); }, ...attrs });
+const areaInput = (obj, key, attrs = {}) =>
+  el('textarea', { oninput: (e) => { obj[key] = e.target.value; save(); }, ...attrs }, obj[key] || '');
+const selInput = (obj, key, options, attrs = {}) => {
+  const s = el('select', { onchange: (e) => { obj[key] = e.target.value; save(); }, ...attrs },
+    options.map(o => el('option', { value: o, ...(o === (obj[key] || '') ? { selected: '' } : {}) }, o || '—')));
+  return s;
+};
+const delBtn = (fn, title = 'Remove') => el('button', { class: 'iconbtn danger noprint', title, onclick: fn }, '✕');
+
+/* ---------- static field binding ---------- */
+document.querySelectorAll('[data-path]').forEach((n) => {
+  const p = n.getAttribute('data-path');
+  n.value = get(p) || '';
+  n.addEventListener('input', () => set(p, n.value));
+});
+
+/* ============ 01 CONTEXT ============ */
+function renderWorkTypes() {
+  const wrap = document.getElementById('workTypeChips');
+  wrap.replaceChildren();
+  const all = [...WORK_TYPES, ...S.context.customWorkTypes];
+  for (const wt of all) {
+    const on = S.context.workTypes.includes(wt);
+    wrap.append(el('button', {
+      class: 'chip' + (on ? ' on' : ''),
+      onclick: () => {
+        S.context.workTypes = on ? S.context.workTypes.filter(x => x !== wt) : [...S.context.workTypes, wt];
+        save(); renderWorkTypes();
+      },
+    }, wt));
+  }
+}
+document.getElementById('btnAddWorkType').onclick = () => {
+  const inp = document.getElementById('customWorkType');
+  const v = inp.value.trim();
+  if (!v) return;
+  if (![...WORK_TYPES, ...S.context.customWorkTypes].includes(v)) S.context.customWorkTypes.push(v);
+  if (!S.context.workTypes.includes(v)) S.context.workTypes.push(v);
+  inp.value = ''; save(); renderWorkTypes();
+};
+
+/* ============ 02 WORKFLOW ============ */
+function renderWorkflow() {
+  const strip = document.getElementById('wfStrip');
+  strip.replaceChildren();
+  S.workflow.stages.forEach((st, i) => {
+    if (i > 0) strip.append(el('span', { class: 'wf-arrow' }, '→'));
+    const filled = [st.who, st.action, st.record, st.output].filter(Boolean).length;
+    strip.append(el('div', {
+      class: 'wf-stage' + (S.workflow.selected === st.id ? ' sel' : ''),
+      onclick: () => { S.workflow.selected = st.id; save(); renderWorkflow(); },
+    },
+      el('div', { class: 'idx' }, String(i + 1).padStart(2, '0')),
+      el('div', { class: 'nm' }, st.name || 'Untitled stage'),
+      el('div', { class: 'meta' }, filled ? `${filled}/4 mapped` : ''),
+    ));
+  });
+  renderStageDetail();
+  renderPilotStages();
+}
+
+function renderStageDetail() {
+  const wrap = document.getElementById('wfDetailWrap');
+  wrap.replaceChildren();
+  const st = S.workflow.stages.find(s => s.id === S.workflow.selected);
+  if (!st) {
+    wrap.append(el('p', { class: 'empty-note' }, 'Select a stage above to map it.'));
+    return;
+  }
+  const i = S.workflow.stages.indexOf(st);
+  const move = (d) => () => {
+    const j = i + d;
+    if (j < 0 || j >= S.workflow.stages.length) return;
+    const a = S.workflow.stages;
+    [a[i], a[j]] = [a[j], a[i]];
+    save(); renderWorkflow();
+  };
+  const fld = (label, node, hint) => el('div', { class: 'field' }, el('label', {}, label + (hint ? ` — ${hint}` : '')), node);
+
+  const toolChips = el('div', { class: 'chips' }, TOOLS.map(t => {
+    const on = st.tools.includes(t);
+    return el('button', {
+      class: 'chip small' + (on ? ' on' : ''),
+      onclick: () => { st.tools = on ? st.tools.filter(x => x !== t) : [...st.tools, t]; save(); renderStageDetail(); },
+    }, t);
+  }));
+
+  wrap.append(el('div', { class: 'wf-detail' },
+    el('div', { class: 'dhead' },
+      el('span', { class: 'mono', style: 'font-size:0.62rem;color:var(--olive)' }, `Stage ${String(i + 1).padStart(2, '0')}`),
+      txtInput(st, 'name', { oninput: (e) => { st.name = e.target.value; save(); }, onchange: () => renderWorkflow() }),
+      el('span', { class: 'spacer' }),
+      el('button', { class: 'iconbtn noprint', title: 'Move earlier', onclick: move(-1) }, '◀'),
+      el('button', { class: 'iconbtn noprint', title: 'Move later', onclick: move(1) }, '▶'),
+      delBtn(() => {
+        S.workflow.stages = S.workflow.stages.filter(s => s.id !== st.id);
+        S.pilot.stagesIncluded = S.pilot.stagesIncluded.filter(id => id !== st.id);
+        S.workflow.selected = null;
+        save(); renderWorkflow();
+      }, 'Delete stage'),
+    ),
+    el('div', { class: 'grid g2' },
+      fld('Who', txtInput(st, 'who'), 'who performs this step?'),
+      fld('Input', txtInput(st, 'input'), 'what do they need before starting?'),
+      fld('Action', areaInput(st, 'action', { style: 'min-height:48px' }), 'what actually happens?'),
+      fld('Record', areaInput(st, 'record', { style: 'min-height:48px' }), 'what gets recorded?'),
+    ),
+    el('div', { class: 'field', style: 'margin-top:10px' }, el('label', {}, 'Tool — where is it recorded today?'), toolChips,
+      st.tools.includes('Other') ? el('div', { style: 'margin-top:6px;max-width:340px' }, txtInput(st, 'toolOther', { placeholder: 'Which tool?' })) : null),
+    el('div', { class: 'grid g2', style: 'margin-top:10px' },
+      fld('Output', txtInput(st, 'output'), 'what gets passed to the next person?'),
+      fld('Approval', txtInput(st, 'approval'), 'does anyone review or approve it?'),
+      fld('Delay', txtInput(st, 'delay'), 'what commonly holds this step up?'),
+      fld('Notes', txtInput(st, 'notes')),
+    ),
+  ));
+}
+document.getElementById('btnAddStage').onclick = () => {
+  const st = stage('New stage');
+  S.workflow.stages.push(st);
+  S.workflow.selected = st.id;
+  save(); renderWorkflow();
+};
+
+/* ============ 03 QA + EVIDENCE ============ */
+function renderDocs() {
+  const tb = document.querySelector('#docTable tbody');
+  tb.replaceChildren();
+  if (!S.qa.docs.length) tb.append(el('tr', {}, el('td', { colspan: 6, class: 'empty-note', style: 'padding:9px' }, 'No governing documents recorded yet.')));
+  for (const d of S.qa.docs) {
+    tb.append(el('tr', {},
+      el('td', {}, txtInput(d, 'name')),
+      el('td', {}, txtInput(d, 'ref')),
+      el('td', { style: 'width:90px' }, txtInput(d, 'rev')),
+      el('td', { style: 'width:110px' }, txtInput(d, 'date')),
+      el('td', { style: 'width:150px' }, selInput(d, 'provided', ['', 'Yes', 'No'])),
+      el('td', { class: 'rowctl noprint' }, delBtn(() => { S.qa.docs = S.qa.docs.filter(x => x.id !== d.id); save(); renderDocs(); })),
+    ));
+  }
+}
+document.getElementById('btnAddDoc').onclick = () => {
+  S.qa.docs.push({ id: uid(), name:'', ref:'', rev:'', date:'', provided:'' });
+  save(); renderDocs();
+};
+
+function qaRow(req = '') {
+  return { id: uid(), req, source:'', ref:'', when:'', who:'', evidence:'', hold:'', method:'', opportunity:'' };
+}
+function renderQaPrompts() {
+  const wrap = document.getElementById('qaPrompts');
+  wrap.replaceChildren();
+  for (const p of QA_PROMPTS) {
+    wrap.append(el('button', { class: 'chip ghost small', onclick: () => { S.qa.rows.push(qaRow(p)); save(); renderQa(); } }, '+ ' + p));
+  }
+}
+function renderQa() {
+  const tb = document.querySelector('#qaTable tbody');
+  tb.replaceChildren();
+  if (!S.qa.rows.length) tb.append(el('tr', {}, el('td', { colspan: 10, class: 'empty-note', style: 'padding:9px' }, 'No requirements recorded yet — add from the prompts above or the button below.')));
+  for (const r of S.qa.rows) {
+    tb.append(el('tr', {},
+      el('td', {}, txtInput(r, 'req')),
+      el('td', {}, selInput(r, 'source', SOURCES)),
+      el('td', {}, txtInput(r, 'ref', { placeholder: 'exact ref if known' })),
+      el('td', {}, txtInput(r, 'when')),
+      el('td', {}, txtInput(r, 'who')),
+      el('td', {}, txtInput(r, 'evidence')),
+      el('td', {}, txtInput(r, 'hold')),
+      el('td', {}, txtInput(r, 'method')),
+      el('td', {}, txtInput(r, 'opportunity')),
+      el('td', { class: 'rowctl noprint' }, delBtn(() => { S.qa.rows = S.qa.rows.filter(x => x.id !== r.id); save(); renderQa(); })),
+    ));
+  }
+}
+document.getElementById('btnAddReq').onclick = () => { S.qa.rows.push(qaRow()); save(); renderQa(); };
+
+/* ============ 04 FRICTION ============ */
+function renderFriction() {
+  const wrap = document.getElementById('frictionWrap');
+  wrap.replaceChildren();
+  for (const cat of FRICTION_CATS) {
+    const list = S.friction[cat.key];
+    const box = el('div', { style: 'margin-bottom:18px' },
+      el('div', { class: 'subhead', style: 'margin-top:0' }, cat.label),
+    );
+    for (const pp of list) {
+      box.append(el('div', { class: 'pain' + (pp.pilot ? ' marked' : '') },
+        el('div', { class: 'row1' },
+          areaInput(pp, 'desc', { placeholder: 'What hurts, specifically?' }),
+          el('button', {
+            class: 'pilotmark' + (pp.pilot ? ' on' : ''),
+            onclick: () => { pp.pilot = !pp.pilot; save(); renderFriction(); },
+          }, pp.pilot ? '★ Pilot should prove this' : '☆ Pilot should prove this'),
+          delBtn(() => { S.friction[cat.key] = list.filter(x => x.id !== pp.id); save(); renderFriction(); }),
+        ),
+        el('div', { class: 'row2' },
+          el('div', { class: 'field' }, el('label', {}, 'Who experiences it?'), txtInput(pp, 'who')),
+          el('div', { class: 'field' }, el('label', {}, 'Frequency'), selInput(pp, 'freq', FREQ)),
+          el('div', { class: 'field' }, el('label', {}, 'Impact'), selInput(pp, 'impact', IMPACT)),
+          el('div', { class: 'field' }, el('label', {}, 'Type'), selInput(pp, 'type', PAIN_TYPES)),
+          el('div', { class: 'field' }, el('label', {}, 'Est. time / cost impact'), txtInput(pp, 'cost', { placeholder: 'only if known' })),
+        ),
+      ));
+    }
+    box.append(el('button', { class: 'addbtn noprint', onclick: () => { list.push(pain()); save(); renderFriction(); } }, `+ Add ${cat.label.toLowerCase()} pain point`));
+    wrap.append(box);
+  }
+  renderOpps();
+}
+function allPains() {
+  return FRICTION_CATS.flatMap(c => S.friction[c.key].map(p => ({ ...p, cat: c.label })));
+}
+function renderOpps() {
+  const box = document.getElementById('oppsBox');
+  box.replaceChildren();
+  const rank = { High: 3, Medium: 2, Low: 1, '': 0 };
+  const frank = { 'Every job': 4, Often: 3, Sometimes: 2, Rare: 1, '': 0 };
+  const marked = allPains().filter(p => p.pilot && p.desc.trim())
+    .sort((a, b) => (rank[b.impact] - rank[a.impact]) || (frank[b.freq] - frank[a.freq]));
+  if (!marked.length) {
+    box.append(el('p', { class: 'empty-note' }, 'Mark pain points with “Pilot should prove this” and they will rank here automatically.'));
+    return;
+  }
+  box.append(el('ol', {}, marked.slice(0, 5).map(p =>
+    el('li', {}, p.desc, el('span', { class: 'tag' }, [p.cat, p.impact && p.impact + ' impact', p.freq].filter(Boolean).join(' · '))))));
+}
+
+/* ============ 05 PILOT ============ */
+function renderPilotStages() {
+  const wrap = document.getElementById('pilotStageChips');
+  wrap.replaceChildren();
+  if (!S.workflow.stages.length) { wrap.append(el('span', { class: 'empty-note' }, 'No stages defined in Section 02 yet.')); return; }
+  for (const st of S.workflow.stages) {
+    const on = S.pilot.stagesIncluded.includes(st.id);
+    wrap.append(el('button', {
+      class: 'chip' + (on ? ' on' : ''),
+      onclick: () => {
+        S.pilot.stagesIncluded = on ? S.pilot.stagesIncluded.filter(id => id !== st.id) : [...S.pilot.stagesIncluded, st.id];
+        save(); renderPilotStages();
+      },
+    }, st.name || 'Untitled stage'));
+  }
+}
+
+const CCC = [
+  { key: 'configure', title: 'Configure', sub: 'What TACEDGE needs to know before work begins.' },
+  { key: 'capture', title: 'Capture', sub: 'What operators need to record in the field.' },
+  { key: 'confirm', title: 'Confirm', sub: 'What PM / QA / Engineer needs to review or accept.' },
+];
+function renderCcc() {
+  const wrap = document.getElementById('cccWrap');
+  wrap.replaceChildren();
+  for (const c of CCC) {
+    const items = el('div', { class: 'items' });
+    S.pilot[c.key].forEach((it, idx) => {
+      items.append(el('div', { class: 'item' },
+        el('input', { type: 'text', value: it, oninput: (e) => { S.pilot[c.key][idx] = e.target.value; save(); } }),
+        delBtn(() => { S.pilot[c.key].splice(idx, 1); save(); renderCcc(); }),
+      ));
+    });
+    items.append(el('button', { class: 'addbtn noprint', style: 'margin-top:2px', onclick: () => { S.pilot[c.key].push(''); save(); renderCcc(); } }, '+ Add item'));
+    wrap.append(el('div', { class: 'col' }, el('h4', {}, c.title), el('div', { class: 'sub' }, c.sub), items));
+  }
+}
+function renderOos() {
+  const wrap = document.getElementById('oosItems');
+  wrap.replaceChildren();
+  S.pilot.outOfScope.forEach((it, idx) => {
+    wrap.append(el('div', { class: 'item', style: 'display:flex;gap:6px;margin-bottom:6px' },
+      el('input', { type: 'text', value: it, oninput: (e) => { S.pilot.outOfScope[idx] = e.target.value; save(); } }),
+      delBtn(() => { S.pilot.outOfScope.splice(idx, 1); save(); renderOos(); }),
+    ));
+  });
+}
+document.getElementById('btnAddOos').onclick = () => { S.pilot.outOfScope.push(''); save(); renderOos(); };
+
+/* ============ 06 SUCCESS ============ */
+function renderSuccess() {
+  const tb = document.querySelector('#successTable tbody');
+  tb.replaceChildren();
+  for (const m of S.success.measures) {
+    tb.append(el('tr', {},
+      el('td', {}, txtInput(m, 'measure')),
+      el('td', {}, txtInput(m, 'baseline')),
+      el('td', {}, txtInput(m, 'target')),
+      el('td', {}, txtInput(m, 'how')),
+      el('td', {}, txtInput(m, 'owner')),
+      el('td', { class: 'rowctl noprint' }, delBtn(() => { S.success.measures = S.success.measures.filter(x => x.id !== m.id); save(); renderSuccess(); })),
+    ));
+  }
+}
+document.getElementById('btnAddMeasure').onclick = () => {
+  S.success.measures.push({ id: uid(), measure:'', baseline:'', target:'', how:'', owner:'' });
+  save(); renderSuccess();
+};
+
+/* ============ 07 BLUEPRINT ============ */
+function renderActions() {
+  const tb = document.querySelector('#actionTable tbody');
+  tb.replaceChildren();
+  for (const a of S.blueprint.actions) {
+    tb.append(el('tr', {},
+      el('td', {}, txtInput(a, 'action')),
+      el('td', { style: 'width:130px' }, txtInput(a, 'owner')),
+      el('td', { style: 'width:110px' }, txtInput(a, 'due')),
+      el('td', { style: 'width:130px' }, selInput(a, 'status', ['', 'Open', 'In progress', 'Done'])),
+      el('td', { class: 'rowctl noprint' }, delBtn(() => { S.blueprint.actions = S.blueprint.actions.filter(x => x.id !== a.id); save(); renderActions(); })),
+    ));
+  }
+}
+document.getElementById('btnAddAction').onclick = () => {
+  S.blueprint.actions.push({ id: uid(), action:'', owner:'', due:'', status:'' });
+  save(); renderActions();
+};
+
+function renderDocReq() {
+  const wrap = document.getElementById('docReqWrap');
+  wrap.replaceChildren();
+  for (const d of S.docsRequest) {
+    const tri = el('div', { class: 'tri' },
+      ['requested', 'received', 'na'].map(s => el('button', {
+        class: (d.status === s ? 'on ' : '') + (s === 'na' ? 'na' : ''),
+        onclick: () => { d.status = d.status === s ? '' : s; save(); renderDocReq(); },
+      }, s === 'na' ? 'N/A' : s)),
+    );
+    wrap.append(
+      el('div', { class: 'nm' },
+        delBtn(() => { S.docsRequest = S.docsRequest.filter(x => x.id !== d.id); save(); renderDocReq(); }),
+        d.name,
+        d.status ? el('span', { class: 'mono', style: 'font-size:0.58rem;color:var(--olive)' }, d.status === 'na' ? 'not applicable' : d.status) : null,
+      ),
+      tri,
+    );
+  }
+}
+document.getElementById('btnAddDocReq').onclick = () => {
+  const inp = document.getElementById('customDocReq');
+  const v = inp.value.trim();
+  if (!v) return;
+  S.docsRequest.push({ id: uid(), name: v, status: '' });
+  inp.value = ''; save(); renderDocReq();
+};
+
+function renderBlueprint() {
+  const d = document.getElementById('blueprint-doc');
+  d.replaceChildren();
+  const val = (v) => (v && String(v).trim()) || '—';
+  const list = (arr) => arr.filter(x => x && String(x).trim());
+
+  const rank = { High: 3, Medium: 2, Low: 1, '': 0 };
+  const pains = allPains().filter(p => p.desc.trim())
+    .sort((a, b) => (Number(b.pilot) - Number(a.pilot)) || (rank[b.impact] - rank[a.impact]))
+    .slice(0, 5);
+  const stagesIncl = S.workflow.stages.filter(s => S.pilot.stagesIncluded.includes(s.id)).map(s => s.name);
+  const measures = S.success.measures.filter(m => m.measure.trim() && (m.baseline.trim() || m.target.trim() || m.how.trim() || m.owner.trim()));
+  const docs = S.qa.docs.filter(x => x.name.trim());
+  const reqSources = [...new Set(S.qa.rows.map(r => r.source).filter(Boolean))];
+
+  d.append(
+    el('div', { class: 'bhead' },
+      el('img', { src: '../brand/tacedge-lockup-forest.svg', alt: 'TACEDGE' }),
+      el('div', { class: 'bt' },
+        el('div', { class: 't1' }, 'Rutledge × TACEDGE — Pilot Blueprint'),
+        el('div', { class: 't2' }, 'Pilot scoping · Commercial in confidence' + (S.meta.meetingDate ? ' · ' + S.meta.meetingDate : '')),
+      ),
+    ),
+    el('div', { class: 'bsec' }, el('h5', {}, 'Opportunity'),
+      S.blueprint.opportunity.trim() ? el('p', {}, S.blueprint.opportunity) : el('p', { class: 'empty-note' }, 'Summarise the opportunity in the field above.')),
+    el('div', { class: 'bsec' }, el('h5', {}, 'Pilot project'),
+      el('div', { class: 'bkv' },
+        el('div', {}, el('div', { class: 'k' }, 'Project'), el('div', { class: 'v' }, val(S.pilot.project || S.context.project))),
+        el('div', {}, el('div', { class: 'k' }, 'Work type'), el('div', { class: 'v' }, val(S.pilot.workType || S.context.workTypes.join(', ')))),
+        el('div', {}, el('div', { class: 'k' }, 'Start'), el('div', { class: 'v' }, val(S.pilot.start))),
+        el('div', {}, el('div', { class: 'k' }, 'Duration'), el('div', { class: 'v' }, val(S.pilot.duration))),
+        el('div', {}, el('div', { class: 'k' }, 'Approx. work items'), el('div', { class: 'v' }, val(S.pilot.items))),
+        el('div', {}, el('div', { class: 'k' }, 'Users'), el('div', { class: 'v' },
+          [S.pilot.fieldUsers && S.pilot.fieldUsers + ' field', S.pilot.pmUsers && S.pilot.pmUsers + ' PM/QA', S.pilot.engineer && 'Engineer: ' + S.pilot.engineer].filter(Boolean).join(' · ') || '—')),
+      )),
+    el('div', { class: 'bsec' }, el('h5', {}, 'Current problem'),
+      pains.length ? el('ul', {}, pains.map(p => el('li', {}, p.desc + (p.impact ? ` (${p.cat.toLowerCase()}, ${p.impact.toLowerCase()} impact)` : ` (${p.cat.toLowerCase()})`))))
+        : el('p', { class: 'empty-note' }, 'Pain points from Section 04 will appear here.')),
+    el('div', { class: 'bsec' }, el('h5', {}, 'Proposed TACEDGE workflow — Configure → Capture → Confirm'),
+      stagesIncl.length ? el('p', { style: 'font-size:0.82rem;margin-bottom:8px' }, 'Pilot stages: ' + stagesIncl.join(' → ')) : null,
+      el('div', { class: 'bccc' }, CCC.map(c =>
+        el('div', { class: 'c' }, el('h6', {}, c.title),
+          list(S.pilot[c.key]).length ? el('ul', {}, list(S.pilot[c.key]).map(i => el('li', {}, i))) : el('p', { class: 'empty-note' }, '—'))))),
+    el('div', { class: 'bsec' }, el('h5', {}, 'QA requirements'),
+      docs.length ? el('ul', {}, docs.map(x => el('li', {}, [x.name, x.ref, x.rev && 'Rev ' + x.rev].filter(Boolean).join(' · ') + (x.provided ? ` — provided: ${x.provided}` : ''))))
+        : el('p', { class: 'empty-note' }, 'Governing documents from Section 03 will appear here.'),
+      reqSources.length ? el('p', { style: 'font-size:0.82rem;margin-top:6px' }, 'Requirement sources mapped: ' + reqSources.join(', ')) : null,
+      el('p', { class: 'bcaveat', style: 'margin-top:8px' }, 'Final pilot configuration subject to verification against the applicable project, client, principal and regulatory requirements.')),
+    el('div', { class: 'bsec' }, el('h5', {}, 'Success measures'),
+      measures.length ? el('ul', {}, measures.map(m => el('li', {},
+        m.measure + [m.baseline && ` — baseline: ${m.baseline}`, m.target && ` target: ${m.target}`, m.owner && ` (owner: ${m.owner})`].filter(Boolean).join(''))))
+        : el('p', { class: 'empty-note' }, 'Measures with agreed baselines or targets from Section 06 will appear here.')),
+    el('div', { class: 'bsec' }, el('h5', {}, 'Out of scope'),
+      list(S.pilot.outOfScope).length ? el('ul', {}, list(S.pilot.outOfScope).map(i => el('li', {}, i)))
+        : el('p', { class: 'empty-note' }, 'Exclusions from Section 05 will appear here.')),
+  );
+}
+
+/* ---------- header controls ---------- */
+const mdInput = document.getElementById('meetingDate');
+mdInput.value = S.meta.meetingDate || '';
+mdInput.addEventListener('input', () => { S.meta.meetingDate = mdInput.value; save(); });
+
+const mmToggle = document.getElementById('meetingMode');
+function applyMeeting() { document.body.classList.toggle('meeting', !!S.meta.meeting); }
+mmToggle.checked = !!S.meta.meeting;
+applyMeeting();
+mmToggle.addEventListener('change', () => { S.meta.meeting = mmToggle.checked; save(); applyMeeting(); });
+
+document.getElementById('btnSave').onclick = () => { save(true); toast('Saved locally ✓'); };
+
+document.getElementById('btnExport').onclick = () => {
+  const blob = new Blob([JSON.stringify(S, null, 2)], { type: 'application/json' });
+  const a = el('a', { href: URL.createObjectURL(blob), download: `rutledge-pilot-canvas-${(S.meta.meetingDate || new Date().toISOString().slice(0, 10))}.json` });
+  a.click(); URL.revokeObjectURL(a.href);
+  toast('Exported JSON');
+};
+
+const importFile = document.getElementById('importFile');
+document.getElementById('btnImport').onclick = () => importFile.click();
+importFile.addEventListener('change', () => {
+  const f = importFile.files[0];
+  if (!f) return;
+  const r = new FileReader();
+  r.onload = () => {
+    try {
+      const data = JSON.parse(r.result);
+      if (!data || data.v !== 1) throw new Error('wrong version');
+      S = Object.assign(defaultState(), data);
+      save(true); location.reload();
+    } catch { toast('Import failed — not a valid canvas file'); }
+  };
+  r.readAsText(f);
+  importFile.value = '';
+});
+
+document.getElementById('btnPrint').onclick = () => window.print();
+document.getElementById('btnPrintBlueprint').onclick = () => {
+  document.body.classList.add('print-blueprint');
+  window.print();
+};
+window.addEventListener('afterprint', () => document.body.classList.remove('print-blueprint'));
+
+let toastTimer;
+function toast(t) {
+  const n = document.getElementById('toast');
+  n.textContent = t; n.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => n.classList.remove('show'), 1800);
+}
+
+window.addEventListener('beforeprint', () => {
+  renderBlueprint();
+  document.getElementById('printDate').textContent =
+    'Generated ' + new Date().toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' });
+});
+
+/* ---------- scrollspy ---------- */
+const navLinks = [...document.querySelectorAll('nav.steps a')];
+const sections = navLinks.map(a => document.querySelector(a.getAttribute('href')));
+const spy = () => {
+  let cur = 0;
+  const y = window.scrollY + 140;
+  sections.forEach((s, i) => { if (s.offsetTop <= y) cur = i; });
+  navLinks.forEach((a, i) => a.classList.toggle('active', i === cur));
+  if (cur === 6) renderBlueprint();
+};
+window.addEventListener('scroll', spy, { passive: true });
+
+/* ---------- boot ---------- */
+renderWorkTypes();
+renderWorkflow();
+renderDocs();
+renderQaPrompts();
+renderQa();
+renderFriction();
+renderCcc();
+renderOos();
+renderSuccess();
+renderActions();
+renderDocReq();
+renderBlueprint();
+spy();
+setSaveState(localStorage.getItem(LS_KEY) ? 'Saved locally ✓' : 'Not saved yet');
+</script>
+</body>
+</html>

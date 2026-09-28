@@ -11,13 +11,12 @@ import { AddMilestoneModal, AddHorizonModal } from '../components/AddModals';
 import { LooManager } from '../components/LooManager';
 
 export const DiagramPage = ({
-  expanded, onToggleExpanded, onOpenMilestonePage,
+  expanded, onToggleExpanded,
   initialMilestoneId = null, initialHorizonId = null,
   modal, onCloseModal,
 }: {
   expanded: boolean;
   onToggleExpanded: () => void;
-  onOpenMilestonePage: (id: string) => void;
   /** Deep-link selection from the URL; the app otherwise opens neutral. */
   initialMilestoneId?: string | null;
   initialHorizonId?: string | null;
@@ -31,10 +30,9 @@ export const DiagramPage = ({
     () => new Set(allLoos.map((l) => l.id)),
   );
   const [focusLooId, setFocusLooId] = useState<string | null>(null);
-  const [showAllDeps, setShowAllDeps] = useState(false);
   // Labels default on up to Year view, off at 3y/5y; the user can override.
   const [labelsOverride, setLabelsOverride] = useState<boolean | null>(null);
-  // Neutral by default: drawers open only on user selection or a deep link.
+  // Neutral by default: panels open only on user selection or a deep link.
   const [selectedMilestoneId, setSelectedMilestoneId] = useState<string | null>(
     () => (initialMilestoneId && state.milestones.some((m) => m.id === initialMilestoneId)
       ? initialMilestoneId : null),
@@ -74,17 +72,23 @@ export const DiagramPage = ({
 
   useEffect(() => { scrollToDate(todayIso()); }, [scrollToDate]);
 
-  const [horizonFocusLooId, setHorizonFocusLooId] = useState<string | null>(null);
-
   const selectMilestone = (id: string) => {
     setSelectedHorizonId(null);
-    setHorizonFocusLooId(null);
     setSelectedMilestoneId((cur) => (cur === id ? null : id));
   };
-  const selectHorizon = (id: string, focusLooId?: string) => {
+  const selectHorizon = (id: string) => {
     setSelectedMilestoneId(null);
-    setHorizonFocusLooId(focusLooId ?? null);
-    setSelectedHorizonId(id);
+    setSelectedHorizonId((cur) => (cur === id ? null : id));
+  };
+  const closePanels = () => { setSelectedMilestoneId(null); setSelectedHorizonId(null); };
+
+  // Adding is fire-and-forget: the new item lands on the diagram and the
+  // timeline scrolls to it if it is out of view. No panel opens.
+  const revealDate = (iso: string) => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const x = daysBetween(parseDate(TIMELINE_START), parseDate(iso)) * view.pxPerDay;
+    if (x < el.scrollLeft + 40 || x > el.scrollLeft + el.clientWidth - 40) scrollToDate(iso, 0.5);
   };
 
   return (
@@ -94,7 +98,6 @@ export const DiagramPage = ({
         loos={allLoos}
         visibleLooIds={visibleLooIds}
         expanded={expanded}
-        showAllDeps={showAllDeps}
         showLabels={showLabels}
         onToggleLabels={() => setLabelsOverride(!showLabels)}
         onView={setViewId}
@@ -105,9 +108,8 @@ export const DiagramPage = ({
           return next;
         })}
         onFocusAll={() => { setVisibleLooIds(new Set(allLoos.map((l) => l.id))); setFocusLooId(null); }}
-        onToggleAllDeps={() => setShowAllDeps((s) => !s)}
         onToggleExpanded={onToggleExpanded}
-        onAdd={setAddOpen}
+        onAdd={(kind) => { closePanels(); setAddOpen(kind); }}
       />
 
       <Diagram
@@ -117,12 +119,11 @@ export const DiagramPage = ({
         selectedMilestoneId={selectedMilestoneId}
         selectedHorizonId={selectedHorizonId}
         focusLooId={focusLooId}
-        showAllDeps={showAllDeps}
         showLabels={showLabels}
         scrollRef={scrollRef}
         onSelectMilestone={selectMilestone}
         onSelectHorizon={selectHorizon}
-        onMoveMilestone={(id, iso) => dispatch({ type: 'milestone/move-date', id, targetDate: iso })}
+        onMoveMilestone={(id, iso) => dispatch({ type: 'milestone/update', id, patch: { targetDate: iso } })}
         onMoveHorizon={(id, iso) => dispatch({ type: 'horizon/update', id, patch: { date: iso } })}
         onToggleFocus={(id) => setFocusLooId((cur) => (cur === id ? null : id))}
       />
@@ -133,23 +134,23 @@ export const DiagramPage = ({
         <MilestoneDrawer
           milestoneId={selectedMilestoneId}
           onClose={() => setSelectedMilestoneId(null)}
-          onOpenFull={onOpenMilestonePage}
-          onSelectMilestone={(id) => { setSelectedHorizonId(null); setSelectedMilestoneId(id); }}
         />
       )}
       {selectedHorizonId && (
         <HorizonDrawer
           horizonId={selectedHorizonId}
-          focusLooId={horizonFocusLooId}
-          onClose={() => { setSelectedHorizonId(null); setHorizonFocusLooId(null); }}
-          onSelectMilestone={(id) => { setSelectedHorizonId(null); setHorizonFocusLooId(null); setSelectedMilestoneId(id); }}
+          onClose={() => setSelectedHorizonId(null)}
         />
       )}
       {addOpen === 'milestone' && (
-        <AddMilestoneModal onClose={() => setAddOpen(null)} onCreated={(id) => { setSelectedHorizonId(null); setSelectedMilestoneId(id); }} />
+        <AddMilestoneModal
+          onClose={() => setAddOpen(null)}
+          defaultLooId={focusLooId}
+          onCreated={(m) => revealDate(m.targetDate)}
+        />
       )}
       {addOpen === 'horizon' && (
-        <AddHorizonModal onClose={() => setAddOpen(null)} onCreated={selectHorizon} />
+        <AddHorizonModal onClose={() => setAddOpen(null)} onCreated={(h) => revealDate(h.date)} />
       )}
 
       {modal === 'loos' && <LooManager onClose={onCloseModal} />}

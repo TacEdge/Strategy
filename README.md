@@ -16,33 +16,37 @@ npm run preview    # serve the build
 
 ## Strategic model
 
-- **Vision** — an enduring direction, not an endpoint.
+The model is deliberately small. The diagram is meant to be read at a
+glance: what needs attention shows from the labels alone, synchronised by
+Line of Operation and by time. Nothing needs opening to be understood.
+
 - **Lines of Operation** — endure through time; they never terminate at a
-  horizon. Roles: Main Effort, Supporting, Sustaining, Paused. One Main
-  Effort at a time.
-- **Strategic Horizons** — vertical synchronisation points. Each carries an
-  Endstate, one objective per LOO, assumptions, risks and an assessment.
-  Lines continue visually through and beyond every horizon.
-- **Milestones** — conditions that must become true, not activities. Live
-  objects with purpose, importance, success criteria, dependencies, risks,
-  decisions, tasks, evidence, notes, next best action and change history.
-- **Dependencies** — cross-LOO, drawn as restrained curves on the diagram.
+  horizon.
+- **Milestones** — conditions that must become true, not activities. A
+  milestone is a title, a Line of Operation, a target date, an owner and a
+  status (future, active, at risk, blocked, complete). A milestone past its
+  date and not complete reads as overdue on the diagram.
+- **Strategic Horizons** — vertical synchronisation points: a theme and a
+  date. Lines continue visually through and beyond every horizon.
+
 ## Views
 
-- **LOO Diagram** (`#/`, the landing route) — the strategic map: lanes,
-  horizons, objectives, milestones, dependencies, semantic zoom, editing.
-  Milestones are status dots on the LOO line with short labels; horizon
-  objectives are diamonds with short summaries; dependency lines appear
-  only for the selected milestone (or via "Show all dependencies").
-  Full detail lives in the selection drawer and milestone workspace.
-- **Weekly Review** (`#/review`) — movement toward the horizon, progress
-  by LOO, achieved/slipped milestones, founder allocation, and the three
-  outcomes for the next seven days.
-- **Milestone workspace** (`#/milestone/:id`).
+- **Campaign** (`#/`, the landing route) — the LOO Diagram: lanes,
+  milestones as status dots with labels, horizon spines with their theme,
+  semantic zoom. Add a milestone or a horizon from the toolbar and move on;
+  nothing opens. Selecting a dot opens a compact panel to change status,
+  date, line or owner, or delete.
+- **Milestones** (`#/milestones`) — the flat list behind the diagram,
+  attention first. A row opens that milestone on the diagram.
+- **Reviews** (`#/review`) — what needs attention, what is due before the
+  next horizon, what has been achieved, and the three outcomes for the
+  next seven days.
 
 Types live in `src/types.ts`; seeded campaign data in `src/data/seed.ts`;
 state in `src/state/store.tsx` (reducer + localStorage persistence, keyed
-`tacedge-strategy-campaign-v1`). Clear the key to reset to seed data.
+`tacedge-strategy-campaign-v1`). Earlier stored campaigns migrate on load:
+the extra milestone detail is dropped and titles, lines, dates, owners and
+statuses are kept. Clear the key to reset to seed data.
 
 ## Brand
 

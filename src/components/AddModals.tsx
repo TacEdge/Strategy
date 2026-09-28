@@ -1,43 +1,38 @@
 import { useState } from 'react';
-import type { Milestone, StrategicHorizon, HorizonObjective } from '../types';
+import type { Milestone, StrategicHorizon } from '../types';
 import { useStore, useLoos, newId } from '../state/store';
-import { nowStamp, todayIso, addDays, parseDate, toIso } from '../lib/time';
+import { todayIso, addDays, parseDate, toIso } from '../lib/time';
 import { Modal, Field } from './ui';
 
+/** Add a milestone and move on: condition, line, date, owner. Nothing else. */
 export const AddMilestoneModal = ({
-  onClose, onCreated,
-}: { onClose: () => void; onCreated: (id: string) => void }) => {
+  onClose, onCreated, defaultLooId,
+}: { onClose: () => void; onCreated: (milestone: Milestone) => void; defaultLooId?: string | null }) => {
   const { dispatch } = useStore();
   const loos = useLoos();
   const [title, setTitle] = useState('');
-  const [looId, setLooId] = useState(loos[0]?.id ?? '');
+  const [looId, setLooId] = useState(defaultLooId ?? loos[0]?.id ?? '');
   const [date, setDate] = useState(toIso(addDays(parseDate(todayIso()), 30)));
   const [owner, setOwner] = useState('Mike');
 
   const create = () => {
     const t = title.trim();
     if (!t || !looId || !date) return;
-    const id = newId('ms');
     const milestone: Milestone = {
-      id, title: t, looId, targetDate: date, status: 'future', confidence: 'medium',
-      priority: 'important',
-      owner, progress: 0, purpose: '', strategicImportance: '', successCriteria: [],
-      risks: [], decisions: [], tasks: [], evidence: [], notes: '', nextBestAction: '',
-      founderAction: false, major: false,
-      history: [{ id: newId('ch'), at: nowStamp(), summary: 'Milestone created.' }],
+      id: newId('ms'), title: t, looId, targetDate: date, status: 'future', owner: owner.trim(),
     };
     dispatch({ type: 'milestone/add', milestone });
-    onCreated(id);
+    onCreated(milestone);
     onClose();
   };
 
   return (
     <Modal title="Add milestone" onClose={onClose}>
       <p className="detail-text muted" style={{ fontSize: 14 }}>
-        A milestone is a condition that must become true, not an activity.
-        Write the end state: "Customer agrees to a defined pilot", not "Meet the customer".
+        Write the condition that must become true, not the activity:
+        "Customer agrees to a defined pilot", not "Meet the customer".
       </p>
-      <Field label="Condition to become true">
+      <Field label="Milestone">
         <input
           value={title}
           onChange={(e) => setTitle(e.target.value)}
@@ -69,44 +64,28 @@ export const AddMilestoneModal = ({
   );
 };
 
+/** Add a Strategic Horizon: a labelled point in time across every line. */
 export const AddHorizonModal = ({
   onClose, onCreated,
-}: { onClose: () => void; onCreated: (id: string) => void }) => {
+}: { onClose: () => void; onCreated: (horizon: StrategicHorizon) => void }) => {
   const { dispatch } = useStore();
-  const loos = useLoos();
   const [theme, setTheme] = useState('');
   const [date, setDate] = useState(toIso(addDays(parseDate(todayIso()), 365)));
 
   const create = () => {
     const t = theme.trim();
     if (!t || !date) return;
-    const id = newId('hz');
-    const horizon: StrategicHorizon = {
-      id, date, theme: t,
-      integratedState: 'Describe the endstate for this horizon.',
-      status: 'forming', confidence: 'low',
-      assumptions: [], risks: [],
-      assessment: 'Forming. Objectives are directional until earlier horizons deliver evidence.',
-      archived: false,
-    };
-    const objectives: HorizonObjective[] = loos.map((loo) => ({
-      id: newId('obj'),
-      horizonId: id,
-      looId: loo.id,
-      statement: `Define the ${loo.name} objective at this horizon.`,
-      summary: 'Objective to define',
-      confidence: 'low',
-    }));
-    dispatch({ type: 'horizon/add', horizon, objectives });
-    onCreated(id);
+    const horizon: StrategicHorizon = { id: newId('hz'), date, theme: t };
+    dispatch({ type: 'horizon/add', horizon });
+    onCreated(horizon);
     onClose();
   };
 
   return (
     <Modal title="Add Strategic Horizon" onClose={onClose}>
       <p className="detail-text muted" style={{ fontSize: 14 }}>
-        A Strategic Horizon is a point in time where progress across all Lines of Operation
-        must synchronise. The lines continue beyond it.
+        A point in time where progress across all Lines of Operation must synchronise.
+        The lines continue beyond it.
       </p>
       <Field label="Theme">
         <input

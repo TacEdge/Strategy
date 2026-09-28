@@ -7,7 +7,7 @@ import {
   parseDate, toIso, daysBetween, addDays, monthShort, todayIso, fmtDayMonth,
 } from '../lib/time';
 import { MarkerIcon } from './icons';
-import { STATUS_LABEL, ConfidenceMeter } from './ui';
+import { STATUS_LABEL } from './ui';
 
 const HEAD_H = 40;
 /** The LOO line runs at this fraction of lane height; labels hang below. */
@@ -20,11 +20,10 @@ interface DiagramProps {
   selectedMilestoneId: string | null;
   selectedHorizonId: string | null;
   focusLooId: string | null;
-  showAllDeps: boolean;
   showLabels: boolean;
   scrollRef: RefObject<HTMLDivElement | null>;
   onSelectMilestone: (id: string) => void;
-  onSelectHorizon: (id: string, focusLooId?: string) => void;
+  onSelectHorizon: (id: string) => void;
   onMoveMilestone: (id: string, iso: string) => void;
   onMoveHorizon: (id: string, iso: string) => void;
   onToggleFocus: (looId: string) => void;
@@ -79,8 +78,12 @@ const useDragDays = (
   }) };
 };
 
+/** Past its target date and not yet complete: needs attention now. */
+export const isOverdue = (m: Milestone, today: string): boolean =>
+  m.status !== 'complete' && m.targetDate < today;
+
 export const Diagram = ({
-  state, loos, view, selectedMilestoneId, selectedHorizonId, focusLooId, showAllDeps, showLabels, scrollRef,
+  state, loos, view, selectedMilestoneId, selectedHorizonId, focusLooId, showLabels, scrollRef,
   onSelectMilestone, onSelectHorizon, onMoveMilestone, onMoveHorizon, onToggleFocus,
 }: DiagramProps) => {
   const t0 = parseDate(TIMELINE_START);
@@ -93,11 +96,9 @@ export const Diagram = ({
   const totalH = HEAD_H + bodyH;
   const today = todayIso();
 
-  // Semantic density by view: dots -> labelled dots -> dates/owners -> tasks.
+  // Semantic density by view: dots -> labelled dots -> dates and owners.
   const sparse = px < 1; // 5y / 3y
-  const zoomedIn = ['6m', 'quarter', 'month'].includes(view.id);
   const showMeta = ['quarter', 'month'].includes(view.id);
-  const showTasks = view.id === 'month';
 
   const msDrag = useDragDays(
     px,
@@ -177,8 +178,7 @@ export const Diagram = ({
     loos.forEach((loo, laneIdx) => {
       const laneTop = HEAD_H + laneIdx * laneH;
       const ms = state.milestones
-        .filter((m) => m.looId === loo.id && m.status !== 'archived')
-        .filter((m) => (zoomedIn ? true : m.major && m.status !== 'superseded'))
+        .filter((m) => m.looId === loo.id)
         .sort((a, b) => a.targetDate.localeCompare(b.targetDate));
 
       const rowEnds: number[] = [];
@@ -196,42 +196,10 @@ export const Diagram = ({
       map.set(loo.id, placed);
     });
     return map;
-  }, [state.milestones, loos, laneH, zoomedIn, showLabels, labelW, px]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const positions = useMemo(() => {
-    const p = new Map<string, { x: number; y: number }>();
-    placedByLane.forEach((list) => list.forEach((pl) => {
-      const dx = msDrag.drag?.id === pl.m.id ? msDrag.drag.dx : 0;
-      p.set(pl.m.id, { x: pl.x + dx, y: pl.laneTop + laneH * LINE_AT });
-    }));
-    return p;
-  }, [placedByLane, msDrag.drag, laneH]);
-
-  // ---- selection focus: related milestones and visible dependencies ----
-  const relatedIds = useMemo(() => {
-    if (!selectedMilestoneId) return null;
-    const set = new Set([selectedMilestoneId]);
-    state.dependencies.forEach((d) => {
-      if (d.toMilestoneId === selectedMilestoneId && d.fromMilestoneId) set.add(d.fromMilestoneId);
-      if (d.fromMilestoneId === selectedMilestoneId) set.add(d.toMilestoneId);
-    });
-    return set;
-  }, [selectedMilestoneId, state.dependencies]);
-
-  const visibleDeps = useMemo(() => {
-    if (!zoomedIn) return [];
-    const placeable = state.dependencies.filter((d) =>
-      d.fromMilestoneId && positions.has(d.fromMilestoneId) && positions.has(d.toMilestoneId));
-    if (showAllDeps) return placeable;
-    if (!selectedMilestoneId) return [];
-    return placeable.filter((d) =>
-      d.toMilestoneId === selectedMilestoneId || d.fromMilestoneId === selectedMilestoneId);
-  }, [state.dependencies, positions, zoomedIn, showAllDeps, selectedMilestoneId]);
+  }, [state.milestones, loos, laneH, showLabels, labelW, px]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const horizons = useMemo(
-    () => state.horizons
-      .filter((h) => !h.archived)
-      .sort((a, b) => a.date.localeCompare(b.date)),
+    () => [...state.horizons].sort((a, b) => a.date.localeCompare(b.date)),
     [state.horizons],
   );
 
@@ -259,14 +227,13 @@ export const Diagram = ({
     onClick: fn,
   });
 
-  const isEmpty = state.milestones.filter((m) => m.status !== 'archived').length === 0;
+  const isEmpty = state.milestones.length === 0;
 
   const laneDim = (loo: LineOfOperation) => focusLooId !== null && focusLooId !== loo.id;
   const nodeOpacity = (loo: LineOfOperation, m: Milestone) => {
     if (laneDim(loo)) return 0.25;
-    if (relatedIds && !relatedIds.has(m.id)) return 0.4;
-    if (selectedHorizonId) return 0.55; // horizon selected: spine and objectives lead
-    if (m.status === 'superseded') return 0.5;
+    if (selectedMilestoneId && selectedMilestoneId !== m.id) return 0.55;
+    if (selectedHorizonId) return 0.55; // horizon selected: the spine leads
     return 1;
   };
 
@@ -354,44 +321,19 @@ export const Diagram = ({
             <span className="today-chip">Today</span>
           </div>
 
-          {/* dependency layer: hidden until a milestone is selected */}
-          {visibleDeps.length > 0 && (
-            <svg className="dep-layer" width={width} height={totalH} aria-hidden>
-              {visibleDeps.map((d) => {
-                const a = positions.get(d.fromMilestoneId!)!;
-                const b = positions.get(d.toMilestoneId)!;
-                const hl = selectedMilestoneId === d.toMilestoneId || selectedMilestoneId === d.fromMilestoneId;
-                const bend = Math.max(8, Math.min(110, Math.abs(b.x - a.x) * 0.4));
-                return (
-                  <g key={d.id}>
-                    <path
-                      className={`dep-path${hl ? ' highlight' : ''}`}
-                      d={`M ${a.x} ${a.y} C ${a.x + bend} ${a.y}, ${b.x - bend} ${b.y}, ${b.x - 9} ${b.y}`}
-                    />
-                    <circle className={`dep-dot${hl ? ' highlight' : ''}`} cx={b.x - 7} cy={b.y} r={2.6} />
-                  </g>
-                );
-              })}
-            </svg>
-          )}
-
-          {/* Strategic Horizon spines. The calendar header stays clean: one
-              large Endstate diamond sits at the top of the vertical line —
-              its position against the calendar carries the timing. Select
-              first, then drag the diamond to move the horizon. */}
+          {/* Strategic Horizon spines: a vertical line across every lane with
+              one diamond and the theme label at its head. Select first, then
+              drag the diamond to move the horizon. */}
           {horizons.map((h) => {
             const hzSelected = selectedHorizonId === h.id;
             const dx = hzSelected && hzDrag.drag?.id === h.id ? hzDrag.drag.dx : 0;
             const hx = x(h.date) + dx;
-            const forming = h.status === 'forming';
-            const title = hzSelected
-              ? `Strategic Horizon: ${h.theme} · ${fmtDayMonth(h.date)} ${parseDate(h.date).getFullYear()}. Drag to change date.`
-              : `Strategic Horizon: ${h.theme} · ${fmtDayMonth(h.date)} ${parseDate(h.date).getFullYear()}. Select for the Endstate.`;
-            const label = `Strategic Horizon ${fmtDayMonth(h.date)} ${parseDate(h.date).getFullYear()}: ${h.theme}`;
+            const when = `${fmtDayMonth(h.date)} ${parseDate(h.date).getFullYear()}`;
+            const title = `Strategic Horizon: ${h.theme} · ${when}. ${hzSelected ? 'Drag to change date.' : 'Select to edit.'}`;
             return (
               <div key={h.id}>
                 <div
-                  className={`horizon-line${forming ? ' forming' : ''}${hzSelected ? ' selected' : ''}`}
+                  className={`horizon-line${hzSelected ? ' selected' : ''}`}
                   style={{ left: hx, top: HEAD_H, height: bodyH }}
                 />
                 <button
@@ -405,47 +347,25 @@ export const Diagram = ({
                 />
                 <button
                   type="button"
-                  className={`horizon-endstate${forming ? ' forming' : ''}${hzSelected ? ' selected' : ''}`}
+                  className={`horizon-endstate${hzSelected ? ' selected' : ''}`}
                   style={{ left: hx, top: HEAD_H + 14 }}
                   title={title}
-                  aria-label={label}
+                  aria-label={`Strategic Horizon ${when}: ${h.theme}`}
                   {...(hzSelected
                     ? hzDrag.handlers(h.id)
                     : selectProps(() => onSelectHorizon(h.id)))}
                 >
                   <span className="endstate-diamond" aria-hidden />
+                  {showLabels && (
+                    <span className="horizon-label">
+                      <span className="horizon-theme">{h.theme}</span>
+                      {!sparse && <span className="horizon-when">{when}</span>}
+                    </span>
+                  )}
                 </button>
               </div>
             );
           })}
-
-          {/* Objective diamonds at each LOO x horizon intersection. The
-              short label appears on hover/focus or while the horizon is
-              selected; clicking opens the drawer at that LOO objective. */}
-          {horizons.map((h) =>
-            loos.map((loo, laneIdx) => {
-              const obj = state.objectives.find((o) => o.horizonId === h.id && o.looId === loo.id);
-              if (!obj) return null;
-              const dx = hzDrag.drag?.id === h.id ? hzDrag.drag.dx : 0;
-              const laneTop = HEAD_H + laneIdx * laneH;
-              return (
-                <button
-                  type="button"
-                  key={obj.id}
-                  className={`objective-marker${h.status === 'forming' ? ' forming' : ''}${selectedHorizonId === h.id ? ' hz-selected' : ''}`}
-                  style={{
-                    left: x(h.date) + dx,
-                    top: laneTop + laneH * LINE_AT,
-                    opacity: laneDim(loo) ? 0.25 : 1,
-                  }}
-                  {...selectProps(() => onSelectHorizon(h.id, loo.id))}
-                  title={`${loo.name} objective at ${fmtDayMonth(h.date)}: ${obj.statement}`}
-                >
-                  <span className="obj-diamond" aria-hidden />
-                  <span className="obj-summary">{obj.summary}</span>
-                </button>
-              );
-            }))}
 
           {/* milestones: dots on the line, labels beneath (or above when crowded) */}
           {loos.map((loo) => (placedByLane.get(loo.id) ?? []).map((pl) => {
@@ -456,7 +376,8 @@ export const Diagram = ({
             const dragging = msDrag.drag?.id === m.id && msDrag.drag.dx !== 0;
             const selected = selectedMilestoneId === m.id;
             const opacity = nodeOpacity(loo, m);
-            const label = `${m.title}. ${STATUS_LABEL[m.status]}, ${fmtDayMonth(m.targetDate)}, ${m.owner}.`;
+            const overdue = isOverdue(m, today);
+            const label = `${m.title}. ${STATUS_LABEL[m.status]}${overdue ? ', overdue' : ''}, ${fmtDayMonth(m.targetDate)}, ${m.owner}.`;
 
             if (selected && !sparse) {
               return (
@@ -471,16 +392,16 @@ export const Diagram = ({
                 >
                   <span className={`st-icon-${m.status}`}><MarkerIcon status={m.status} size={15} /></span>
                   <span className="msb-text">
-                    <span className="msb-title">{m.shortLabel ?? m.title}</span>
-                    {showMeta && <span className="msb-meta">{fmtDayMonth(m.targetDate)} · {m.owner}</span>}
+                    <span className="msb-title">{m.title}</span>
+                    {showMeta && (
+                      <span className={`msb-meta${overdue ? ' overdue' : ''}`}>
+                        {fmtDayMonth(m.targetDate)}{m.owner ? ` · ${m.owner}` : ''}
+                      </span>
+                    )}
                   </span>
                 </button>
               );
             }
-
-            const tasks = showTasks && ['active', 'at-risk', 'blocked'].includes(m.status)
-              ? m.tasks.filter((t) => !t.done).slice(0, 2)
-              : [];
 
             // Unselected milestones select on click only; dragging them pans
             // the canvas. Rescheduling requires selecting first.
@@ -488,10 +409,10 @@ export const Diagram = ({
               <div key={m.id} className="ms-point" style={{ opacity }}>
                 <button
                   type="button"
-                  className={`ms-dot st-icon-${m.status}`}
+                  className={`ms-dot st-icon-${m.status}${overdue ? ' overdue' : ''}`}
                   style={{ left: cx, top: cy }}
-                  aria-label={`${label} Select to view and move.`}
-                  title={`${label} Select to view and move.`}
+                  aria-label={`${label} Select to edit or move.`}
+                  title={`${label} Select to edit or move.`}
                   {...selectProps(() => onSelectMilestone(m.id))}
                 >
                   <MarkerIcon status={m.status} size={sparse ? 12 : 14} />
@@ -499,7 +420,7 @@ export const Diagram = ({
                 {showLabels && (
                   <button
                     type="button"
-                    className={`ms-tag${sparse ? ' compact' : ''}${pl.row === 1 ? ' above' : ''}${m.status === 'superseded' ? ' superseded' : ''}`}
+                    className={`ms-tag${sparse ? ' compact' : ''}${pl.row === 1 ? ' above' : ''}${overdue ? ' overdue' : ''}`}
                     style={{
                       left: cx,
                       top: pl.row === 1 ? cy - (sparse ? 8 : 10) : cy + (sparse ? 8 : 10),
@@ -510,20 +431,10 @@ export const Diagram = ({
                     tabIndex={-1}
                     aria-hidden
                   >
-                    <span className="ms-tag-title">{m.shortLabel ?? m.title}</span>
+                    <span className="ms-tag-title">{m.title}</span>
                     {showMeta && (
                       <span className="ms-tag-meta">
-                        {fmtDayMonth(m.targetDate)} · {m.owner}
-                        {m.progress > 0 && m.status !== 'complete' ? ` · ${m.progress}%` : ''}
-                        {' '}
-                        <ConfidenceMeter value={m.confidence} label={false} />
-                      </span>
-                    )}
-                    {tasks.length > 0 && (
-                      <span className="ms-tag-tasks">
-                        {tasks.map((t) => (
-                          <span key={t.id}>{t.week ? `${t.week}: ` : ''}{t.title}</span>
-                        ))}
+                        {fmtDayMonth(m.targetDate)}{m.owner ? ` · ${m.owner}` : ''}
                       </span>
                     )}
                   </button>
@@ -547,20 +458,19 @@ export const Diagram = ({
 export const DiagramLegend = () => (
   <div className="diagram-legend" aria-hidden>
     {([
-      ['complete', 'Completed'],
-      ['active', 'Active'],
       ['future', 'Future'],
+      ['active', 'Active'],
       ['at-risk', 'At risk'],
       ['blocked', 'Blocked'],
-      ['superseded', 'Superseded'],
+      ['complete', 'Complete'],
     ] as const).map(([status, text]) => (
       <span key={status} className="legend-item">
         <span className={`st-icon-${status}`}><MarkerIcon status={status} size={14} /></span>
         {text}
       </span>
     ))}
-    <span className="legend-item"><span className="endstate-diamond legend-endstate" /> Horizon endstate</span>
-    <span className="legend-item"><span className="obj-diamond" /> LOO objective</span>
+    <span className="legend-item"><span className="legend-overdue" /> Overdue</span>
+    <span className="legend-item"><span className="endstate-diamond legend-endstate" /> Strategic Horizon</span>
     <span className="legend-item"><span className="legend-continues" /> Line continues</span>
   </div>
 );

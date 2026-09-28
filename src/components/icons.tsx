@@ -103,15 +103,11 @@ export const IconStatusBlocked = (p: P) => (
 export const IconStatusFuture = (p: P) => (
   <svg {...base(p)}><circle cx="12" cy="12" r="8.5" strokeDasharray="3.4 3.2" /></svg>
 );
-export const IconStatusSuperseded = (p: P) => (
-  <svg {...base(p)}><circle cx="12" cy="12" r="8.5" /><path d="m6.5 17.5 11-11" /></svg>
-);
-export const IconStatusArchived = (p: P) => <IconArchive {...p} />;
 
 /**
  * Compact timeline markers. Shape carries status at dot scale: filled =
  * complete, ringed dot = active, open = future, triangle = at risk,
- * square = blocked, slashed = superseded. Each draws a card-coloured
+ * square = blocked. Each draws a card-coloured
  * backing so the LOO line does not show through.
  */
 export const MarkerIcon = ({ status, size = 14 }: { status: MilestoneStatus; size?: number }) => {
@@ -142,14 +138,7 @@ export const MarkerIcon = ({ status, size = 14 }: { status: MilestoneStatus; siz
           <rect x="2.6" y="2.6" width="8.8" height="8.8" rx="1" fill="none" stroke="currentColor" strokeWidth="1.6" />
         </svg>
       );
-    case 'superseded':
-      return (
-        <svg {...common}>{backing}
-          <circle cx="7" cy="7" r="4.9" fill="none" stroke="currentColor" strokeWidth="1.4" />
-          <path d="m3.9 10.1 6.2-6.2" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
-        </svg>
-      );
-    default: // future / archived
+    default: // future
       return (
         <svg {...common}>{backing}
           <circle cx="7" cy="7" r="4.9" fill="none" stroke="currentColor" strokeWidth="1.5" />
@@ -165,7 +154,5 @@ export const statusIcon = (status: MilestoneStatus, size = 16): JSX.Element => {
     case 'at-risk': return <IconStatusAtRisk size={size} />;
     case 'blocked': return <IconStatusBlocked size={size} />;
     case 'future': return <IconStatusFuture size={size} />;
-    case 'superseded': return <IconStatusSuperseded size={size} />;
-    case 'archived': return <IconStatusArchived size={size} />;
   }
 };

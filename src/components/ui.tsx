@@ -1,55 +1,23 @@
 import { useEffect, useRef } from 'react';
 import type { ReactNode } from 'react';
-import type { Confidence, MilestoneStatus, MilestonePriority } from '../types';
+import type { MilestoneStatus } from '../types';
 import { statusIcon } from './icons';
 
 export const STATUS_LABEL: Record<MilestoneStatus, string> = {
-  complete: 'Complete',
+  future: 'Future',
   active: 'Active',
   'at-risk': 'At risk',
   blocked: 'Blocked',
-  future: 'Future',
-  superseded: 'Superseded',
-  archived: 'Archived',
+  complete: 'Complete',
 };
 
-export const CONFIDENCE_LABEL: Record<Confidence, string> = {
-  high: 'High',
-  medium: 'Medium',
-  low: 'Low',
-};
-
-export const PRIORITY_LABEL: Record<MilestonePriority, string> = {
-  critical: 'Critical',
-  important: 'Important',
-  routine: 'Routine',
-};
+/** Statuses in the order they are offered for editing. */
+export const STATUSES: MilestoneStatus[] = ['future', 'active', 'at-risk', 'blocked', 'complete'];
 
 export const StatusBadge = ({ status, compact = false }: { status: MilestoneStatus; compact?: boolean }) => (
   <span className={`status-badge status-${status}`} title={STATUS_LABEL[status]}>
     {statusIcon(status, 14)}
     {!compact && <span>{STATUS_LABEL[status]}</span>}
-  </span>
-);
-
-/** Confidence as a three-segment meter plus text — never colour alone. */
-export const ConfidenceMeter = ({ value, label = true }: { value: Confidence; label?: boolean }) => {
-  const filled = value === 'high' ? 3 : value === 'medium' ? 2 : 1;
-  return (
-    <span className="confidence-meter" title={`Confidence: ${CONFIDENCE_LABEL[value]}`}>
-      <span className="confidence-bars" aria-hidden>
-        {[1, 2, 3].map((i) => (
-          <span key={i} className={i <= filled ? 'bar on' : 'bar'} />
-        ))}
-      </span>
-      {label && <span className="confidence-text">{CONFIDENCE_LABEL[value]}</span>}
-    </span>
-  );
-};
-
-export const ProgressBar = ({ value }: { value: number }) => (
-  <span className="progress-track" role="img" aria-label={`Progress ${value} percent`}>
-    <span className="progress-fill" style={{ width: `${Math.min(100, Math.max(0, value))}%` }} />
   </span>
 );
 

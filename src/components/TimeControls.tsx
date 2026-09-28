@@ -32,22 +32,20 @@ interface TimeControlsProps {
   loos: LineOfOperation[];
   visibleLooIds: Set<string>;
   expanded: boolean;
-  showAllDeps: boolean;
   showLabels: boolean;
   onToggleLabels: () => void;
   onView: (id: ViewId) => void;
   onToday: () => void;
   onToggleLoo: (id: string) => void;
   onFocusAll: () => void;
-  onToggleAllDeps: () => void;
   onToggleExpanded: () => void;
   onAdd: (kind: 'milestone' | 'horizon') => void;
 }
 
 export const TimeControls = ({
-  viewId, loos, visibleLooIds, expanded, showAllDeps, showLabels,
+  viewId, loos, visibleLooIds, expanded, showLabels,
   onToggleLabels, onView, onToday, onToggleLoo, onFocusAll,
-  onToggleAllDeps, onToggleExpanded, onAdd,
+  onToggleExpanded, onAdd,
 }: TimeControlsProps) => {
   const [openMenu, setOpenMenu] = useState<'focus' | 'add' | null>(null);
 
@@ -115,11 +113,6 @@ export const TimeControls = ({
               <span>{loo.name}</span>
             </label>
           ))}
-          <div className="menu-divider" />
-          <label className="filter-row">
-            <input type="checkbox" checked={showAllDeps} onChange={onToggleAllDeps} />
-            <span>Show all dependencies</span>
-          </label>
         </Menu>
       </div>
 

@@ -116,7 +116,7 @@ export const LooManager = ({ onClose }: { onClose: () => void }) => {
       {confirm && confirmTarget && confirm.kind === 'archive' && (
         <ConfirmDialog
           title="Archive Line of Operation"
-          message={`Archive "${confirmTarget.name}"? It leaves the diagram but keeps its milestones and history.`}
+          message={`Archive "${confirmTarget.name}"? It leaves the diagram but keeps its milestones.`}
           confirmLabel="Archive"
           onCancel={() => setConfirm(null)}
           onConfirm={() => { dispatch({ type: 'loo/archive', id: confirm.id }); setConfirm(null); }}
@@ -125,7 +125,7 @@ export const LooManager = ({ onClose }: { onClose: () => void }) => {
       {confirm && confirmTarget && confirm.kind === 'delete' && (
         <ConfirmDialog
           title="Delete Line of Operation"
-          message={`Permanently delete "${confirmTarget.name}" and all its milestones and objectives? Archiving preserves strategic history; deletion does not.`}
+          message={`Permanently delete "${confirmTarget.name}" and all its milestones? Archiving keeps them off the diagram without deleting them.`}
           confirmLabel="Delete permanently"
           danger
           onCancel={() => setConfirm(null)}

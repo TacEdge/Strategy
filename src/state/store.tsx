@@ -3,11 +3,9 @@ import {
 } from 'react';
 import type { ReactNode, Dispatch } from 'react';
 import type {
-  CampaignState, Milestone, LineOfOperation, StrategicHorizon,
-  HorizonObjective, Dependency, ChangeHistoryEntry, WeeklyPlan,
+  CampaignState, Milestone, MilestoneStatus, LineOfOperation, StrategicHorizon, WeeklyPlan,
 } from '../types';
 import { seedState } from '../data/seed';
-import { nowStamp, fmtDate } from '../lib/time';
 
 const STORAGE_KEY = 'tacedge-strategy-campaign-v1';
 
@@ -15,102 +13,32 @@ let idCounter = 0;
 export const newId = (prefix: string): string =>
   `${prefix}-${Date.now().toString(36)}-${(idCounter++).toString(36)}`;
 
-const entry = (summary: string): ChangeHistoryEntry => ({
-  id: newId('ch'),
-  at: nowStamp(),
-  summary,
-});
-
 export type Action =
-  | { type: 'milestone/update'; id: string; patch: Partial<Milestone>; historySummary?: string }
-  | { type: 'milestone/move-date'; id: string; targetDate: string }
-  | { type: 'milestone/move-loo'; id: string; looId: string }
   | { type: 'milestone/add'; milestone: Milestone }
-  | { type: 'milestone/duplicate'; id: string }
-  | { type: 'milestone/archive'; id: string }
+  | { type: 'milestone/update'; id: string; patch: Partial<Milestone> }
   | { type: 'milestone/delete'; id: string }
   | { type: 'loo/update'; id: string; patch: Partial<LineOfOperation> }
   | { type: 'loo/add'; loo: LineOfOperation }
   | { type: 'loo/reorder'; id: string; direction: -1 | 1 }
   | { type: 'loo/archive'; id: string }
   | { type: 'loo/delete'; id: string }
+  | { type: 'horizon/add'; horizon: StrategicHorizon }
   | { type: 'horizon/update'; id: string; patch: Partial<StrategicHorizon> }
-  | { type: 'horizon/add'; horizon: StrategicHorizon; objectives: HorizonObjective[] }
-  | { type: 'horizon/archive'; id: string }
   | { type: 'horizon/delete'; id: string }
-  | { type: 'objective/update'; id: string; patch: Partial<HorizonObjective> }
-  | { type: 'dependency/add'; dependency: Dependency }
-  | { type: 'dependency/remove'; id: string }
   | { type: 'weekly/update'; patch: Partial<WeeklyPlan> }
   | { type: 'campaign/reset' };
 
-const withHistory = (m: Milestone, summary: string): Milestone => ({
-  ...m,
-  history: [...m.history, entry(summary)],
-});
-
-const mapMilestone = (
-  state: CampaignState, id: string, fn: (m: Milestone) => Milestone,
-): CampaignState => ({
-  ...state,
-  milestones: state.milestones.map((m) => (m.id === id ? fn(m) : m)),
-});
-
 export const reducer = (state: CampaignState, action: Action): CampaignState => {
   switch (action.type) {
-    case 'milestone/update': {
-      return mapMilestone(state, action.id, (m) => {
-        const next = { ...m, ...action.patch };
-        const summary =
-          action.historySummary ??
-          (action.patch.title !== undefined && action.patch.title !== m.title
-            ? `Title changed to "${action.patch.title}".`
-            : action.patch.status !== undefined && action.patch.status !== m.status
-              ? `Status changed from ${m.status} to ${action.patch.status}.`
-              : action.patch.confidence !== undefined && action.patch.confidence !== m.confidence
-                ? `Confidence changed to ${action.patch.confidence}.`
-                : 'Milestone updated.');
-        return withHistory(next, summary);
-      });
-    }
-    case 'milestone/move-date': {
-      return mapMilestone(state, action.id, (m) =>
-        m.targetDate === action.targetDate
-          ? m
-          : withHistory(
-              { ...m, targetDate: action.targetDate },
-              `Target date moved from ${fmtDate(m.targetDate)} to ${fmtDate(action.targetDate)}.`,
-            ));
-    }
-    case 'milestone/move-loo': {
-      const loo = state.loos.find((l) => l.id === action.looId);
-      return mapMilestone(state, action.id, (m) =>
-        withHistory({ ...m, looId: action.looId }, `Moved to ${loo?.name ?? 'another line'}.`));
-    }
     case 'milestone/add':
       return { ...state, milestones: [...state.milestones, action.milestone] };
-    case 'milestone/duplicate': {
-      const src = state.milestones.find((m) => m.id === action.id);
-      if (!src) return state;
-      const copy: Milestone = {
-        ...src,
-        id: newId('ms'),
-        title: `${src.title} (copy)`,
-        history: [entry(`Duplicated from "${src.title}".`)],
-      };
-      return { ...state, milestones: [...state.milestones, copy] };
-    }
-    case 'milestone/archive':
-      return mapMilestone(state, action.id, (m) =>
-        withHistory({ ...m, status: 'archived' }, 'Milestone archived.'));
-    case 'milestone/delete':
+    case 'milestone/update':
       return {
         ...state,
-        milestones: state.milestones.filter((m) => m.id !== action.id),
-        dependencies: state.dependencies.filter(
-          (d) => d.toMilestoneId !== action.id && d.fromMilestoneId !== action.id,
-        ),
+        milestones: state.milestones.map((m) => (m.id === action.id ? { ...m, ...action.patch } : m)),
       };
+    case 'milestone/delete':
+      return { ...state, milestones: state.milestones.filter((m) => m.id !== action.id) };
 
     case 'loo/update':
       return {
@@ -142,43 +70,17 @@ export const reducer = (state: CampaignState, action: Action): CampaignState => 
         loos: state.loos.filter((l) => l.id !== action.id),
         looOrder: state.looOrder.filter((id) => id !== action.id),
         milestones: state.milestones.filter((m) => m.looId !== action.id),
-        objectives: state.objectives.filter((o) => o.looId !== action.id),
       };
 
+    case 'horizon/add':
+      return { ...state, horizons: [...state.horizons, action.horizon] };
     case 'horizon/update':
       return {
         ...state,
         horizons: state.horizons.map((h) => (h.id === action.id ? { ...h, ...action.patch } : h)),
       };
-    case 'horizon/add':
-      return {
-        ...state,
-        horizons: [...state.horizons, action.horizon],
-        objectives: [...state.objectives, ...action.objectives],
-      };
-    case 'horizon/archive':
-      return {
-        ...state,
-        horizons: state.horizons.map((h) =>
-          h.id === action.id ? { ...h, archived: true, status: 'archived' } : h),
-      };
     case 'horizon/delete':
-      return {
-        ...state,
-        horizons: state.horizons.filter((h) => h.id !== action.id),
-        objectives: state.objectives.filter((o) => o.horizonId !== action.id),
-      };
-
-    case 'objective/update':
-      return {
-        ...state,
-        objectives: state.objectives.map((o) => (o.id === action.id ? { ...o, ...action.patch } : o)),
-      };
-
-    case 'dependency/add':
-      return { ...state, dependencies: [...state.dependencies, action.dependency] };
-    case 'dependency/remove':
-      return { ...state, dependencies: state.dependencies.filter((d) => d.id !== action.id) };
+      return { ...state, horizons: state.horizons.filter((h) => h.id !== action.id) };
 
     case 'weekly/update':
       return { ...state, weekly: { ...state.weekly, ...action.patch } };
@@ -191,14 +93,28 @@ export const reducer = (state: CampaignState, action: Action): CampaignState => 
   }
 };
 
-/**
- * Migration v8 -> v9: rename the default Lines of Operation
- * (Customers -> Market, Revenue -> Commercial, refreshed sublines) and
- * delete the notional seeded records. Seeded records are identified by
- * their fixture ID patterns; user-created records use timestamped IDs
- * and are preserved with their relationships, ordering and history.
- */
-const SEED_ID = [/^ms-(mv|pt|cr|sr|cc)-\d+$/, /^dep-\d+$/, /^hz-\d+$/, /^obj-h\d+-/];
+/* ------------------------------------------------------------------ */
+/* Persistence and migration                                            */
+/* ------------------------------------------------------------------ */
+
+/** Loose shape of any earlier stored campaign (schema 8-10). */
+interface LegacyState {
+  schemaVersion?: number;
+  campaign?: { id?: string; name?: string; vision?: { statement?: string } | string };
+  loos?: LineOfOperation[];
+  looOrder?: string[];
+  horizons?: { id: string; date: string; theme: string; archived?: boolean }[];
+  milestones?: {
+    id: string; title: string; looId: string; targetDate: string;
+    status: string; owner?: string;
+  }[];
+  weekly?: Partial<WeeklyPlan>;
+}
+
+const STATUSES: MilestoneStatus[] = ['future', 'active', 'at-risk', 'blocked', 'complete'];
+
+/** Seeded fixture records from schema 8 are identified by their ID patterns. */
+const SEED_ID = [/^ms-(mv|pt|cr|sr|cc)-\d+$/, /^hz-\d+$/];
 const isSeedId = (id: string) => SEED_ID.some((r) => r.test(id));
 
 const SEEDED_OUTCOMES = [
@@ -207,71 +123,76 @@ const SEEDED_OUTCOMES = [
   'Pilot pricing structure tested with the design partner',
 ];
 
-const migrateV8toV9 = (s: CampaignState): CampaignState => {
-  const removedMilestones = new Set(
-    s.milestones.filter((m) => isSeedId(m.id)).map((m) => m.id),
-  );
+/**
+ * Bring any earlier schema up to the current one. Everything the reduced
+ * model no longer carries (purpose, criteria, tasks, risks, evidence,
+ * dependencies, objectives, history, priority, confidence, progress) is
+ * dropped. Milestones keep their title, line, date, owner and status;
+ * archived and superseded milestones are removed, as they left the diagram
+ * already. Schema 8 additionally drops its notional seed records and
+ * renames the default lines, as the v9 migration used to.
+ */
+const migrate = (raw: LegacyState): CampaignState => {
+  const version = raw.schemaVersion ?? 0;
+  const v8 = version <= 8;
+
+  const loos = (raw.loos ?? seedState.loos).map((l) => {
+    if (!v8) return l;
+    if (l.id === 'loo-mv' && l.name === 'Customers') {
+      return { ...l, name: 'Market', description: 'Prove demand and secure reference customers.' };
+    }
+    if (l.id === 'loo-cr' && l.name === 'Revenue') {
+      return { ...l, name: 'Commercial', description: 'Convert customer value into repeatable recurring revenue.' };
+    }
+    if (l.id === 'loo-pt' && l.name === 'Product' && l.description === 'Build and validate the platform.') {
+      return { ...l, description: 'Build and validate a trusted field-to-record platform.' };
+    }
+    if (l.id === 'loo-sr' && l.name === 'Partnerships' && l.description === 'Create leverage and routes to market.') {
+      return { ...l, description: 'Create leverage, capability and routes to market.' };
+    }
+    return l;
+  });
+
+  const vision = raw.campaign?.vision;
+  const outcomes = raw.weekly?.outcomes ?? seedState.weekly.outcomes;
+
   return {
-    ...s,
-    schemaVersion: 9,
+    schemaVersion: seedState.schemaVersion,
     campaign: {
-      ...s.campaign,
-      theme: s.campaign.theme === 'Prove the Narrow V2 Model' ? '' : s.campaign.theme,
-      activeHorizonId: isSeedId(s.campaign.activeHorizonId) ? '' : s.campaign.activeHorizonId,
+      id: raw.campaign?.id ?? seedState.campaign.id,
+      name: raw.campaign?.name ?? seedState.campaign.name,
+      vision: typeof vision === 'string' ? vision : vision?.statement ?? seedState.campaign.vision,
     },
-    loos: s.loos.map((l) => {
-      // Only rename defaults still carrying the old default name; a LOO the
-      // user renamed or created stays untouched.
-      if (l.id === 'loo-mv' && l.name === 'Customers') {
-        return { ...l, name: 'Market', description: 'Prove demand and secure reference customers.' };
-      }
-      if (l.id === 'loo-cr' && l.name === 'Revenue') {
-        return { ...l, name: 'Commercial', description: 'Convert customer value into repeatable recurring revenue.' };
-      }
-      if (l.id === 'loo-pt' && l.name === 'Product' && l.description === 'Build and validate the platform.') {
-        return { ...l, description: 'Build and validate a trusted field-to-record platform.' };
-      }
-      if (l.id === 'loo-sr' && l.name === 'Partnerships' && l.description === 'Create leverage and routes to market.') {
-        return { ...l, description: 'Create leverage, capability and routes to market.' };
-      }
-      return l;
-    }),
-    horizons: s.horizons.filter((h) => !isSeedId(h.id)),
-    objectives: s.objectives.filter((o) => !isSeedId(o.id) && !isSeedId(o.horizonId)),
-    milestones: s.milestones.filter((m) => !isSeedId(m.id)),
-    dependencies: s.dependencies.filter((d) =>
-      !isSeedId(d.id)
-      && !removedMilestones.has(d.toMilestoneId)
-      && (!d.fromMilestoneId || !removedMilestones.has(d.fromMilestoneId))),
+    loos,
+    looOrder: raw.looOrder ?? loos.map((l) => l.id),
+    horizons: (raw.horizons ?? [])
+      .filter((h) => !h.archived && !(v8 && isSeedId(h.id)))
+      .map((h) => ({ id: h.id, date: h.date, theme: h.theme })),
+    milestones: (raw.milestones ?? [])
+      .filter((m) => !(v8 && isSeedId(m.id)))
+      .filter((m) => m.status !== 'archived' && m.status !== 'superseded')
+      .map((m) => ({
+        id: m.id,
+        title: m.title,
+        looId: m.looId,
+        targetDate: m.targetDate,
+        status: STATUSES.includes(m.status as MilestoneStatus) ? (m.status as MilestoneStatus) : 'future',
+        owner: m.owner ?? '',
+      })),
     weekly: {
-      ...s.weekly,
-      outcomes: s.weekly.outcomes.map((o) => (SEEDED_OUTCOMES.includes(o) ? '' : o)),
+      outcomes: v8 ? outcomes.map((o) => (SEEDED_OUTCOMES.includes(o) ? '' : o)) : outcomes,
+      updatedAt: raw.weekly?.updatedAt ?? '',
     },
   };
 };
-
-/**
- * Migration v9 -> v10: milestones gain a command-assigned priority band.
- * Existing milestones default to Important; everything else is untouched.
- */
-const migrateV9toV10 = (s: CampaignState): CampaignState => ({
-  ...s,
-  schemaVersion: 10,
-  milestones: s.milestones.map((m) => {
-    const prior = (m as Partial<Milestone>).priority;
-    return { ...m, priority: prior ?? 'important' };
-  }),
-});
 
 const load = (): CampaignState => {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return seedState;
-    const parsed = JSON.parse(raw) as CampaignState;
-    if (parsed.schemaVersion === seedState.schemaVersion) return parsed;
-    if (parsed.schemaVersion === 9) return migrateV9toV10(parsed);
-    if (parsed.schemaVersion === 8) return migrateV9toV10(migrateV8toV9(parsed));
-    return seedState;
+    const parsed = JSON.parse(raw) as LegacyState;
+    if (parsed.schemaVersion === seedState.schemaVersion) return parsed as unknown as CampaignState;
+    return migrate(parsed);
   } catch {
     return seedState;
   }

@@ -132,7 +132,7 @@ const SEEDED_OUTCOMES = [
  * already. Schema 8 additionally drops its notional seed records and
  * renames the default lines, as the v9 migration used to.
  */
-const migrate = (raw: LegacyState): CampaignState => {
+const migrateLegacy = (raw: LegacyState): CampaignState => {
   const version = raw.schemaVersion ?? 0;
   const v8 = version <= 8;
 
@@ -157,7 +157,7 @@ const migrate = (raw: LegacyState): CampaignState => {
   const outcomes = raw.weekly?.outcomes ?? seedState.weekly.outcomes;
 
   return {
-    schemaVersion: seedState.schemaVersion,
+    schemaVersion: 11,
     campaign: {
       id: raw.campaign?.id ?? seedState.campaign.id,
       name: raw.campaign?.name ?? seedState.campaign.name,
@@ -186,13 +186,52 @@ const migrate = (raw: LegacyState): CampaignState => {
   };
 };
 
+/**
+ * Migration 11 -> 12: three default Lines of Operation instead of five.
+ * Product, Commercial and Company remain; the default Market and
+ * Partnerships lines are removed and their milestones move to Commercial,
+ * which now covers customers, contracts and agreements. Only lines still
+ * carrying their default ID are touched; lines the user created stay.
+ * Descriptions are refreshed only where they still read as the old default.
+ */
+const FOLDED_INTO_COMMERCIAL = ['loo-mv', 'loo-sr'];
+const OLD_DEFAULT_DESCRIPTION: Record<string, string> = {
+  'loo-pt': 'Build and validate a trusted field-to-record platform.',
+  'loo-cr': 'Convert customer value into repeatable recurring revenue.',
+  'loo-cc': 'Build the team, runway and delivery system.',
+};
+
+const migrateV11toV12 = (s: CampaignState): CampaignState => {
+  const commercial = s.loos.find((l) => l.id === 'loo-cr');
+  const folded = new Set(commercial ? FOLDED_INTO_COMMERCIAL : []);
+  const loos = s.loos
+    .filter((l) => !folded.has(l.id))
+    .map((l) => {
+      const fresh = seedState.loos.find((d) => d.id === l.id);
+      return fresh && l.description === OLD_DEFAULT_DESCRIPTION[l.id]
+        ? { ...l, description: fresh.description }
+        : l;
+    });
+  const looOrder = s.looOrder.filter((id) => !folded.has(id) && loos.some((l) => l.id === id));
+  // Renumber to match the visible order.
+  const numbered = loos.map((l) => ({ ...l, number: looOrder.indexOf(l.id) + 1 || l.number }));
+  return {
+    ...s,
+    schemaVersion: 12,
+    loos: numbered,
+    looOrder,
+    milestones: s.milestones.map((m) => (folded.has(m.looId) ? { ...m, looId: 'loo-cr' } : m)),
+  };
+};
+
 const load = (): CampaignState => {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return seedState;
     const parsed = JSON.parse(raw) as LegacyState;
     if (parsed.schemaVersion === seedState.schemaVersion) return parsed as unknown as CampaignState;
-    return migrate(parsed);
+    const v11 = parsed.schemaVersion === 11 ? (parsed as unknown as CampaignState) : migrateLegacy(parsed);
+    return migrateV11toV12(v11);
   } catch {
     return seedState;
   }

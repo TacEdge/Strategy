@@ -21,7 +21,9 @@ glance: what needs attention shows from the labels alone, synchronised by
 Line of Operation and by time. Nothing needs opening to be understood.
 
 - **Lines of Operation** — endure through time; they never terminate at a
-  horizon.
+  horizon. Three by default: **Product** (design and build of the
+  product), **Commercial** (contracts and agreements with customers) and
+  **Company** (the internal workings: brand, marketing, team, runway).
 - **Milestones** — conditions that must become true, not activities. A
   milestone is a title, a Line of Operation, a target date, an owner and a
   status (future, active, at risk, blocked, complete). A milestone past its

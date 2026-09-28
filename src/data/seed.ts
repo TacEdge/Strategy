@@ -1,12 +1,12 @@
 import type { CampaignState } from '../types';
 
 /**
- * Clean default campaign: the five Lines of Operation and nothing else.
+ * Clean default campaign: the three Lines of Operation and nothing else.
  * No notional milestones or horizons — the campaign starts empty and
  * real data is added by the user.
  */
 export const seedState: CampaignState = {
-  schemaVersion: 11,
+  schemaVersion: 12,
 
   campaign: {
     id: 'campaign-1',
@@ -16,32 +16,22 @@ export const seedState: CampaignState = {
 
   loos: [
     {
-      id: 'loo-mv', number: 1, name: 'Market',
-      description: 'Prove demand and secure reference customers.',
+      id: 'loo-pt', number: 1, name: 'Product',
+      description: 'Design and build the product.',
       owner: 'Mike', archived: false,
     },
     {
-      id: 'loo-pt', number: 2, name: 'Product',
-      description: 'Build and validate a trusted field-to-record platform.',
+      id: 'loo-cr', number: 2, name: 'Commercial',
+      description: 'Win contracts and agreements with customers.',
       owner: 'Mike', archived: false,
     },
     {
-      id: 'loo-cr', number: 3, name: 'Commercial',
-      description: 'Convert customer value into repeatable recurring revenue.',
-      owner: 'Mike', archived: false,
-    },
-    {
-      id: 'loo-sr', number: 4, name: 'Partnerships',
-      description: 'Create leverage, capability and routes to market.',
-      owner: 'Mike', archived: false,
-    },
-    {
-      id: 'loo-cc', number: 5, name: 'Company',
-      description: 'Build the team, runway and delivery system.',
+      id: 'loo-cc', number: 3, name: 'Company',
+      description: 'Run the company: brand, marketing, team and runway.',
       owner: 'Mike', archived: false,
     },
   ],
-  looOrder: ['loo-mv', 'loo-pt', 'loo-cr', 'loo-sr', 'loo-cc'],
+  looOrder: ['loo-pt', 'loo-cr', 'loo-cc'],
 
   horizons: [],
   milestones: [],

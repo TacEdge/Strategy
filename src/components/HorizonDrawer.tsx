@@ -5,7 +5,7 @@ import { ConfirmDialog, Field } from './ui';
 import { IconClose, IconTrash } from './icons';
 import { TERMS } from '../lib/terms';
 
-/** Compact edit panel for one Strategic Milestone: theme and date. */
+/** Compact edit panel for one Strategic Objective: theme and date. */
 export const HorizonDrawer = ({
   horizonId, onClose,
 }: {
@@ -23,14 +23,14 @@ export const HorizonDrawer = ({
   const patch = (p: Partial<typeof h>) => dispatch({ type: 'horizon/update', id: h.id, patch: p });
 
   return (
-    <aside className="drawer drawer-compact" aria-label={`${TERMS.milestone}: ${h.theme}`}>
+    <aside className="drawer drawer-compact" aria-label={`${TERMS.objective}: ${h.theme}`}>
       <div className="drawer-head">
         <div className="drawer-head-info">
-          <span className="eyebrow">{TERMS.milestone}</span>
+          <span className="eyebrow">{TERMS.objective}</span>
           <h2 className="drawer-title">{h.theme}</h2>
           <span className="detail-text muted" style={{ fontSize: 13 }}>{fmtDateLong(h.date)}</span>
         </div>
-        <button type="button" className="icon-btn" onClick={onClose} aria-label={`Close ${TERMS.milestoneLower} panel`}>
+        <button type="button" className="icon-btn" onClick={onClose} aria-label={`Close ${TERMS.objectiveLower} panel`}>
           <IconClose size={16} />
         </button>
       </div>
@@ -58,7 +58,7 @@ export const HorizonDrawer = ({
 
       {confirm && (
         <ConfirmDialog
-          title={`Delete ${TERMS.milestoneLower}`}
+          title={`Delete ${TERMS.objectiveLower}`}
           message={`Delete "${h.theme}"? This cannot be undone.`}
           confirmLabel="Delete"
           danger

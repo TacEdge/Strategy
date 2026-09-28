@@ -6,7 +6,7 @@ import { TERMS } from '../lib/terms';
 
 /**
  * Weekly review: what needs attention, what is due before the next
- * strategic milestone, what has been achieved, and the three outcomes for
+ * strategic objective, what has been achieved, and the three outcomes for
  * the week. Everything here is read straight off key task status and date.
  */
 export const ReviewPage = ({
@@ -26,7 +26,7 @@ export const ReviewPage = ({
   // Listed under Overdue only when not already listed under pressure.
   const overdue = overdueAll.filter((m) => !underPressure.includes(m));
 
-  // The next strategic milestone ahead of today; failing that, the latest one on the diagram.
+  // The next strategic objective ahead of today; failing that, the latest one on the diagram.
   const horizon =
     [...state.horizons].filter((h) => h.date >= today).sort((a, b) => a.date.localeCompare(b.date))[0]
     ?? [...state.horizons].sort((a, b) => b.date.localeCompare(a.date))[0];
@@ -55,9 +55,9 @@ export const ReviewPage = ({
         </button>
       </div>
 
-      <section className="today-context" aria-label="Movement toward the next strategic milestone">
+      <section className="today-context" aria-label="Movement toward the next strategic objective">
         <div className="today-context-cell">
-          <Eyebrow>Next {TERMS.milestone}</Eyebrow>
+          <Eyebrow>Next {TERMS.objective}</Eyebrow>
           <p className="today-context-value">{horizon ? horizon.theme : 'None set'}</p>
           <p className="today-context-sub">
             {horizon && daysTo !== null

@@ -134,7 +134,7 @@ export const TimeControls = ({
             {TERMS.task}
           </button>
           <button type="button" className="menu-action" onClick={() => { onAdd('horizon'); setOpenMenu(null); }}>
-            {TERMS.milestone}
+            {TERMS.objective}
           </button>
         </Menu>
       </div>

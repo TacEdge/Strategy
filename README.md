@@ -28,24 +28,24 @@ Line of Operation and by time. Nothing needs opening to be understood.
   task is a title, a Line of Operation, a target date, an owner and a
   status (future, active, at risk, blocked, complete). A key task past its
   date and not complete reads as overdue on the diagram.
-- **Strategic Milestones** — vertical synchronisation points: a theme and
+- **Strategic Objectives** — vertical synchronisation points: a theme and
   a date. Lines continue visually through and beyond every one.
 
 In code the older names remain: a key task is a `Milestone` and a
-strategic milestone is a `StrategicHorizon`. User-facing words live in
+strategic objective is a `StrategicHorizon`. User-facing words live in
 `src/lib/terms.ts`.
 
 ## Views
 
 - **Campaign** (`#/`, the landing route) — the LOO Diagram: lanes, key
-  tasks as status dots with labels, strategic milestone spines with their
-  theme, semantic zoom. Add a key task or a strategic milestone from the
+  tasks as status dots with labels, strategic objective spines with their
+  theme, semantic zoom. Add a key task or a strategic objective from the
   toolbar and move on; nothing opens. Selecting a dot opens a compact
   panel to change status, date, line or owner, or delete.
 - **Key Tasks** (`#/tasks`) — the flat list behind the diagram, attention
   first. A row opens that key task on the diagram.
 - **Reviews** (`#/review`) — what needs attention, what is due before the
-  next strategic milestone, what has been achieved, and the three outcomes
+  next strategic objective, what has been achieved, and the three outcomes
   for the next seven days.
 
 Types live in `src/types.ts`; seeded campaign data in `src/data/seed.ts`;

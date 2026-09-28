@@ -65,7 +65,7 @@ export const AddMilestoneModal = ({
   );
 };
 
-/** Add a Strategic Milestone: a labelled point in time across every line. */
+/** Add a Strategic Objective: a labelled point in time across every line. */
 export const AddHorizonModal = ({
   onClose, onCreated,
 }: { onClose: () => void; onCreated: (horizon: StrategicHorizon) => void }) => {
@@ -83,7 +83,7 @@ export const AddHorizonModal = ({
   };
 
   return (
-    <Modal title={`Add ${TERMS.milestone}`} onClose={onClose}>
+    <Modal title={`Add ${TERMS.objective}`} onClose={onClose}>
       <p className="detail-text muted" style={{ fontSize: 14 }}>
         A point in time where progress across all Lines of Operation must synchronise.
         The lines continue beyond it.
@@ -103,7 +103,7 @@ export const AddHorizonModal = ({
       <div className="modal-actions">
         <button type="button" className="btn btn-secondary" onClick={onClose}>Cancel</button>
         <button type="button" className="btn btn-primary" onClick={create} disabled={!theme.trim()}>
-          Add {TERMS.milestoneLower}
+          Add {TERMS.objectiveLower}
         </button>
       </div>
     </Modal>

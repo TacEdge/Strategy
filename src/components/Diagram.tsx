@@ -322,7 +322,7 @@ export const Diagram = ({
             <span className="today-chip">Today</span>
           </div>
 
-          {/* Strategic Milestone spines: a vertical line across every lane with
+          {/* Strategic Objective spines: a vertical line across every lane with
               one diamond and the theme label at its head. Select first, then
               drag the diamond to move it. */}
           {horizons.map((h) => {
@@ -330,7 +330,7 @@ export const Diagram = ({
             const dx = hzSelected && hzDrag.drag?.id === h.id ? hzDrag.drag.dx : 0;
             const hx = x(h.date) + dx;
             const when = `${fmtDayMonth(h.date)} ${parseDate(h.date).getFullYear()}`;
-            const title = `${TERMS.milestone}: ${h.theme} · ${when}. ${hzSelected ? 'Drag to change date.' : 'Select to edit.'}`;
+            const title = `${TERMS.objective}: ${h.theme} · ${when}. ${hzSelected ? 'Drag to change date.' : 'Select to edit.'}`;
             return (
               <div key={h.id}>
                 <div
@@ -351,7 +351,7 @@ export const Diagram = ({
                   className={`horizon-endstate${hzSelected ? ' selected' : ''}`}
                   style={{ left: hx, top: HEAD_H + 14 }}
                   title={title}
-                  aria-label={`${TERMS.milestone} ${when}: ${h.theme}`}
+                  aria-label={`${TERMS.objective} ${when}: ${h.theme}`}
                   {...(hzSelected
                     ? hzDrag.handlers(h.id)
                     : selectProps(() => onSelectHorizon(h.id)))}
@@ -471,7 +471,7 @@ export const DiagramLegend = () => (
       </span>
     ))}
     <span className="legend-item"><span className="legend-overdue" /> Overdue</span>
-    <span className="legend-item"><span className="endstate-diamond legend-endstate" /> {TERMS.milestone}</span>
+    <span className="legend-item"><span className="endstate-diamond legend-endstate" /> {TERMS.objective}</span>
     <span className="legend-item"><span className="legend-continues" /> Line continues</span>
   </div>
 );

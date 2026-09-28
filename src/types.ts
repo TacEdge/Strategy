@@ -3,7 +3,7 @@
  *
  * Deliberately small. The diagram is read at a glance: a key task is a
  * labelled condition on a Line of Operation at a point in time, and a
- * strategic milestone is a labelled synchronisation point across all lines.
+ * strategic objective is a labelled synchronisation point across all lines.
  * Nothing here needs opening to be understood.
  */
 
@@ -30,7 +30,7 @@ export interface LineOfOperation {
 }
 
 /**
- * Shown in the product as a **Strategic Milestone**: a vertical
+ * Shown in the product as a **Strategic Objective**: a vertical
  * synchronisation point. Lines continue through and beyond it.
  */
 export interface StrategicHorizon {

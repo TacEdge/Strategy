@@ -2,7 +2,7 @@ name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: [claude/tacedge-loo-diagram-prototype-98pp6r]
+    branches: [claude/simplify-tech-edge-strategy-frip8c]
   workflow_dispatch:
 
 permissions:

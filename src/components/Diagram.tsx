@@ -8,6 +8,7 @@ import {
 } from '../lib/time';
 import { MarkerIcon } from './icons';
 import { STATUS_LABEL } from './ui';
+import { TERMS } from '../lib/terms';
 
 const HEAD_H = 40;
 /** The LOO line runs at this fraction of lane height; labels hang below. */
@@ -171,7 +172,7 @@ export const Diagram = ({
     return ticks;
   }, [view.showWeeks, px, t0, t1]);
 
-  // ---- milestone placement: centre track, alternate above when crowded ----
+  // ---- key task placement: centre track, alternate above when crowded ----
   const labelW = sparse ? 82 : showMeta ? 132 : 110;
   const placedByLane = useMemo(() => {
     const map = new Map<string, Placed[]>();
@@ -321,15 +322,15 @@ export const Diagram = ({
             <span className="today-chip">Today</span>
           </div>
 
-          {/* Strategic Horizon spines: a vertical line across every lane with
+          {/* Strategic Milestone spines: a vertical line across every lane with
               one diamond and the theme label at its head. Select first, then
-              drag the diamond to move the horizon. */}
+              drag the diamond to move it. */}
           {horizons.map((h) => {
             const hzSelected = selectedHorizonId === h.id;
             const dx = hzSelected && hzDrag.drag?.id === h.id ? hzDrag.drag.dx : 0;
             const hx = x(h.date) + dx;
             const when = `${fmtDayMonth(h.date)} ${parseDate(h.date).getFullYear()}`;
-            const title = `Strategic Horizon: ${h.theme} · ${when}. ${hzSelected ? 'Drag to change date.' : 'Select to edit.'}`;
+            const title = `${TERMS.milestone}: ${h.theme} · ${when}. ${hzSelected ? 'Drag to change date.' : 'Select to edit.'}`;
             return (
               <div key={h.id}>
                 <div
@@ -350,7 +351,7 @@ export const Diagram = ({
                   className={`horizon-endstate${hzSelected ? ' selected' : ''}`}
                   style={{ left: hx, top: HEAD_H + 14 }}
                   title={title}
-                  aria-label={`Strategic Horizon ${when}: ${h.theme}`}
+                  aria-label={`${TERMS.milestone} ${when}: ${h.theme}`}
                   {...(hzSelected
                     ? hzDrag.handlers(h.id)
                     : selectProps(() => onSelectHorizon(h.id)))}
@@ -367,7 +368,7 @@ export const Diagram = ({
             );
           })}
 
-          {/* milestones: dots on the line, labels beneath (or above when crowded) */}
+          {/* key tasks: dots on the line, labels beneath (or above when crowded) */}
           {loos.map((loo) => (placedByLane.get(loo.id) ?? []).map((pl) => {
             const { m } = pl;
             const dx = msDrag.drag?.id === m.id ? msDrag.drag.dx : 0;
@@ -403,7 +404,7 @@ export const Diagram = ({
               );
             }
 
-            // Unselected milestones select on click only; dragging them pans
+            // Unselected key tasks select on click only; dragging them pans
             // the canvas. Rescheduling requires selecting first.
             return (
               <div key={m.id} className="ms-point" style={{ opacity }}>
@@ -447,7 +448,7 @@ export const Diagram = ({
 
       {isEmpty && (
         <div className="diagram-empty" aria-live="polite">
-          No milestones yet. Add the first milestone to begin building the campaign.
+          No {TERMS.tasksLower} yet. Add the first {TERMS.taskLower} to begin building the campaign.
         </div>
       )}
     </div>
@@ -470,7 +471,7 @@ export const DiagramLegend = () => (
       </span>
     ))}
     <span className="legend-item"><span className="legend-overdue" /> Overdue</span>
-    <span className="legend-item"><span className="endstate-diamond legend-endstate" /> Strategic Horizon</span>
+    <span className="legend-item"><span className="endstate-diamond legend-endstate" /> {TERMS.milestone}</span>
     <span className="legend-item"><span className="legend-continues" /> Line continues</span>
   </div>
 );

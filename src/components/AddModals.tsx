@@ -3,8 +3,9 @@ import type { Milestone, StrategicHorizon } from '../types';
 import { useStore, useLoos, newId } from '../state/store';
 import { todayIso, addDays, parseDate, toIso } from '../lib/time';
 import { Modal, Field } from './ui';
+import { TERMS } from '../lib/terms';
 
-/** Add a milestone and move on: condition, line, date, owner. Nothing else. */
+/** Add a key task and move on: condition, line, date, owner. Nothing else. */
 export const AddMilestoneModal = ({
   onClose, onCreated, defaultLooId,
 }: { onClose: () => void; onCreated: (milestone: Milestone) => void; defaultLooId?: string | null }) => {
@@ -27,12 +28,12 @@ export const AddMilestoneModal = ({
   };
 
   return (
-    <Modal title="Add milestone" onClose={onClose}>
+    <Modal title={`Add ${TERMS.taskLower}`} onClose={onClose}>
       <p className="detail-text muted" style={{ fontSize: 14 }}>
         Write the condition that must become true, not the activity:
         "Customer agrees to a defined pilot", not "Meet the customer".
       </p>
-      <Field label="Milestone">
+      <Field label={TERMS.task}>
         <input
           value={title}
           onChange={(e) => setTitle(e.target.value)}
@@ -57,14 +58,14 @@ export const AddMilestoneModal = ({
       <div className="modal-actions">
         <button type="button" className="btn btn-secondary" onClick={onClose}>Cancel</button>
         <button type="button" className="btn btn-primary" onClick={create} disabled={!title.trim()}>
-          Add milestone
+          Add {TERMS.taskLower}
         </button>
       </div>
     </Modal>
   );
 };
 
-/** Add a Strategic Horizon: a labelled point in time across every line. */
+/** Add a Strategic Milestone: a labelled point in time across every line. */
 export const AddHorizonModal = ({
   onClose, onCreated,
 }: { onClose: () => void; onCreated: (horizon: StrategicHorizon) => void }) => {
@@ -82,7 +83,7 @@ export const AddHorizonModal = ({
   };
 
   return (
-    <Modal title="Add Strategic Horizon" onClose={onClose}>
+    <Modal title={`Add ${TERMS.milestone}`} onClose={onClose}>
       <p className="detail-text muted" style={{ fontSize: 14 }}>
         A point in time where progress across all Lines of Operation must synchronise.
         The lines continue beyond it.
@@ -102,7 +103,7 @@ export const AddHorizonModal = ({
       <div className="modal-actions">
         <button type="button" className="btn btn-secondary" onClick={onClose}>Cancel</button>
         <button type="button" className="btn btn-primary" onClick={create} disabled={!theme.trim()}>
-          Add horizon
+          Add {TERMS.milestoneLower}
         </button>
       </div>
     </Modal>

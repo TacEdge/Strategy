@@ -5,6 +5,7 @@ import { fmtDate, parseDate, daysBetween, todayIso } from '../lib/time';
 import { MarkerIcon } from '../components/icons';
 import { STATUS_LABEL } from '../components/ui';
 import { isOverdue } from '../components/Diagram';
+import { TERMS } from '../lib/terms';
 
 /** Attention first, then soonest. */
 const STATUS_ORDER: Record<MilestoneStatus, number> = {
@@ -12,7 +13,7 @@ const STATUS_ORDER: Record<MilestoneStatus, number> = {
 };
 
 /**
- * The flat list behind the diagram: every milestone, one line each,
+ * The flat list behind the diagram: every key task, one line each,
  * sorted so what needs attention is at the top. Selecting a row opens it
  * on the diagram.
  */
@@ -46,7 +47,7 @@ export const MilestonesPage = ({ onOpenMilestone }: { onOpenMilestone: (id: stri
   return (
     <div className="page progress-page">
       <div className="pv-head">
-        <h1 className="pv-title">Milestones</h1>
+        <h1 className="pv-title">{TERMS.tasks}</h1>
         <div className="pv-filters">
           <select
             value={looFilter}
@@ -85,14 +86,14 @@ export const MilestonesPage = ({ onOpenMilestone }: { onOpenMilestone: (id: stri
       {rows.length === 0 ? (
         <p className="empty-note">
           {state.milestones.length === 0
-            ? 'No milestones yet. Add the first milestone from the Campaign diagram.'
+            ? `No ${TERMS.tasksLower} yet. Add the first ${TERMS.taskLower} from the Campaign diagram.`
             : 'Nothing matches the current filter.'}
         </p>
       ) : (
-        <div className="pv-table" role="table" aria-label="Milestones">
+        <div className="pv-table" role="table" aria-label={TERMS.tasks}>
           <div className="pv-row pv-row-head" role="row">
             <span />
-            <span>Milestone</span>
+            <span>{TERMS.task}</span>
             <span>LOO</span>
             <span>Status</span>
             <span>Target</span>

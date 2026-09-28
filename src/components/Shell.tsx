@@ -1,13 +1,14 @@
 import type { ReactNode } from 'react';
 import { IconSearch, IconBell, IconFlag, IconMenu, IconCompass, IconLink } from './icons';
 import lockupCream from '../assets/brand/tacedge-lockup-cream.svg';
+import { TERMS } from '../lib/terms';
 
-export type NavKey = 'campaign' | 'loos' | 'milestones' | 'reviews';
+export type NavKey = 'campaign' | 'loos' | 'tasks' | 'reviews';
 
 const NAV: { key: NavKey; label: string; icon: ReactNode }[] = [
   { key: 'campaign', label: 'Campaign', icon: <IconCompass size={16} /> },
   { key: 'loos', label: 'LOOs', icon: <IconMenu size={16} /> },
-  { key: 'milestones', label: 'Milestones', icon: <IconFlag size={16} /> },
+  { key: 'tasks', label: TERMS.tasks, icon: <IconFlag size={16} /> },
   { key: 'reviews', label: 'Reviews', icon: <IconLink size={16} /> },
 ];
 
@@ -29,7 +30,7 @@ export const Shell = ({
       <div className="topbar-spacer" />
       <div className="topbar-search" role="search">
         <IconSearch size={15} />
-        <input type="search" placeholder="Search milestones" aria-label="Search milestones" />
+        <input type="search" placeholder={`Search ${TERMS.tasksLower}`} aria-label={`Search ${TERMS.tasksLower}`} />
       </div>
       <div className="topbar-actions">
         <button type="button" className="topbar-icon-btn" title="Notifications" aria-label="Notifications">

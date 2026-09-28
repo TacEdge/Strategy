@@ -2,11 +2,12 @@ import { useStore, useLoos } from '../state/store';
 import { fmtDateLong, fmtDate, parseDate, daysBetween, todayIso, nowStamp } from '../lib/time';
 import { SectionHeading, Eyebrow, StatusBadge } from '../components/ui';
 import { isOverdue } from '../components/Diagram';
+import { TERMS } from '../lib/terms';
 
 /**
  * Weekly review: what needs attention, what is due before the next
- * horizon, what has been achieved, and the three outcomes for the week.
- * Everything here is read straight off milestone status and date.
+ * strategic milestone, what has been achieved, and the three outcomes for
+ * the week. Everything here is read straight off key task status and date.
  */
 export const ReviewPage = ({
   onOpenMilestone, onOpenDiagram,
@@ -25,7 +26,7 @@ export const ReviewPage = ({
   // Listed under Overdue only when not already listed under pressure.
   const overdue = overdueAll.filter((m) => !underPressure.includes(m));
 
-  // The next horizon ahead of today; failing that, the latest one on the diagram.
+  // The next strategic milestone ahead of today; failing that, the latest one on the diagram.
   const horizon =
     [...state.horizons].filter((h) => h.date >= today).sort((a, b) => a.date.localeCompare(b.date))[0]
     ?? [...state.horizons].sort((a, b) => b.date.localeCompare(a.date))[0];
@@ -54,9 +55,9 @@ export const ReviewPage = ({
         </button>
       </div>
 
-      <section className="today-context" aria-label="Movement toward the horizon">
+      <section className="today-context" aria-label="Movement toward the next strategic milestone">
         <div className="today-context-cell">
-          <Eyebrow>Next Strategic Horizon</Eyebrow>
+          <Eyebrow>Next {TERMS.milestone}</Eyebrow>
           <p className="today-context-value">{horizon ? horizon.theme : 'None set'}</p>
           <p className="today-context-sub">
             {horizon && daysTo !== null
@@ -65,7 +66,7 @@ export const ReviewPage = ({
           </p>
         </div>
         <div className="today-context-cell">
-          <Eyebrow>Milestones before horizon</Eyebrow>
+          <Eyebrow>{TERMS.tasks} before it</Eyebrow>
           <p className="today-context-value">
             {horizon ? `${doneBeforeHorizon.length} of ${beforeHorizon.length} complete` : '—'}
           </p>
@@ -73,7 +74,7 @@ export const ReviewPage = ({
         </div>
         <div className="today-context-cell">
           <Eyebrow>Overdue</Eyebrow>
-          <p className="today-context-value">{overdueAll.length} milestone{overdueAll.length === 1 ? '' : 's'}</p>
+          <p className="today-context-value">{overdueAll.length} {overdueAll.length === 1 ? TERMS.taskLower : TERMS.tasksLower}</p>
           <p className="today-context-sub">Past target date, not complete</p>
         </div>
       </section>

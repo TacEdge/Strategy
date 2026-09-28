@@ -24,31 +24,35 @@ Line of Operation and by time. Nothing needs opening to be understood.
   horizon. Three by default: **Product** (design and build of the
   product), **Commercial** (contracts and agreements with customers) and
   **Company** (the internal workings: brand, marketing, team, runway).
-- **Milestones** — conditions that must become true, not activities. A
-  milestone is a title, a Line of Operation, a target date, an owner and a
-  status (future, active, at risk, blocked, complete). A milestone past its
+- **Key Tasks** — conditions that must become true, not activities. A key
+  task is a title, a Line of Operation, a target date, an owner and a
+  status (future, active, at risk, blocked, complete). A key task past its
   date and not complete reads as overdue on the diagram.
-- **Strategic Horizons** — vertical synchronisation points: a theme and a
-  date. Lines continue visually through and beyond every horizon.
+- **Strategic Milestones** — vertical synchronisation points: a theme and
+  a date. Lines continue visually through and beyond every one.
+
+In code the older names remain: a key task is a `Milestone` and a
+strategic milestone is a `StrategicHorizon`. User-facing words live in
+`src/lib/terms.ts`.
 
 ## Views
 
-- **Campaign** (`#/`, the landing route) — the LOO Diagram: lanes,
-  milestones as status dots with labels, horizon spines with their theme,
-  semantic zoom. Add a milestone or a horizon from the toolbar and move on;
-  nothing opens. Selecting a dot opens a compact panel to change status,
-  date, line or owner, or delete.
-- **Milestones** (`#/milestones`) — the flat list behind the diagram,
-  attention first. A row opens that milestone on the diagram.
+- **Campaign** (`#/`, the landing route) — the LOO Diagram: lanes, key
+  tasks as status dots with labels, strategic milestone spines with their
+  theme, semantic zoom. Add a key task or a strategic milestone from the
+  toolbar and move on; nothing opens. Selecting a dot opens a compact
+  panel to change status, date, line or owner, or delete.
+- **Key Tasks** (`#/tasks`) — the flat list behind the diagram, attention
+  first. A row opens that key task on the diagram.
 - **Reviews** (`#/review`) — what needs attention, what is due before the
-  next horizon, what has been achieved, and the three outcomes for the
-  next seven days.
+  next strategic milestone, what has been achieved, and the three outcomes
+  for the next seven days.
 
 Types live in `src/types.ts`; seeded campaign data in `src/data/seed.ts`;
 state in `src/state/store.tsx` (reducer + localStorage persistence, keyed
 `tacedge-strategy-campaign-v1`). Earlier stored campaigns migrate on load:
-the extra milestone detail is dropped and titles, lines, dates, owners and
-statuses are kept. Clear the key to reset to seed data.
+the extra detail is dropped and titles, lines, dates, owners and statuses
+are kept. Clear the key to reset to seed data.
 
 ## Brand
 

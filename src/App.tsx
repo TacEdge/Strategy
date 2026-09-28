@@ -9,15 +9,16 @@ import { ReviewPage } from './pages/ReviewPage';
 type Route =
   | { name: 'diagram'; milestoneId: string | null; horizonId: string | null }
   | { name: 'review' }
-  | { name: 'milestones' };
+  | { name: 'tasks' };
 
 const parseHash = (): Route => {
   const h = window.location.hash;
-  // Older links to the retired milestone workspace open the milestone on the diagram.
+  // Older links to the retired milestone workspace open the key task on the diagram.
   const legacy = h.match(/^#\/milestone\/([^?]+)/);
   if (legacy) return { name: 'diagram', milestoneId: decodeURIComponent(legacy[1]), horizonId: null };
   if (h.startsWith('#/review')) return { name: 'review' };
-  if (h.startsWith('#/milestones') || h.startsWith('#/progress')) return { name: 'milestones' };
+  // #/tasks is the Key Tasks list; older #/milestones and #/progress links still land there.
+  if (h.startsWith('#/tasks') || h.startsWith('#/milestones') || h.startsWith('#/progress')) return { name: 'tasks' };
   // The diagram opens neutral; ?milestone= / ?horizon= deep links open a panel.
   const params = new URLSearchParams(h.split('?')[1] ?? '');
   return {
@@ -40,20 +41,20 @@ export const App = () => {
 
   const goDiagram = () => { window.location.hash = '/'; };
   const goReview = () => { window.location.hash = '/review'; };
-  const goMilestones = () => { window.location.hash = '/milestones'; };
+  const goTasks = () => { window.location.hash = '/tasks'; };
   const goMilestone = (id: string) => { window.location.hash = `/?milestone=${encodeURIComponent(id)}`; };
 
   const onNavigate = (key: NavKey) => {
     setModal(null);
     if (key === 'campaign') goDiagram();
     else if (key === 'loos') { goDiagram(); setModal('loos'); }
-    else if (key === 'milestones') goMilestones();
+    else if (key === 'tasks') goTasks();
     else if (key === 'reviews') goReview();
   };
 
   const current: NavKey =
     route.name === 'review' ? 'reviews'
-      : route.name === 'milestones' ? 'milestones'
+      : route.name === 'tasks' ? 'tasks'
         : modal === 'loos' ? 'loos'
           : 'campaign';
 
@@ -74,7 +75,7 @@ export const App = () => {
             onCloseModal={() => setModal(null)}
           />
         )}
-        {route.name === 'milestones' && (
+        {route.name === 'tasks' && (
           <MilestonesPage onOpenMilestone={goMilestone} />
         )}
         {route.name === 'review' && (

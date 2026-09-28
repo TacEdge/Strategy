@@ -4,9 +4,10 @@ import { useStore, useLoos } from '../state/store';
 import { fmtDate } from '../lib/time';
 import { StatusBadge, ConfirmDialog, Field, STATUS_LABEL, STATUSES } from './ui';
 import { IconClose, IconTrash, IconEdit } from './icons';
+import { TERMS } from '../lib/terms';
 
 /**
- * Compact edit panel for one selected milestone: the same five things the
+ * Compact edit panel for one selected key task: the same five things the
  * diagram already shows. Change what you need and close.
  */
 export const MilestoneDrawer = ({
@@ -36,10 +37,10 @@ export const MilestoneDrawer = ({
   };
 
   return (
-    <aside className="drawer drawer-compact" aria-label={`Milestone: ${m.title}`}>
+    <aside className="drawer drawer-compact" aria-label={`${TERMS.task}: ${m.title}`}>
       <div className="drawer-head">
         <div className="drawer-head-info">
-          <span className="eyebrow">{loo?.name ?? 'Milestone'}</span>
+          <span className="eyebrow">{loo?.name ?? TERMS.task}</span>
           {editingTitle ? (
             <input
               className="drawer-title-input"
@@ -50,7 +51,7 @@ export const MilestoneDrawer = ({
                 if (e.key === 'Enter') commitTitle();
                 if (e.key === 'Escape') setEditingTitle(false);
               }}
-              aria-label="Milestone title"
+              aria-label={`${TERMS.task} title`}
               autoFocus
             />
           ) : (
@@ -73,7 +74,7 @@ export const MilestoneDrawer = ({
             <span className="detail-text muted" style={{ fontSize: 13 }}>{fmtDate(m.targetDate)}</span>
           </div>
         </div>
-        <button type="button" className="icon-btn" onClick={onClose} aria-label="Close milestone panel">
+        <button type="button" className="icon-btn" onClick={onClose} aria-label={`Close ${TERMS.taskLower} panel`}>
           <IconClose size={16} />
         </button>
       </div>
@@ -114,7 +115,7 @@ export const MilestoneDrawer = ({
 
       {confirm && (
         <ConfirmDialog
-          title="Delete milestone"
+          title={`Delete ${TERMS.taskLower}`}
           message={`Delete "${m.title}"? This cannot be undone.`}
           confirmLabel="Delete"
           danger

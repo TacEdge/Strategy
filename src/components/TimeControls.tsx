@@ -4,6 +4,7 @@ import type { LineOfOperation } from '../types';
 import { VIEWS } from '../lib/views';
 import type { ViewId } from '../lib/views';
 import { IconToday, IconFilter, IconExpand, IconPlus } from './icons';
+import { TERMS } from '../lib/terms';
 
 /** Small anchored menu that closes on outside click or Escape. */
 const Menu = ({
@@ -79,7 +80,7 @@ export const TimeControls = ({
           className={`btn-quiet labels-toggle${showLabels ? ' on' : ''}`}
           onClick={onToggleLabels}
           aria-pressed={showLabels}
-          title={showLabels ? 'Hide milestone labels' : 'Show milestone labels'}
+          title={showLabels ? 'Hide labels' : 'Show labels'}
         >
           Labels: {showLabels ? 'On' : 'Off'}
         </button>
@@ -130,10 +131,10 @@ export const TimeControls = ({
         </div>
         <Menu open={openMenu === 'add'} onClose={() => setOpenMenu(null)}>
           <button type="button" className="menu-action" onClick={() => { onAdd('milestone'); setOpenMenu(null); }}>
-            Milestone
+            {TERMS.task}
           </button>
           <button type="button" className="menu-action" onClick={() => { onAdd('horizon'); setOpenMenu(null); }}>
-            Strategic Horizon
+            {TERMS.milestone}
           </button>
         </Menu>
       </div>

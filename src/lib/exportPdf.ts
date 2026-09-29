@@ -181,7 +181,8 @@ export const buildDiagramPdf = async (input: PdfInput): Promise<Blob> => {
 
   /* ---- Alternating bands for the unit of this zoom, as on screen:
           weeks in Month view, months from Quarter to Year, years beyond ---- */
-  const bandUnit: 'week' | 'month' | 'year' = input.view.showWeeks ? 'week' : mmPerDay * 30.4 < 3.2 ? 'year' : 'month';
+  const longZoom = input.view.id === '3y' || input.view.id === '5y';
+  const bandUnit: 'week' | 'month' | 'year' = input.view.showWeeks ? 'week' : longZoom ? 'year' : 'month';
   const band = (a0: number, b0: number) => {
     const a = Math.max(x0, a0);
     const b = Math.min(x1, b0);
@@ -221,7 +222,8 @@ export const buildDiagramPdf = async (input: PdfInput): Promise<Blob> => {
     const isYear = d.getMonth() === 0;
     // Guide density steps with the zoom, as on screen: monthly to Year,
     // quarterly at 3 years, half-yearly at 5 years.
-    const guide = isYear || d.getMonth() % monthStep === 0 || (monthStep === 12 && d.getMonth() === 6);
+    const guide = isYear
+      || (input.view.id === '5y' ? d.getMonth() === 6 : input.view.id === '3y' ? d.getMonth() % 3 === 0 : true);
     if (guide) {
       stroke(isYear ? C.line2 : C.guide, isYear ? 0.35 : 0.25);
       doc.line(x, cardY + 0.3, x, bodyBottom - 0.3);

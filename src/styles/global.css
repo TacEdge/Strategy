@@ -509,7 +509,8 @@ input, select, textarea { font: inherit; color: var(--te-ink); }
   pointer-events: none;
 }
 .today-chip {
-  position: absolute; top: -2px; left: -1px;
+  position: absolute; left: -1px; z-index: 1;
+  line-height: 13px;
   transform: translateX(-50%);
   background: var(--te-olive);
   color: #fff;

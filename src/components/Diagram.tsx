@@ -318,8 +318,11 @@ export const Diagram = ({
           ))}
 
           {/* today marker */}
-          <div className="today-line" style={{ left: x(today), top: HEAD_H - 20, height: bodyH + 20 }}>
-            <span className="today-chip">Today</span>
+          {/* The chip sits in the top strip of the date header, above the
+              day and month labels, so it never hides a date. The dashed
+              line starts below the header for the same reason. */}
+          <div className="today-line" style={{ left: x(today), top: HEAD_H, height: bodyH }}>
+            <span className="today-chip" style={{ top: -(HEAD_H - 2) }}>Today</span>
           </div>
 
           {/* Strategic Objective spines: a vertical line across every lane with

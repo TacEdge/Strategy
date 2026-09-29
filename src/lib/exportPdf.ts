@@ -255,7 +255,20 @@ export const buildDiagramPdf = async (input: PdfInput): Promise<Blob> => {
     }
     firstLabel = false;
   }
-  if (input.view.showWeeks) {
+  if (input.view.showDays) {
+    // Week view: every day labelled, with a light guide down each column.
+    const names = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    for (let i = Math.floor(input.startDay); i <= Math.ceil(input.startDay + input.days); i++) {
+      const d = addDays(t0, i);
+      const x = xOfDay(i);
+      if (!inRange(x)) continue;
+      stroke(C.guide, 0.2);
+      doc.line(x, bodyTop - 3.4, x, bodyBottom - 0.3);
+      if (x > x1 - 8) continue;
+      font('JBM', 'normal', 5.5, d.getDay() === 0 || d.getDay() === 6 ? C.ink40 : C.ink60);
+      doc.text(`${names[d.getDay()].toUpperCase()} ${d.getDate()}`, x + 0.9, bodyTop - 1.1);
+    }
+  } else if (input.view.showWeeks) {
     const firstMonday = addDays(t0, (8 - t0.getDay()) % 7);
     for (let d = new Date(firstMonday); d <= endDate; d = addDays(d, 7)) {
       const x = xOfDay(daysBetween(t0, d));
@@ -342,8 +355,8 @@ export const buildDiagramPdf = async (input: PdfInput): Promise<Blob> => {
   });
 
   /* ---- Key Tasks: markers and labels ---- */
-  const fullLabelW = input.view.id === 'month' || input.view.id === 'quarter' ? 30 : mmPerDay < 0.3 ? 20 : 26;
-  const showMeta = ['month', 'quarter', '6m'].includes(input.view.id);
+  const fullLabelW = ['week', 'month', 'quarter'].includes(input.view.id) ? 30 : mmPerDay < 0.3 ? 20 : 26;
+  const showMeta = ['week', 'month', 'quarter', '6m'].includes(input.view.id);
   const r = 1.55;
   // Label styles, as on screen: full size, then dense for a crowded lane.
   // Block heights are the tallest case: two title lines, plus date and owner.

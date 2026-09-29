@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useStore, useLoos } from '../state/store';
 import { viewById, TIMELINE_START } from '../lib/views';
 import type { ViewId } from '../lib/views';
-import { parseDate, daysBetween, todayIso } from '../lib/time';
+import { parseDate, toIso, daysBetween, todayIso } from '../lib/time';
 import { TimeControls } from '../components/TimeControls';
 import { Diagram } from '../components/Diagram';
 import { MilestoneDrawer } from '../components/MilestoneDrawer';
@@ -73,7 +73,21 @@ export const DiagramPage = ({
     el.scrollLeft = Math.max(0, x - el.clientWidth * ratio);
   }, [view.pxPerDay]);
 
-  useEffect(() => { scrollToDate(todayIso()); }, [scrollToDate]);
+  // Week view opens on this week's Monday; every other view puts today
+  // about a third of the way in.
+  const scrollHome = useCallback(() => {
+    if (view.id === 'week') {
+      // Monday of this week, with room to the left for Monday's own labels.
+      const d = parseDate(todayIso());
+      d.setDate(d.getDate() - ((d.getDay() + 6) % 7));
+      const w = scrollRef.current?.clientWidth ?? 1000;
+      scrollToDate(toIso(d), Math.min(0.2, 90 / w));
+    } else {
+      scrollToDate(todayIso());
+    }
+  }, [view.id, scrollToDate]);
+
+  useEffect(() => { scrollHome(); }, [scrollHome]);
 
   const selectMilestone = (id: string) => {
     setSelectedHorizonId(null);
@@ -134,7 +148,7 @@ export const DiagramPage = ({
         showLabels={showLabels}
         onToggleLabels={() => setLabelsOverride(!showLabels)}
         onView={setViewId}
-        onToday={() => scrollToDate(todayIso())}
+        onToday={scrollHome}
         onToggleLoo={(id) => setVisibleLooIds((prev) => {
           const next = new Set(prev);
           if (next.has(id)) { if (next.size > 1) next.delete(id); } else next.add(id);

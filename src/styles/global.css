@@ -436,6 +436,8 @@ input, select, textarea { font: inherit; color: var(--te-ink); }
   color: var(--te-ink-40);
   white-space: nowrap;
 }
+/* Week view: month name up top, clear of the day labels */
+.month-tick.top { justify-content: flex-start; padding-top: 5px; }
 .month-tick .year {
   color: var(--te-ink);
   font-size: var(--te-fs-xs);
@@ -455,6 +457,21 @@ input, select, textarea { font: inherit; color: var(--te-ink); }
   border-left: 1px solid color-mix(in srgb, var(--te-line-2) 90%, transparent);
   pointer-events: none;
 }
+/* Week view: one labelled column per day; weekends a shade quieter */
+.day-tick {
+  position: absolute; bottom: 0; height: 14px;
+  border-left: 1px solid var(--te-line);
+  font-family: var(--te-mono);
+  font-size: 9px;
+  letter-spacing: 0.04em;
+  color: var(--te-ink-60);
+  padding-left: 5px;
+  line-height: 1.1;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.day-tick.weekend { color: var(--te-ink-40); }
+.guide-line.day { border-left-color: color-mix(in srgb, var(--te-line) 55%, transparent); }
 .week-tick {
   position: absolute; bottom: 0; height: 14px;
   border-left: 1px solid var(--te-line);

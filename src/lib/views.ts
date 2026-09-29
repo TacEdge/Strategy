@@ -2,7 +2,7 @@
  * Semantic zoom levels. Each view sets a time density (px per day)
  * and a detail level — the diagram changes what it shows, not just scale.
  */
-export type ViewId = '5y' | '3y' | 'year' | '6m' | 'quarter' | 'month';
+export type ViewId = '5y' | '3y' | 'year' | '6m' | 'quarter' | 'month' | 'week';
 
 export interface ViewSpec {
   id: ViewId;
@@ -12,10 +12,13 @@ export interface ViewSpec {
   detail: 'macro' | 'detail' | 'operational';
   laneHeight: number;
   showWeeks: boolean;
+  /** Label every day in the header (Week view). */
+  showDays?: boolean;
 }
 
 /** Ordered near-term to long-term; zooming in steps toward Month. */
 export const VIEWS: ViewSpec[] = [
+  { id: 'week', label: 'Week', pxPerDay: 96, detail: 'operational', laneHeight: 164, showWeeks: true, showDays: true },
   { id: 'month', label: 'Month', pxPerDay: 15, detail: 'operational', laneHeight: 164, showWeeks: true },
   { id: 'quarter', label: 'Quarter', pxPerDay: 7.4, detail: 'detail', laneHeight: 142, showWeeks: false },
   { id: '6m', label: '6 months', pxPerDay: 3.8, detail: 'detail', laneHeight: 134, showWeeks: false },

@@ -184,7 +184,7 @@ export const Diagram = ({
 
   // Semantic density by view: dots -> labelled dots -> dates and owners.
   const sparse = px < 1; // 5y / 3y
-  const showMeta = ['quarter', 'month'].includes(view.id);
+  const showMeta = ['quarter', 'month', 'week'].includes(view.id);
 
   const msDrag = useDragDays(
     px,
@@ -247,6 +247,36 @@ export const Diagram = ({
     }
     return bands;
   }, [px, t0, t1]);
+
+  // Week view: one column per day, labelled with weekday and date. Only
+  // the days near the scroll position are rendered; the timeline is six
+  // years long and a node per day would be thousands of elements.
+  const [scrollX, setScrollX] = useState(0);
+  const [viewportW, setViewportW] = useState(0);
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    let raf = 0;
+    const measure = () => { setScrollX(el.scrollLeft); setViewportW(el.clientWidth); };
+    const onScroll = () => { cancelAnimationFrame(raf); raf = requestAnimationFrame(measure); };
+    measure();
+    el.addEventListener('scroll', onScroll, { passive: true });
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => { el.removeEventListener('scroll', onScroll); ro.disconnect(); cancelAnimationFrame(raf); };
+  }, [scrollRef]);
+  const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const dayTicks = useMemo(() => {
+    if (!view.showDays) return [];
+    const from = Math.max(0, Math.floor((scrollX - viewportW) / px));
+    const to = Math.min(daysBetween(t0, t1), Math.ceil((scrollX + 2 * viewportW) / px));
+    const ticks: { x: number; label: string; weekend: boolean }[] = [];
+    for (let i = from; i <= to; i++) {
+      const d = addDays(t0, i);
+      ticks.push({ x: i * px, label: `${DAY_NAMES[d.getDay()]} ${d.getDate()}`, weekend: d.getDay() === 0 || d.getDay() === 6 });
+    }
+    return ticks;
+  }, [view.showDays, scrollX, viewportW, px, t0, t1]);
 
   const weekTicks = useMemo(() => {
     if (!view.showWeeks) return [];
@@ -403,13 +433,23 @@ export const Diagram = ({
           {/* time header */}
           <div className="time-head" style={{ width }}>
             {visibleTicks.map((tk) => (
-              <div key={`${tk.year}-${tk.month}`} className="month-tick" style={{ left: tk.x, width: sparse ? px * 91 : px * 30 }}>
-                {(tk.month === 0 || tk === visibleTicks[0]) && <span className="year">{tk.year}</span>}
-                <span>{tk.label}</span>
+              <div key={`${tk.year}-${tk.month}`} className={`month-tick${view.showDays ? ' top' : ''}`} style={{ left: tk.x, width: sparse ? px * 91 : px * 30 }}>
+                {view.showDays ? (
+                  // Week view: the day row is full, so month and year share the top row.
+                  <span className="year">{tk.label} {tk.year}</span>
+                ) : (
+                  <>
+                    {(tk.month === 0 || tk === visibleTicks[0]) && <span className="year">{tk.year}</span>}
+                    <span>{tk.label}</span>
+                  </>
+                )}
               </div>
             ))}
-            {weekTicks.map((tk) => (
+            {!view.showDays && weekTicks.map((tk) => (
               <div key={`w-${tk.x}`} className="week-tick" style={{ left: tk.x }}>{tk.label}</div>
+            ))}
+            {dayTicks.map((tk) => (
+              <div key={`d-${tk.x}`} className={`day-tick${tk.weekend ? ' weekend' : ''}`} style={{ left: tk.x, width: px }}>{tk.label}</div>
             ))}
           </div>
 
@@ -432,6 +472,9 @@ export const Diagram = ({
           ))}
           {weekTicks.map((tk) => (
             <div key={`gw-${tk.x}`} className="guide-line week" style={{ left: tk.x, top: HEAD_H, height: bodyH }} />
+          ))}
+          {dayTicks.map((tk) => (
+            <div key={`gd-${tk.x}`} className="guide-line day" style={{ left: tk.x, top: HEAD_H, height: bodyH }} />
           ))}
 
           {/* today marker */}

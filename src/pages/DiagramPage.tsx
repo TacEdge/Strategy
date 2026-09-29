@@ -4,7 +4,7 @@ import { viewById, TIMELINE_START } from '../lib/views';
 import type { ViewId } from '../lib/views';
 import { parseDate, daysBetween, todayIso } from '../lib/time';
 import { TimeControls } from '../components/TimeControls';
-import { Diagram, DiagramLegend } from '../components/Diagram';
+import { Diagram } from '../components/Diagram';
 import { MilestoneDrawer } from '../components/MilestoneDrawer';
 import { HorizonDrawer } from '../components/HorizonDrawer';
 import { AddMilestoneModal, AddHorizonModal } from '../components/AddModals';
@@ -104,7 +104,7 @@ export const DiagramPage = ({
   }, []);
 
   return (
-    <div className="page">
+    <div className="page diagram-page">
       <TimeControls
         viewId={viewId}
         loos={allLoos}
@@ -139,8 +139,6 @@ export const DiagramPage = ({
         onMoveHorizon={(id, iso) => dispatch({ type: 'horizon/update', id, patch: { date: iso } })}
         onToggleFocus={(id) => setFocusLooId((cur) => (cur === id ? null : id))}
       />
-
-      <DiagramLegend />
 
       {selectedMilestoneId && (
         <MilestoneDrawer

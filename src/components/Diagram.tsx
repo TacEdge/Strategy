@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { PointerEvent as ReactPointerEvent, RefObject } from 'react';
 import type { CampaignState, LineOfOperation, Milestone } from '../types';
 import type { ViewSpec } from '../lib/views';
@@ -92,7 +92,22 @@ export const Diagram = ({
   const px = view.pxPerDay;
   const width = daysBetween(t0, t1) * px;
   const x = (iso: string) => daysBetween(t0, parseDate(iso)) * px;
-  const laneH = view.laneHeight;
+  // Lanes stretch to fill the card, never shrinking below the view's own
+  // height; with many lines the card grows and the page scrolls instead.
+  const cardRef = useRef<HTMLDivElement | null>(null);
+  const [cardH, setCardH] = useState(0);
+  useEffect(() => {
+    const el = cardRef.current;
+    if (!el) return;
+    const measure = () => setCardH(el.clientHeight);
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+  const minLaneH = view.laneHeight;
+  const fitLaneH = loos.length ? Math.floor((cardH - HEAD_H - 2) / loos.length) : 0;
+  const laneH = Math.max(minLaneH, fitLaneH);
   const bodyH = loos.length * laneH;
   const totalH = HEAD_H + bodyH;
   const today = todayIso();
@@ -239,7 +254,7 @@ export const Diagram = ({
   };
 
   return (
-    <div className="diagram-card" style={{ minHeight: totalH + 10 }}>
+    <div className="diagram-card" ref={cardRef} style={{ minHeight: HEAD_H + loos.length * minLaneH + 2 }}>
       {/* Left rail: LOO identities */}
       <div className="lane-rail" style={{ height: totalH }}>
         <div className="lane-rail-head" style={{ height: HEAD_H }}>
@@ -457,24 +472,3 @@ export const Diagram = ({
     </div>
   );
 };
-
-/** Legend for the marker language. Rendered under the diagram. */
-export const DiagramLegend = () => (
-  <div className="diagram-legend" aria-hidden>
-    {([
-      ['future', 'Future'],
-      ['active', 'Active'],
-      ['at-risk', 'At risk'],
-      ['blocked', 'Blocked'],
-      ['complete', 'Complete'],
-    ] as const).map(([status, text]) => (
-      <span key={status} className="legend-item">
-        <span className={`st-icon-${status}`}><MarkerIcon status={status} size={14} /></span>
-        {text}
-      </span>
-    ))}
-    <span className="legend-item"><span className="legend-overdue" /> Overdue</span>
-    <span className="legend-item"><span className="endstate-diamond legend-endstate" /> {TERMS.objective}</span>
-    <span className="legend-item"><span className="legend-continues" /> Line continues</span>
-  </div>
-);

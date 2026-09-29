@@ -30,7 +30,7 @@ export const ExportSheet = ({ input, onClose }: { input: PdfInput; onClose: () =
         setUrl(made);
         setPhase('ready');
       })
-      .catch(() => { if (!cancelled) setPhase('error'); });
+      .catch((e: unknown) => { console.error('PDF export failed', e); if (!cancelled) setPhase('error'); });
     return () => { cancelled = true; if (made) URL.revokeObjectURL(made); };
   }, []);
 

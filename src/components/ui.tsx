@@ -1,24 +1,34 @@
 import { useEffect, useRef } from 'react';
 import type { ReactNode } from 'react';
-import type { MilestoneStatus } from '../types';
-import { statusIcon } from './icons';
+import type { Outcome } from '../types';
+import { OutcomeBox, OUTCOME_LABEL } from './icons';
 
-export const STATUS_LABEL: Record<MilestoneStatus, string> = {
-  future: 'Future',
-  active: 'Active',
-  'at-risk': 'At risk',
-  blocked: 'Blocked',
-  complete: 'Complete',
-};
+export const OUTCOMES: Outcome[] = ['open', 'done', 'missed'];
 
-/** Statuses in the order they are offered for editing. */
-export const STATUSES: MilestoneStatus[] = ['future', 'active', 'at-risk', 'blocked', 'complete'];
-
-export const StatusBadge = ({ status, compact = false }: { status: MilestoneStatus; compact?: boolean }) => (
-  <span className={`status-badge status-${status}`} title={STATUS_LABEL[status]}>
-    {statusIcon(status, 14)}
-    {!compact && <span>{STATUS_LABEL[status]}</span>}
+export const OutcomeBadge = ({ outcome, overdue = false, compact = false }: { outcome: Outcome; overdue?: boolean; compact?: boolean }) => (
+  <span className={`outcome-badge outcome-${outcome}${overdue ? ' overdue' : ''}`} title={OUTCOME_LABEL[outcome]}>
+    <OutcomeBox outcome={outcome} overdue={overdue} size={15} />
+    {!compact && <span>{overdue && outcome === 'open' ? 'Open · overdue' : OUTCOME_LABEL[outcome]}</span>}
   </span>
+);
+
+/** Three-way choice: open, completed, didn't complete. */
+export const OutcomePicker = ({ value, onChange }: { value: Outcome; onChange: (o: Outcome) => void }) => (
+  <div className="outcome-picker" role="radiogroup" aria-label="Outcome">
+    {OUTCOMES.map((o) => (
+      <button
+        type="button"
+        key={o}
+        role="radio"
+        aria-checked={value === o}
+        className={`outcome-option outcome-${o}${value === o ? ' on' : ''}`}
+        onClick={() => onChange(o)}
+      >
+        <OutcomeBox outcome={o} size={15} />
+        {OUTCOME_LABEL[o]}
+      </button>
+    ))}
+  </div>
 );
 
 export const Eyebrow = ({ children }: { children: ReactNode }) => (

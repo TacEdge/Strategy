@@ -133,11 +133,11 @@ export const VoiceCommand = () => {
       const id = newId(c.kind === 'task' ? 'ms' : 'hz');
       if (c.kind === 'task') {
         const milestone: Milestone = {
-          id, title: c.title, looId: c.looId, targetDate: c.date, status: 'future', owner: c.owner,
+          id, title: c.title, looId: c.looId, targetDate: c.date, outcome: 'open', owner: c.owner,
         };
         dispatch({ type: 'milestone/add', milestone });
       } else {
-        const horizon: StrategicHorizon = { id, date: c.date, theme: c.title };
+        const horizon: StrategicHorizon = { id, date: c.date, theme: c.title, outcome: 'open' };
         dispatch({ type: 'horizon/add', horizon });
       }
       return { ...c, id };

@@ -7,12 +7,12 @@
  * Nothing here needs opening to be understood.
  */
 
-export type MilestoneStatus =
-  | 'future'
-  | 'active'
-  | 'at-risk'
-  | 'blocked'
-  | 'complete';
+/**
+ * Every Key Task and Strategic Objective ends as a tick or a cross.
+ * Nothing is deleted to tidy up: what was not completed stays on the
+ * record, and a fresh task is added if it is to be tried again.
+ */
+export type Outcome = 'open' | 'done' | 'missed';
 
 export interface Campaign {
   id: string;
@@ -37,6 +37,7 @@ export interface StrategicHorizon {
   id: string;
   date: string; // ISO date
   theme: string;
+  outcome: Outcome;
 }
 
 /**
@@ -48,7 +49,7 @@ export interface Milestone {
   title: string;
   looId: string;
   targetDate: string; // ISO date
-  status: MilestoneStatus;
+  outcome: Outcome;
   owner: string;
 }
 

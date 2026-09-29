@@ -5,7 +5,7 @@
  *
  * jsPDF and the fonts are loaded only when an export is asked for.
  */
-import type { LineOfOperation, Milestone, MilestoneStatus, StrategicHorizon } from '../types';
+import type { LineOfOperation, Milestone, Outcome, StrategicHorizon } from '../types';
 import { TIMELINE_START } from './views';
 import type { ViewSpec } from './views';
 import { parseDate, daysBetween, addDays, fmtDayMonth, fmtDateLong, monthShort } from './time';
@@ -36,9 +36,9 @@ const C = {
   line: '#E7E2D6', line2: '#D9D3C4', ochre: '#B07D2B', brick: '#9E3B2E',
   weekBand: '#F4F5EC', guide: '#EFECE3', horizonLine: '#9DA59A', creamLine: '#3B4B36',
 };
-const STATUS_COLOR: Record<MilestoneStatus, string> = {
-  future: C.ink40, active: C.olive, 'at-risk': C.ochre, blocked: C.brick, complete: C.forest,
-};
+/** Box edge and fill per outcome, as on screen. */
+const OUTCOME_EDGE: Record<Outcome, string> = { open: C.ink40, done: C.forest, missed: C.brick };
+const OUTCOME_FILL: Record<Outcome, string> = { open: C.card, done: '#E6EBD9', missed: '#F3DDD6' };
 
 const toBase64 = (buf: ArrayBuffer): string => {
   const bytes = new Uint8Array(buf);
@@ -124,6 +124,24 @@ export const buildDiagramPdf = async (input: PdfInput): Promise<Blob> => {
     doc.setDrawColor(color);
     doc.setLineWidth(width);
     doc.setLineDashPattern(dash, 0);
+  };
+
+  /** A tick box: open, ticked, or crossed; ochre-edged when open past its date. */
+  const outcomeBox = (outcome: Outcome, x: number, y: number, half: number, overdue: boolean) => {
+    const edge = outcome === 'open' && overdue ? C.ochre : OUTCOME_EDGE[outcome];
+    doc.setFillColor(OUTCOME_FILL[outcome]);
+    stroke(edge, half * 0.22);
+    doc.roundedRect(x - half, y - half, half * 2, half * 2, half * 0.4, half * 0.4, 'FD');
+    doc.setLineCap('round');
+    if (outcome === 'done') {
+      stroke(C.forest, half * 0.3);
+      doc.lines([[half * 0.4, half * 0.4], [half * 0.7, -half * 0.8]], x - half * 0.55, y + half * 0.05, [1, 1], 'S', false);
+    } else if (outcome === 'missed') {
+      stroke(C.brick, half * 0.3);
+      doc.line(x - half * 0.45, y - half * 0.45, x + half * 0.45, y + half * 0.45);
+      doc.line(x + half * 0.45, y - half * 0.45, x - half * 0.45, y + half * 0.45);
+    }
+    doc.setLineCap('butt');
   };
 
   /* ---- Page and header band ---- */
@@ -308,16 +326,14 @@ export const buildDiagramPdf = async (input: PdfInput): Promise<Blob> => {
     if (!inRange(x)) return;
     stroke(C.horizonLine, 0.3);
     doc.line(x, bodyTop, x, bodyBottom);
-    const cy = bodyTop + 5;
-    const r = 1.9;
-    doc.setFillColor(C.forest);
-    doc.lines([[r, r], [-r, r], [-r, -r]], x, cy - r, [1, 1], 'F', true);
+    const cy = bodyTop + 5.4;
+    outcomeBox(h.outcome, x, cy, 2.6, h.outcome === 'open' && h.date < input.today);
     if (!input.showLabels) return;
     font('BVP', 'bold', 7.5, C.ink);
     const tWidth = doc.getTextWidth(h.theme);
     const when = `${fmtDayMonth(h.date)} ${parseDate(h.date).getFullYear()}`.toUpperCase();
-    const right = x + 3.2 + tWidth <= x1;
-    const lx = right ? x + 3.2 : x - 3.2;
+    const right = x + 4.2 + tWidth <= x1;
+    const lx = right ? x + 4.2 : x - 4.2;
     doc.setFillColor(C.card);
     doc.rect(right ? lx - 0.6 : lx - tWidth - 0.6, cy - 2.8, tWidth + 1.2, 6.8, 'F');
     doc.text(h.theme, lx, cy + 0.3, { align: right ? 'left' : 'right' });
@@ -345,37 +361,7 @@ export const buildDiagramPdf = async (input: PdfInput): Promise<Blob> => {
     };
   });
 
-  const marker = (status: MilestoneStatus, x: number, y: number, overdue: boolean) => {
-    const col = STATUS_COLOR[status];
-    doc.setFillColor(C.card);
-    if (overdue) {
-      stroke(C.brick, 0.3);
-      doc.circle(x, y, r + 0.75, 'FD');
-    }
-    switch (status) {
-      case 'complete':
-        doc.setFillColor(col);
-        doc.circle(x, y, r, 'F');
-        break;
-      case 'active':
-        stroke(col, 0.4);
-        doc.circle(x, y, r, 'FD');
-        doc.setFillColor(col);
-        doc.circle(x, y, 0.65, 'F');
-        break;
-      case 'at-risk':
-        stroke(col, 0.4);
-        doc.triangle(x, y - r * 1.1, x + r * 1.15, y + r * 0.85, x - r * 1.15, y + r * 0.85, 'FD');
-        break;
-      case 'blocked':
-        stroke(col, 0.4);
-        doc.rect(x - r * 0.95, y - r * 0.95, r * 1.9, r * 1.9, 'FD');
-        break;
-      default:
-        stroke(col, 0.35);
-        doc.circle(x, y, r, 'FD');
-    }
-  };
+  const marker = (outcome: Outcome, x: number, y: number, overdue: boolean) => outcomeBox(outcome, x, y, r * 1.15, overdue);
 
   input.loos.forEach((loo, i) => {
     const ly = bodyTop + i * laneH + laneH * 0.42;
@@ -402,7 +388,7 @@ export const buildDiagramPdf = async (input: PdfInput): Promise<Blob> => {
     const pdfTierH = style.tierH;
 
     withCx.forEach(({ m, x, cx }) => {
-      const overdue = m.status !== 'complete' && m.targetDate < input.today;
+      const overdue = m.outcome === 'open' && m.targetDate < input.today;
       const slot = input.showLabels ? slots.get(m.id) ?? null : null;
       if (slot) {
         font('BVP', 'normal', style.size, overdue ? C.ink : C.ink60);
@@ -428,11 +414,11 @@ export const buildDiagramPdf = async (input: PdfInput): Promise<Blob> => {
           y += style.lineH;
         });
         if (meta) {
-          font('JBM', 'normal', 5.4, overdue ? C.brick : C.ink40);
+          font('JBM', 'normal', 5.4, overdue ? C.ochre : C.ink40);
           doc.text(meta, cx, y - 0.1, { align: 'center' });
         }
       }
-      marker(m.status, x, ly, overdue);
+      marker(m.outcome, x, ly, overdue);
     });
   });
 

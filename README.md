@@ -25,11 +25,15 @@ Line of Operation and by time. Nothing needs opening to be understood.
   product), **Commercial** (contracts and agreements with customers) and
   **Company** (the internal workings: brand, marketing, team, runway).
 - **Key Tasks** — conditions that must become true, not activities. A key
-  task is a title, a Line of Operation, a target date, an owner and a
-  status (future, active, at risk, blocked, complete). A key task past its
-  date and not complete reads as overdue on the diagram.
-- **Strategic Objectives** — vertical synchronisation points: a theme and
-  a date. Lines continue visually through and beyond every one.
+  task is a title, a Line of Operation, a target date, an owner and an
+  outcome. It sits on its line as a tick box: open, completed (green
+  tick) or didn't complete (red cross). Tap the box to mark it. Nothing is
+  deleted to tidy up: what was not completed stays on the record, and a
+  fresh task is added if it is to be tried again. A task still open past
+  its date reads as overdue (ochre) on the diagram.
+- **Strategic Objectives** — vertical synchronisation points: a theme, a
+  date and the same tick-box outcome, in a larger box at the head of the
+  spine. Lines continue visually through and beyond every one.
 
 In code the older names remain: a key task is a `Milestone` and a
 strategic objective is a `StrategicHorizon`. User-facing words live in

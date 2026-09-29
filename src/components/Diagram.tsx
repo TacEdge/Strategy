@@ -1,13 +1,12 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { PointerEvent as ReactPointerEvent, RefObject } from 'react';
-import type { CampaignState, LineOfOperation, Milestone } from '../types';
+import type { CampaignState, LineOfOperation, Milestone, Outcome } from '../types';
 import type { ViewSpec } from '../lib/views';
 import { TIMELINE_START, TIMELINE_END } from '../lib/views';
 import {
   parseDate, toIso, daysBetween, addDays, monthShort, todayIso, fmtDayMonth,
 } from '../lib/time';
-import { MarkerIcon } from './icons';
-import { STATUS_LABEL } from './ui';
+import { OutcomeBox, OUTCOME_LABEL, IconEdit } from './icons';
 import { placeLabels, tiersThatFit } from '../lib/labels';
 import type { LabelSlot } from '../lib/labels';
 import { TERMS } from '../lib/terms';
@@ -30,7 +29,57 @@ interface DiagramProps {
   onMoveMilestone: (id: string, iso: string) => void;
   onMoveHorizon: (id: string, iso: string) => void;
   onToggleFocus: (looId: string) => void;
+  onSetTaskOutcome: (id: string, outcome: Outcome) => void;
+  onSetObjectiveOutcome: (id: string, outcome: Outcome) => void;
 }
+
+/** Tap a box, choose: completed, didn't complete, or reopen; or edit. */
+const OutcomeMenu = ({
+  x, y, above, title, outcome, onChoose, onEdit, onClose,
+}: {
+  x: number; y: number; above: boolean; title: string; outcome: Outcome;
+  onChoose: (o: Outcome) => void; onEdit: () => void; onClose: () => void;
+}) => {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const onDown = (e: PointerEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) onClose();
+    };
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('pointerdown', onDown, true);
+    window.addEventListener('keydown', onKey);
+    return () => {
+      window.removeEventListener('pointerdown', onDown, true);
+      window.removeEventListener('keydown', onKey);
+    };
+  }, [onClose]);
+  return (
+    <div
+      className={`outcome-menu${above ? ' above' : ''}`}
+      ref={ref}
+      style={{ left: x, top: y }}
+      role="menu"
+      onPointerDown={(e) => e.stopPropagation()}
+    >
+      <div className="outcome-menu-title" title={title}>{title}</div>
+      <button type="button" role="menuitem" className="outcome-menu-item done" onClick={() => onChoose('done')}>
+        <OutcomeBox outcome="done" size={17} /> Completed
+      </button>
+      <button type="button" role="menuitem" className="outcome-menu-item missed" onClick={() => onChoose('missed')}>
+        <OutcomeBox outcome="missed" size={17} /> Didn't complete
+      </button>
+      {outcome !== 'open' && (
+        <button type="button" role="menuitem" className="outcome-menu-item" onClick={() => onChoose('open')}>
+          <OutcomeBox outcome="open" size={17} /> Reopen
+        </button>
+      )}
+      <div className="menu-divider" />
+      <button type="button" role="menuitem" className="outcome-menu-item quiet" onClick={onEdit}>
+        <IconEdit size={15} /> Edit
+      </button>
+    </div>
+  );
+};
 
 interface Placed {
   m: Milestone;
@@ -92,14 +141,22 @@ const useDragDays = (
   }) };
 };
 
-/** Past its target date and not yet complete: needs attention now. */
-export const isOverdue = (m: Milestone, today: string): boolean =>
-  m.status !== 'complete' && m.targetDate < today;
+/** Still open past its date: needs a decision now. */
+export const isOverdue = (m: { outcome: Outcome; targetDate: string }, today: string): boolean =>
+  m.outcome === 'open' && m.targetDate < today;
+
+/** Objectives use their date the same way. */
+const isObjectiveOverdue = (h: { outcome: Outcome; date: string }, today: string): boolean =>
+  h.outcome === 'open' && h.date < today;
 
 export const Diagram = ({
   state, loos, view, selectedMilestoneId, selectedHorizonId, focusLooId, showLabels, scrollRef,
   onSelectMilestone, onSelectHorizon, onMoveMilestone, onMoveHorizon, onToggleFocus,
+  onSetTaskOutcome, onSetObjectiveOutcome,
 }: DiagramProps) => {
+  // The tick-box menu: which box it belongs to and where it sits.
+  const [menu, setMenu] = useState<{ kind: 'task' | 'objective'; id: string; x: number; y: number } | null>(null);
+  const closeMenu = useCallback(() => setMenu(null), []);
   const t0 = parseDate(TIMELINE_START);
   const t1 = parseDate(TIMELINE_END);
   const px = view.pxPerDay;
@@ -412,21 +469,27 @@ export const Diagram = ({
                 <button
                   type="button"
                   className={`horizon-endstate${hzSelected ? ' selected' : ''}`}
-                  style={{ left: hx, top: HEAD_H + 14 }}
-                  title={title}
-                  aria-label={`${TERMS.objective} ${when}: ${h.theme}`}
+                  style={{ left: hx, top: HEAD_H + 16 }}
+                  title={hzSelected ? title : `${TERMS.objective}: ${h.theme} · ${when}. ${OUTCOME_LABEL[h.outcome]}. Tap to mark.`}
+                  aria-label={`${TERMS.objective} ${when}: ${h.theme}. ${OUTCOME_LABEL[h.outcome]}.`}
                   {...(hzSelected
                     ? hzDrag.handlers(h.id)
-                    : selectProps(() => onSelectHorizon(h.id)))}
+                    : selectProps(() => setMenu({ kind: 'objective', id: h.id, x: hx, y: HEAD_H + 16 })))}
                 >
-                  <span className="endstate-diamond" aria-hidden />
-                  {showLabels && (
-                    <span className="horizon-label">
-                      <span className="horizon-theme">{h.theme}</span>
-                      {!sparse && <span className="horizon-when">{when}</span>}
-                    </span>
-                  )}
+                  <OutcomeBox outcome={h.outcome} size={26} bold overdue={isObjectiveOverdue(h, today)} />
                 </button>
+                {showLabels && (
+                  <button
+                    type="button"
+                    className={`horizon-label${hzSelected ? ' selected' : ''}${h.outcome === 'missed' ? ' missed' : ''}`}
+                    style={{ left: hx + 17, top: HEAD_H + 16 }}
+                    title={`${h.theme} · ${when}. Select to edit or move.`}
+                    {...selectProps(() => onSelectHorizon(h.id))}
+                  >
+                    <span className="horizon-theme">{h.theme}</span>
+                    {!sparse && <span className="horizon-when">{when}</span>}
+                  </button>
+                )}
               </div>
             );
           })}
@@ -446,20 +509,20 @@ export const Diagram = ({
             const selected = selectedMilestoneId === m.id;
             const opacity = nodeOpacity(loo, m);
             const overdue = isOverdue(m, today);
-            const label = `${m.title}. ${STATUS_LABEL[m.status]}${overdue ? ', overdue' : ''}, ${fmtDayMonth(m.targetDate)}, ${m.owner}.`;
+            const label = `${m.title}. ${OUTCOME_LABEL[m.outcome]}${overdue ? ', overdue' : ''}, ${fmtDayMonth(m.targetDate)}, ${m.owner}.`;
 
             if (selected && !sparse) {
               return (
                 <button
                   type="button"
                   key={m.id}
-                  className={`ms-selected-box st-${m.status}${dragging ? ' dragging' : ''}`}
+                  className={`ms-selected-box outcome-${m.outcome}${dragging ? ' dragging' : ''}`}
                   style={{ left: cx, top: cy }}
                   aria-label={`${label} Selected. Drag to reschedule.`}
                   title={`${label} Drag to reschedule.`}
                   {...msDrag.handlers(m.id)}
                 >
-                  <span className={`st-icon-${m.status}`}><MarkerIcon status={m.status} size={15} /></span>
+                  <OutcomeBox outcome={m.outcome} size={18} overdue={overdue} />
                   <span className="msb-text">
                     <span className="msb-title">{m.title}</span>
                     {showMeta && (
@@ -472,19 +535,20 @@ export const Diagram = ({
               );
             }
 
-            // Unselected key tasks select on click only; dragging them pans
-            // the canvas. Rescheduling requires selecting first.
+            // The box opens the outcome menu; the label selects for editing.
+            // Dragging an unselected task pans the canvas; rescheduling
+            // requires selecting first.
             return (
               <div key={m.id} className="ms-point" style={{ opacity }}>
                 <button
                   type="button"
-                  className={`ms-dot st-icon-${m.status}${overdue ? ' overdue' : ''}`}
+                  className={`ms-box outcome-${m.outcome}`}
                   style={{ left: cx, top: cy }}
-                  aria-label={`${label} Select to edit or move.`}
-                  title={`${label} Select to edit or move.`}
-                  {...selectProps(() => onSelectMilestone(m.id))}
+                  aria-label={`${label} Tap to mark completed or not.`}
+                  title={`${label} Tap to mark.`}
+                  {...selectProps(() => setMenu({ kind: 'task', id: m.id, x: cx, y: cy }))}
                 >
-                  <MarkerIcon status={m.status} size={sparse ? 12 : 14} />
+                  <OutcomeBox outcome={m.outcome} size={sparse ? 15 : 19} overdue={overdue} />
                 </button>
                 {pl.slot && pl.slot.level > 0 && (
                   // A thin leader ties an outer-tier label back to its dot.
@@ -524,6 +588,35 @@ export const Diagram = ({
             );
             });
           })}
+
+          {menu && (() => {
+            const task = menu.kind === 'task' ? state.milestones.find((m) => m.id === menu.id) : undefined;
+            const obj = menu.kind === 'objective' ? state.horizons.find((h) => h.id === menu.id) : undefined;
+            const outcome = task?.outcome ?? obj?.outcome;
+            const title = task?.title ?? obj?.theme;
+            if (!outcome || !title) return null;
+            const above = menu.y + 190 > totalH;
+            return (
+              <OutcomeMenu
+                x={menu.x}
+                y={above ? menu.y - 16 : menu.y + 16}
+                above={above}
+                title={title}
+                outcome={outcome}
+                onChoose={(o) => {
+                  if (menu.kind === 'task') onSetTaskOutcome(menu.id, o);
+                  else onSetObjectiveOutcome(menu.id, o);
+                  setMenu(null);
+                }}
+                onEdit={() => {
+                  if (menu.kind === 'task') onSelectMilestone(menu.id);
+                  else onSelectHorizon(menu.id);
+                  setMenu(null);
+                }}
+                onClose={closeMenu}
+              />
+            );
+          })()}
         </div>
       </div>
 

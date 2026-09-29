@@ -1,6 +1,6 @@
 import { useStore, useLoos } from '../state/store';
 import { fmtDateLong, fmtDate, parseDate, daysBetween, todayIso, nowStamp } from '../lib/time';
-import { SectionHeading, Eyebrow, StatusBadge } from '../components/ui';
+import { SectionHeading, Eyebrow, OutcomeBadge } from '../components/ui';
 import { isOverdue } from '../components/Diagram';
 import { TERMS } from '../lib/terms';
 
@@ -20,11 +20,9 @@ export const ReviewPage = ({
   const today = todayIso();
 
   const milestones = state.milestones;
-  const achieved = milestones.filter((m) => m.status === 'complete');
-  const underPressure = milestones.filter((m) => m.status === 'at-risk' || m.status === 'blocked');
-  const overdueAll = milestones.filter((m) => isOverdue(m, today));
-  // Listed under Overdue only when not already listed under pressure.
-  const overdue = overdueAll.filter((m) => !underPressure.includes(m));
+  const achieved = milestones.filter((m) => m.outcome === 'done');
+  const missed = milestones.filter((m) => m.outcome === 'missed');
+  const overdue = milestones.filter((m) => isOverdue(m, today));
 
   // The next strategic objective ahead of today; failing that, the latest one on the diagram.
   const horizon =
@@ -39,7 +37,7 @@ export const ReviewPage = ({
 
   const daysTo = horizon ? daysBetween(parseDate(today), parseDate(horizon.date)) : null;
   const beforeHorizon = horizon ? milestones.filter((m) => m.targetDate <= horizon.date) : [];
-  const doneBeforeHorizon = beforeHorizon.filter((m) => m.status === 'complete');
+  const doneBeforeHorizon = beforeHorizon.filter((m) => m.outcome === 'done');
 
   const byLoo = (id: string) => milestones.filter((m) => m.looId === id);
 
@@ -68,14 +66,14 @@ export const ReviewPage = ({
         <div className="today-context-cell">
           <Eyebrow>{TERMS.tasks} before it</Eyebrow>
           <p className="today-context-value">
-            {horizon ? `${doneBeforeHorizon.length} of ${beforeHorizon.length} complete` : '—'}
+            {horizon ? `${doneBeforeHorizon.length} of ${beforeHorizon.length} completed` : '—'}
           </p>
-          <p className="today-context-sub">{underPressure.length} under pressure</p>
+          <p className="today-context-sub">{missed.length} not completed</p>
         </div>
         <div className="today-context-cell">
           <Eyebrow>Overdue</Eyebrow>
-          <p className="today-context-value">{overdueAll.length} {overdueAll.length === 1 ? TERMS.taskLower : TERMS.tasksLower}</p>
-          <p className="today-context-sub">Past target date, not complete</p>
+          <p className="today-context-value">{overdue.length} {overdue.length === 1 ? TERMS.taskLower : TERMS.tasksLower}</p>
+          <p className="today-context-sub">Past the date and still open: decide tick or cross</p>
         </div>
       </section>
 
@@ -85,15 +83,18 @@ export const ReviewPage = ({
             <h2 className="ws-card-title">By Line of Operation</h2>
             {loos.map((loo) => {
               const ms = byLoo(loo.id);
-              const done = ms.filter((m) => m.status === 'complete').length;
-              const pressure = ms.filter((m) => m.status === 'at-risk' || m.status === 'blocked' || isOverdue(m, today)).length;
+              const done = ms.filter((m) => m.outcome === 'done').length;
+              const notDone = ms.filter((m) => m.outcome === 'missed').length;
+              const pressure = ms.filter((m) => isOverdue(m, today)).length;
               return (
                 <div key={loo.id} className="review-loo-row">
                   <span className="lane-num">{String(loo.number).padStart(2, '0')}</span>
                   <span className="review-loo-name">{loo.name}</span>
-                  <span className="review-loo-stat">{done}/{ms.length} complete</span>
+                  <span className="review-loo-stat">
+                    {done}/{ms.length} completed{notDone > 0 ? ` · ${notDone} not` : ''}
+                  </span>
                   <span className="review-loo-stat" style={{ color: pressure > 0 ? 'var(--te-ochre)' : undefined }}>
-                    {pressure > 0 ? `${pressure} need${pressure === 1 ? 's' : ''} attention` : 'Clear'}
+                    {pressure > 0 ? `${pressure} overdue` : 'Clear'}
                   </span>
                 </div>
               );
@@ -103,27 +104,27 @@ export const ReviewPage = ({
           <section className="ws-card" aria-label="Attention and achievement">
             <h2 className="ws-card-title">Needs attention</h2>
             <div className="detail-section">
-              <SectionHeading>Under pressure</SectionHeading>
-              {underPressure.length > 0 ? underPressure.map((m) => (
-                <div key={m.id} className="dep-item">
-                  <StatusBadge status={m.status} compact />
-                  <button type="button" className="dep-link" onClick={() => onOpenMilestone(m.id)}>{m.title}</button>
-                  <span className="dep-loo" style={{ marginLeft: 'auto' }}>{fmtDate(m.targetDate)}</span>
-                </div>
-              )) : <p className="empty-note">Nothing at risk or blocked.</p>}
-            </div>
-            <div className="detail-section">
-              <SectionHeading>Overdue</SectionHeading>
+              <SectionHeading>Overdue, still open</SectionHeading>
               {overdue.length > 0 ? overdue.map((m) => (
                 <div key={m.id} className="dep-item">
-                  <StatusBadge status={m.status} compact />
+                  <OutcomeBadge outcome={m.outcome} overdue compact />
                   <button type="button" className="dep-link" onClick={() => onOpenMilestone(m.id)}>{m.title}</button>
-                  <span className="dep-loo" style={{ marginLeft: 'auto', color: 'var(--te-brick)' }}>{fmtDate(m.targetDate)}</span>
+                  <span className="dep-loo" style={{ marginLeft: 'auto', color: 'var(--te-ochre)' }}>{fmtDate(m.targetDate)}</span>
                 </div>
               )) : <p className="empty-note">Nothing past its date.</p>}
             </div>
             <div className="detail-section">
-              <SectionHeading>Achieved</SectionHeading>
+              <SectionHeading>Didn't complete</SectionHeading>
+              {missed.length > 0 ? missed.map((m) => (
+                <div key={m.id} className="dep-item">
+                  <OutcomeBadge outcome={m.outcome} compact />
+                  <button type="button" className="dep-link" onClick={() => onOpenMilestone(m.id)}>{m.title}</button>
+                  <span className="dep-loo" style={{ marginLeft: 'auto' }}>{fmtDate(m.targetDate)}</span>
+                </div>
+              )) : <p className="empty-note">Nothing marked as not completed.</p>}
+            </div>
+            <div className="detail-section">
+              <SectionHeading>Completed</SectionHeading>
               {achieved.length > 0 ? achieved.map((m) => (
                 <div key={m.id} className="dep-item">
                   <span className="dep-loo">{fmtDate(m.targetDate)}</span>

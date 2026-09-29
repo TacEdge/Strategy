@@ -160,6 +160,8 @@ export const DiagramPage = ({
         onMoveMilestone={(id, iso) => dispatch({ type: 'milestone/update', id, patch: { targetDate: iso } })}
         onMoveHorizon={(id, iso) => dispatch({ type: 'horizon/update', id, patch: { date: iso } })}
         onToggleFocus={(id) => setFocusLooId((cur) => (cur === id ? null : id))}
+        onSetTaskOutcome={(id, outcome) => dispatch({ type: 'milestone/update', id, patch: { outcome } })}
+        onSetObjectiveOutcome={(id, outcome) => dispatch({ type: 'horizon/update', id, patch: { outcome } })}
       />
 
       {selectedMilestoneId && (

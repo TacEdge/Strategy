@@ -1,5 +1,5 @@
-import type { SVGProps, JSX } from 'react';
-import type { MilestoneStatus } from '../types';
+import type { SVGProps } from 'react';
+import type { Outcome } from '../types';
 
 type P = SVGProps<SVGSVGElement> & { size?: number };
 
@@ -86,76 +86,38 @@ export const IconMenu = (p: P) => (
   <svg {...base(p)}><path d="M4 7h16M4 12h16M4 17h16" /></svg>
 );
 
-/* ---- Milestone status icons. Shape carries meaning, never colour alone. ---- */
+/* ---- Outcome boxes. A Key Task is a tick box on its line; a Strategic
+   Objective is a larger one at the head of its spine. Open is an empty
+   box, completed a green tick, didn't complete a red cross. Overdue and
+   still open carries an ochre edge. Shape and colour agree, never colour
+   alone. ---- */
 
-export const IconStatusComplete = (p: P) => (
-  <svg {...base(p)} fill="currentColor" stroke="none">
-    <circle cx="12" cy="12" r="9" />
-    <path d="m8 12.2 2.8 2.8L16.4 9.4" fill="none" stroke="var(--te-cream)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-  </svg>
-);
-export const IconStatusActive = (p: P) => (
-  <svg {...base(p)}><circle cx="12" cy="12" r="8.5" /><path d="M12 3.5a8.5 8.5 0 0 1 8.5 8.5H12z" fill="currentColor" stroke="none" /></svg>
-);
-export const IconStatusAtRisk = (p: P) => (
-  <svg {...base(p)}><path d="M12 4 21 19H3z" /><path d="M12 10v4M12 16.8v.4" strokeWidth="2" /></svg>
-);
-export const IconStatusBlocked = (p: P) => (
-  <svg {...base(p)}><path d="M8.2 3.5h7.6l4.7 4.7v7.6l-4.7 4.7H8.2l-4.7-4.7V8.2z" /><path d="M8.5 12h7" strokeWidth="2" /></svg>
-);
-export const IconStatusFuture = (p: P) => (
-  <svg {...base(p)}><circle cx="12" cy="12" r="8.5" strokeDasharray="3.4 3.2" /></svg>
-);
 
-/**
- * Compact timeline markers. Shape carries status at dot scale: filled =
- * complete, ringed dot = active, open = future, triangle = at risk,
- * square = blocked. Each draws a card-coloured
- * backing so the LOO line does not show through.
- */
-export const MarkerIcon = ({ status, size = 14 }: { status: MilestoneStatus; size?: number }) => {
-  const backing = <circle cx="7" cy="7" r="6.4" fill="var(--te-card)" />;
-  const common = {
-    width: size, height: size, viewBox: '0 0 14 14',
-    'aria-hidden': true as const,
-  };
-  switch (status) {
-    case 'complete':
-      return <svg {...common}>{backing}<circle cx="7" cy="7" r="5" fill="currentColor" /></svg>;
-    case 'active':
-      return (
-        <svg {...common}>{backing}
-          <circle cx="7" cy="7" r="4.9" fill="none" stroke="currentColor" strokeWidth="1.6" />
-          <circle cx="7" cy="7" r="2.1" fill="currentColor" />
-        </svg>
-      );
-    case 'at-risk':
-      return (
-        <svg {...common}>{backing}
-          <path d="M7 2.4 12.2 11.6H1.8Z" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
-        </svg>
-      );
-    case 'blocked':
-      return (
-        <svg {...common}>{backing}
-          <rect x="2.6" y="2.6" width="8.8" height="8.8" rx="1" fill="none" stroke="currentColor" strokeWidth="1.6" />
-        </svg>
-      );
-    default: // future
-      return (
-        <svg {...common}>{backing}
-          <circle cx="7" cy="7" r="4.9" fill="none" stroke="currentColor" strokeWidth="1.5" />
-        </svg>
-      );
-  }
+export const OUTCOME_LABEL: Record<Outcome, string> = {
+  open: 'Open',
+  done: 'Completed',
+  missed: "Didn't complete",
 };
 
-export const statusIcon = (status: MilestoneStatus, size = 16): JSX.Element => {
-  switch (status) {
-    case 'complete': return <IconStatusComplete size={size} />;
-    case 'active': return <IconStatusActive size={size} />;
-    case 'at-risk': return <IconStatusAtRisk size={size} />;
-    case 'blocked': return <IconStatusBlocked size={size} />;
-    case 'future': return <IconStatusFuture size={size} />;
-  }
+export const OutcomeBox = ({
+  outcome, size = 18, overdue = false, bold = false,
+}: { outcome: Outcome; size?: number; overdue?: boolean; bold?: boolean }) => {
+  const edge = outcome === 'done' ? 'var(--te-forest)'
+    : outcome === 'missed' ? 'var(--te-brick)'
+      : overdue ? 'var(--te-ochre)' : 'var(--te-ink-40)';
+  const fill = outcome === 'done' ? 'var(--te-sage-tint)'
+    : outcome === 'missed' ? 'var(--te-brick-tint)'
+      : 'var(--te-card)';
+  const sw = bold ? 2 : 1.6;
+  return (
+    <svg width={size} height={size} viewBox="0 0 20 20" aria-hidden style={{ display: 'block' }}>
+      <rect x="1.5" y="1.5" width="17" height="17" rx="3.5" fill={fill} stroke={edge} strokeWidth={sw} />
+      {outcome === 'done' && (
+        <path d="M5.2 10.4 8.6 13.8 14.8 6.8" fill="none" stroke="var(--te-forest)" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+      )}
+      {outcome === 'missed' && (
+        <path d="M6.2 6.2 13.8 13.8M13.8 6.2 6.2 13.8" fill="none" stroke="var(--te-brick)" strokeWidth="2.4" strokeLinecap="round" />
+      )}
+    </svg>
+  );
 };

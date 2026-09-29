@@ -3,7 +3,7 @@ import {
 } from 'react';
 import type { ReactNode, Dispatch } from 'react';
 import type {
-  CampaignState, Milestone, MilestoneStatus, LineOfOperation, StrategicHorizon, WeeklyPlan,
+  CampaignState, Milestone, LineOfOperation, StrategicHorizon, WeeklyPlan,
 } from '../types';
 import { seedState } from '../data/seed';
 
@@ -111,7 +111,11 @@ interface LegacyState {
   weekly?: Partial<WeeklyPlan>;
 }
 
-const STATUSES: MilestoneStatus[] = ['future', 'active', 'at-risk', 'blocked', 'complete'];
+/** Stored shape from schema 11 and 12: tasks carried a five-way status. */
+interface V12State extends Omit<CampaignState, 'milestones' | 'horizons'> {
+  milestones: (Omit<Milestone, 'outcome'> & { status: string })[];
+  horizons: Omit<StrategicHorizon, 'outcome'>[];
+}
 
 /** Seeded fixture records from schema 8 are identified by their ID patterns. */
 const SEED_ID = [/^ms-(mv|pt|cr|sr|cc)-\d+$/, /^hz-\d+$/];
@@ -132,7 +136,7 @@ const SEEDED_OUTCOMES = [
  * already. Schema 8 additionally drops its notional seed records and
  * renames the default lines, as the v9 migration used to.
  */
-const migrateLegacy = (raw: LegacyState): CampaignState => {
+const migrateLegacy = (raw: LegacyState): V12State => {
   const version = raw.schemaVersion ?? 0;
   const v8 = version <= 8;
 
@@ -176,7 +180,7 @@ const migrateLegacy = (raw: LegacyState): CampaignState => {
         title: m.title,
         looId: m.looId,
         targetDate: m.targetDate,
-        status: STATUSES.includes(m.status as MilestoneStatus) ? (m.status as MilestoneStatus) : 'future',
+        status: m.status,
         owner: m.owner ?? '',
       })),
     weekly: {
@@ -201,7 +205,7 @@ const OLD_DEFAULT_DESCRIPTION: Record<string, string> = {
   'loo-cc': 'Build the team, runway and delivery system.',
 };
 
-const migrateV11toV12 = (s: CampaignState): CampaignState => {
+const migrateV11toV12 = (s: V12State): V12State => {
   const commercial = s.loos.find((l) => l.id === 'loo-cr');
   const folded = new Set(commercial ? FOLDED_INTO_COMMERCIAL : []);
   const loos = s.loos
@@ -224,14 +228,28 @@ const migrateV11toV12 = (s: CampaignState): CampaignState => {
   };
 };
 
+/**
+ * Migration 12 -> 13: the five-way status becomes an outcome. Every Key
+ * Task and Strategic Objective is open, completed (tick) or didn't
+ * complete (cross). Complete maps to done; everything else to open.
+ * Objectives gain the same field, starting open.
+ */
+const migrateV12toV13 = (s: V12State): CampaignState => ({
+  ...s,
+  schemaVersion: 13,
+  milestones: s.milestones.map(({ status, ...m }) => ({ ...m, outcome: status === 'complete' ? 'done' : 'open' })),
+  horizons: s.horizons.map((h) => ({ ...h, outcome: 'open' })),
+});
+
 const load = (): CampaignState => {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return seedState;
     const parsed = JSON.parse(raw) as LegacyState;
     if (parsed.schemaVersion === seedState.schemaVersion) return parsed as unknown as CampaignState;
-    const v11 = parsed.schemaVersion === 11 ? (parsed as unknown as CampaignState) : migrateLegacy(parsed);
-    return migrateV11toV12(v11);
+    const v12 = parsed.schemaVersion === 12 ? (parsed as unknown as V12State)
+      : migrateV11toV12(parsed.schemaVersion === 11 ? (parsed as unknown as V12State) : migrateLegacy(parsed));
+    return migrateV12toV13(v12);
   } catch {
     return seedState;
   }

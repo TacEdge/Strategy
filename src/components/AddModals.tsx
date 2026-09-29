@@ -20,7 +20,7 @@ export const AddMilestoneModal = ({
     const t = title.trim();
     if (!t || !looId || !date) return;
     const milestone: Milestone = {
-      id: newId('ms'), title: t, looId, targetDate: date, status: 'future', owner: owner.trim(),
+      id: newId('ms'), title: t, looId, targetDate: date, outcome: 'open', owner: owner.trim(),
     };
     dispatch({ type: 'milestone/add', milestone });
     onCreated(milestone);
@@ -76,7 +76,7 @@ export const AddHorizonModal = ({
   const create = () => {
     const t = theme.trim();
     if (!t || !date) return;
-    const horizon: StrategicHorizon = { id: newId('hz'), date, theme: t };
+    const horizon: StrategicHorizon = { id: newId('hz'), date, theme: t, outcome: 'open' };
     dispatch({ type: 'horizon/add', horizon });
     onCreated(horizon);
     onClose();

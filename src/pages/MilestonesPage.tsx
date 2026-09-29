@@ -1,16 +1,13 @@
 import { useMemo, useState } from 'react';
-import type { Milestone, MilestoneStatus } from '../types';
+import type { Milestone, Outcome } from '../types';
 import { useStore, useLoos } from '../state/store';
 import { fmtDate, parseDate, daysBetween, todayIso } from '../lib/time';
-import { MarkerIcon } from '../components/icons';
-import { STATUS_LABEL } from '../components/ui';
+import { OutcomeBox, OUTCOME_LABEL } from '../components/icons';
 import { isOverdue } from '../components/Diagram';
 import { TERMS } from '../lib/terms';
 
-/** Attention first, then soonest. */
-const STATUS_ORDER: Record<MilestoneStatus, number> = {
-  blocked: 0, 'at-risk': 1, active: 2, future: 3, complete: 4,
-};
+/** Open work first, then what was not completed, then what was. */
+const OUTCOME_ORDER: Record<Outcome, number> = { open: 0, missed: 1, done: 2 };
 
 /**
  * The flat list behind the diagram: every key task, one line each,
@@ -26,8 +23,7 @@ export const MilestonesPage = ({ onOpenMilestone }: { onOpenMilestone: (id: stri
   const today = todayIso();
   const todayDate = parseDate(today);
 
-  const needsAttention = (m: Milestone) =>
-    m.status === 'at-risk' || m.status === 'blocked' || isOverdue(m, today);
+  const needsAttention = (m: Milestone) => isOverdue(m, today);
 
   const rows = useMemo(() => {
     let list = state.milestones;
@@ -35,14 +31,15 @@ export const MilestonesPage = ({ onOpenMilestone }: { onOpenMilestone: (id: stri
     if (attentionOnly) list = list.filter(needsAttention);
     return [...list].sort((a, b) =>
       Number(needsAttention(b)) - Number(needsAttention(a))
-      || STATUS_ORDER[a.status] - STATUS_ORDER[b.status]
+      || OUTCOME_ORDER[a.outcome] - OUTCOME_ORDER[b.outcome]
       || a.targetDate.localeCompare(b.targetDate));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.milestones, looFilter, attentionOnly]);
 
   const attention = state.milestones.filter(needsAttention).length;
-  const open = state.milestones.filter((m) => m.status !== 'complete').length;
-  const complete = state.milestones.length - open;
+  const open = state.milestones.filter((m) => m.outcome === 'open').length;
+  const done = state.milestones.filter((m) => m.outcome === 'done').length;
+  const missed = state.milestones.filter((m) => m.outcome === 'missed').length;
 
   return (
     <div className="page progress-page">
@@ -78,8 +75,12 @@ export const MilestonesPage = ({ onOpenMilestone }: { onOpenMilestone: (id: stri
           <span className="pv-stat-label">Open</span>
         </div>
         <div className="pv-stat">
-          <span className="pv-stat-num">{complete}</span>
-          <span className="pv-stat-label">Complete</span>
+          <span className="pv-stat-num">{done}</span>
+          <span className="pv-stat-label">Completed</span>
+        </div>
+        <div className="pv-stat">
+          <span className="pv-stat-num">{missed}</span>
+          <span className="pv-stat-label">Didn't complete</span>
         </div>
       </div>
 
@@ -95,7 +96,7 @@ export const MilestonesPage = ({ onOpenMilestone }: { onOpenMilestone: (id: stri
             <span />
             <span>{TERMS.task}</span>
             <span>LOO</span>
-            <span>Status</span>
+            <span>Outcome</span>
             <span>Target</span>
             <span>Owner</span>
           </div>
@@ -110,18 +111,20 @@ export const MilestonesPage = ({ onOpenMilestone }: { onOpenMilestone: (id: stri
                 className={`pv-row${needsAttention(m) ? ' attention' : ''}`}
                 role="row"
                 onClick={() => onOpenMilestone(m.id)}
-                title={`${m.title}. ${STATUS_LABEL[m.status]}. Open on the diagram.`}
+                title={`${m.title}. ${OUTCOME_LABEL[m.outcome]}. Open on the diagram.`}
               >
-                <span className={`st-icon-${m.status}`} aria-label={STATUS_LABEL[m.status]}>
-                  <MarkerIcon status={m.status} size={14} />
+                <span aria-label={OUTCOME_LABEL[m.outcome]}>
+                  <OutcomeBox outcome={m.outcome} overdue={overdue} size={17} />
                 </span>
                 <span className="pv-ms-title">{m.title}</span>
                 <span className="pv-loo">{loo ? `${String(loo.number).padStart(2, '0')} ${loo.name}` : '—'}</span>
-                <span className={`pv-status status-${m.status}`}>{STATUS_LABEL[m.status]}</span>
+                <span className={`pv-status outcome-${m.outcome}${overdue ? ' overdue' : ''}`}>
+                  {overdue ? 'Overdue' : OUTCOME_LABEL[m.outcome]}
+                </span>
                 <span className={`pv-date${overdue ? ' overdue' : ''}`}>
                   {fmtDate(m.targetDate)}
                   <span className="pv-delta">
-                    {m.status === 'complete' ? '' : overdue ? ` ${-delta}d over` : ` ${delta}d`}
+                    {m.outcome !== 'open' ? '' : overdue ? ` ${-delta}d over` : ` ${delta}d`}
                   </span>
                 </span>
                 <span className="pv-owner">{m.owner || '—'}</span>

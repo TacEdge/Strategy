@@ -551,27 +551,22 @@ input, select, textarea { font: inherit; color: var(--te-ink); }
   position: absolute; z-index: 22;
   transform: translate(-50%, -50%);
   display: grid; place-items: center;
-  width: 34px; height: 34px;
+  width: 38px; height: 38px;
   background: none; border: none; padding: 0;
   cursor: pointer;
 }
-.endstate-diamond {
-  width: 15px; height: 15px;
-  background: var(--te-forest);
-  outline: 3px solid var(--te-card);
-  transform: rotate(45deg);
-  transition: transform var(--te-motion), box-shadow var(--te-motion);
-}
-.horizon-endstate:hover .endstate-diamond { transform: rotate(45deg) scale(1.18); }
-/* Theme and date to the right of the diamond: the horizon reads at a glance. */
+/* Theme and date to the right of the box: the objective reads at a glance.
+   Tapping the label selects it for editing; tapping the box marks it. */
 .horizon-label {
-  position: absolute; left: 30px; top: 50%;
+  position: absolute; z-index: 22;
   transform: translateY(-50%);
   display: flex; flex-direction: column; align-items: flex-start; gap: 1px;
   text-align: left;
   white-space: nowrap;
-  pointer-events: none;
+  background: none; border: none; padding: 0;
+  cursor: pointer;
 }
+.horizon-label.missed .horizon-theme { color: var(--te-brick); }
 .horizon-theme {
   font-family: var(--te-display);
   font-weight: 700;
@@ -590,47 +585,68 @@ input, select, textarea { font: inherit; color: var(--te-ink); }
   color: var(--te-ink-40);
   padding: 0 5px;
 }
-.horizon-endstate.selected .horizon-theme { background: var(--te-sage-tint); }
+.horizon-label.selected .horizon-theme { background: var(--te-sage-tint); }
+.horizon-endstate svg { transition: transform var(--te-motion); }
+.horizon-endstate:hover svg { transform: scale(1.1); }
 .horizon-endstate.selected { cursor: grab; }
-.horizon-endstate.selected .endstate-diamond {
-  transform: rotate(45deg) scale(1.25);
-  box-shadow: 0 0 0 3px var(--te-sage-tint);
-}
+.horizon-endstate.selected svg { transform: scale(1.12); box-shadow: 0 0 0 3px var(--te-sage-tint); border-radius: 6px; }
 
-/* Status colours for markers. Shape carries meaning; colour reinforces. */
-.st-icon-complete { color: var(--te-forest); }
-.st-icon-active { color: var(--te-olive); }
-.st-icon-at-risk { color: var(--te-ochre); }
-.st-icon-blocked { color: var(--te-brick); }
-.st-icon-future { color: var(--te-ink-40); }
-
-/* Milestone dot on the LOO line */
+/* Key task tick box on the LOO line. Tap it to mark. */
 .ms-point { position: static; }
-.ms-dot {
+.ms-box {
   position: absolute; z-index: 12;
   transform: translate(-50%, -50%);
   display: grid; place-items: center;
-  width: 24px; height: 24px;
+  width: 30px; height: 30px;
   background: none; border: none; padding: 0;
   cursor: pointer;
   touch-action: none;
-  transition: transform var(--te-motion);
 }
-.ms-dot:hover { transform: translate(-50%, -50%) scale(1.25); }
-/* Overdue: past the date and not complete. A brick ring around the dot
-   and a brick date, whatever the status, so it reads without opening. */
-.ms-dot.overdue::after {
-  content: '';
-  position: absolute; inset: 2px;
-  border: 1.5px solid var(--te-brick);
-  border-radius: 50%;
-  pointer-events: none;
-}
-.ms-tag.overdue .ms-tag-meta, .msb-meta.overdue { color: var(--te-brick); font-weight: 700; }
+.ms-box svg { transition: transform var(--te-motion); }
+.ms-box:hover svg { transform: scale(1.12); }
+/* Overdue and still open: an ochre date, so it reads without opening. */
+.ms-tag.overdue .ms-tag-meta, .msb-meta.overdue { color: var(--te-ochre); font-weight: 700; }
 .ms-tag.overdue .ms-tag-title { color: var(--te-ink); }
-.ms-dot.dragging { z-index: 30; }
 
-/* Leader from a dot to a label that had to step out a tier or more */
+/* The tick-box menu */
+.outcome-menu {
+  position: absolute; z-index: 40;
+  transform: translateX(-50%);
+  min-width: 200px;
+  background: var(--te-card);
+  border: 1px solid var(--te-line);
+  border-radius: var(--te-r-md);
+  box-shadow: var(--te-shadow-lg);
+  padding: 6px;
+  display: flex; flex-direction: column; gap: 2px;
+}
+.outcome-menu.above { transform: translate(-50%, -100%); }
+.outcome-menu-title {
+  font-family: var(--te-mono);
+  font-size: var(--te-fs-2xs);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--te-ink-40);
+  padding: 4px 8px 6px;
+  max-width: 260px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.outcome-menu-item {
+  display: flex; align-items: center; gap: 9px;
+  padding: 9px 10px;
+  border-radius: var(--te-r-sm);
+  font-size: var(--te-fs-base);
+  font-weight: 600;
+  color: var(--te-ink);
+  text-align: left;
+  background: none; border: none; cursor: pointer;
+  white-space: nowrap;
+}
+.outcome-menu-item:hover { background: var(--te-tint); }
+.outcome-menu-item.done { color: var(--te-forest); }
+.outcome-menu-item.missed { color: var(--te-brick); }
+.outcome-menu-item.quiet { color: var(--te-ink-60); font-weight: 500; }
+/* Leader from a box to a label that had to step out a tier or more */
 .ms-leader {
   position: absolute; z-index: 10;
   width: 0;
@@ -716,18 +732,34 @@ input, select, textarea { font: inherit; color: var(--te-ink); }
 
 /* ============================== Status primitives ============================== */
 
-.status-badge {
-  display: inline-flex; align-items: center; gap: 5px;
+/* Outcome badge and three-way picker */
+.outcome-badge {
+  display: inline-flex; align-items: center; gap: 6px;
   font-size: var(--te-fs-sm);
   font-weight: 600;
   color: var(--te-ink-60);
   white-space: nowrap;
 }
-.status-badge.status-complete { color: var(--te-forest); }
-.status-badge.status-active { color: var(--te-olive); }
-.status-badge.status-at-risk { color: var(--te-ochre); }
-.status-badge.status-blocked { color: var(--te-brick); }
-
+.outcome-badge.outcome-done { color: var(--te-forest); }
+.outcome-badge.outcome-missed { color: var(--te-brick); }
+.outcome-badge.outcome-open.overdue { color: var(--te-ochre); }
+.outcome-picker { display: flex; gap: 6px; }
+.outcome-option {
+  flex: 1;
+  display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+  padding: 8px 8px;
+  border: 1px solid var(--te-line-2);
+  border-radius: var(--te-r-sm);
+  background: var(--te-card);
+  font-size: var(--te-fs-sm);
+  font-weight: 600;
+  color: var(--te-ink-60);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.outcome-option:hover { background: var(--te-tint); }
+.outcome-option.on { border-color: var(--te-forest); background: var(--te-sage-tint); color: var(--te-ink); }
+.outcome-option.on.outcome-missed { border-color: var(--te-brick); background: var(--te-brick-tint); }
 
 /* ============================== Drawer ============================== */
 
@@ -1066,7 +1098,7 @@ input, select, textarea { font: inherit; color: var(--te-ink); }
   padding: 0 10px; font-family: var(--te-ui);
 }
 .pv-stats {
-  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+  display: grid; grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 10px; margin-bottom: 16px;
 }
 .pv-stat {
@@ -1110,15 +1142,14 @@ input, select, textarea { font: inherit; color: var(--te-ink); }
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 .pv-status { font-family: var(--te-mono); font-size: var(--te-fs-2xs); letter-spacing: 0.08em; text-transform: uppercase; color: var(--te-ink-60); }
-.pv-status.status-complete { color: var(--te-forest); }
-.pv-status.status-active { color: var(--te-olive); }
-.pv-status.status-at-risk { color: var(--te-ochre); }
-.pv-status.status-blocked { color: var(--te-brick); }
+.pv-status.outcome-done { color: var(--te-forest); }
+.pv-status.outcome-missed { color: var(--te-brick); }
+.pv-status.outcome-open.overdue { color: var(--te-ochre); }
 .pv-owner { color: var(--te-ink-60); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .pv-date { color: var(--te-ink-60); white-space: nowrap; }
-.pv-date.overdue { color: var(--te-brick); }
+.pv-date.overdue { color: var(--te-ochre); }
 .pv-delta { font-family: var(--te-mono); font-size: var(--te-fs-2xs); color: var(--te-ink-40); margin-left: 4px; }
-.pv-date.overdue .pv-delta { color: var(--te-brick); }
+.pv-date.overdue .pv-delta { color: var(--te-ochre); }
 
 @media (max-width: 1100px) {
   .pv-row { grid-template-columns: 26px minmax(150px, 1.5fr) 100px 80px 130px; }

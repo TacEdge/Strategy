@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useStore } from '../state/store';
-import { fmtDateLong } from '../lib/time';
-import { ConfirmDialog, Field } from './ui';
+import { fmtDateLong, todayIso } from '../lib/time';
+import { ConfirmDialog, Field, OutcomeBadge, OutcomePicker } from './ui';
 import { IconClose, IconTrash } from './icons';
 import { TERMS } from '../lib/terms';
 
@@ -28,7 +28,10 @@ export const HorizonDrawer = ({
         <div className="drawer-head-info">
           <span className="eyebrow">{TERMS.objective}</span>
           <h2 className="drawer-title">{h.theme}</h2>
-          <span className="detail-text muted" style={{ fontSize: 13 }}>{fmtDateLong(h.date)}</span>
+          <div style={{ display: 'flex', gap: 14, alignItems: 'center', flexWrap: 'wrap' }}>
+            <OutcomeBadge outcome={h.outcome} overdue={h.outcome === 'open' && h.date < todayIso()} />
+            <span className="detail-text muted" style={{ fontSize: 13 }}>{fmtDateLong(h.date)}</span>
+          </div>
         </div>
         <button type="button" className="icon-btn" onClick={onClose} aria-label={`Close ${TERMS.objectiveLower} panel`}>
           <IconClose size={16} />
@@ -36,6 +39,10 @@ export const HorizonDrawer = ({
       </div>
 
       <div className="drawer-body">
+        <div className="field">
+          <span className="field-label">Outcome</span>
+          <OutcomePicker value={h.outcome} onChange={(outcome) => patch({ outcome })} />
+        </div>
         <div className="meta-grid">
           <Field label="Theme">
             <input value={h.theme} onChange={(e) => patch({ theme: e.target.value })} />

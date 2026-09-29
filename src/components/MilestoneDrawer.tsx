@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
-import type { Milestone, MilestoneStatus } from '../types';
+import type { Milestone } from '../types';
 import { useStore, useLoos } from '../state/store';
-import { fmtDate } from '../lib/time';
-import { StatusBadge, ConfirmDialog, Field, STATUS_LABEL, STATUSES } from './ui';
+import { fmtDate, todayIso } from '../lib/time';
+import { OutcomeBadge, OutcomePicker, ConfirmDialog, Field } from './ui';
 import { IconClose, IconTrash, IconEdit } from './icons';
 import { TERMS } from '../lib/terms';
 
@@ -70,7 +70,7 @@ export const MilestoneDrawer = ({
             </h2>
           )}
           <div style={{ display: 'flex', gap: 14, alignItems: 'center', flexWrap: 'wrap' }}>
-            <StatusBadge status={m.status} />
+            <OutcomeBadge outcome={m.outcome} overdue={m.outcome === 'open' && m.targetDate < todayIso()} />
             <span className="detail-text muted" style={{ fontSize: 13 }}>{fmtDate(m.targetDate)}</span>
           </div>
         </div>
@@ -80,15 +80,11 @@ export const MilestoneDrawer = ({
       </div>
 
       <div className="drawer-body">
+        <div className="field">
+          <span className="field-label">Outcome</span>
+          <OutcomePicker value={m.outcome} onChange={(outcome) => patch({ outcome })} />
+        </div>
         <div className="meta-grid">
-          <Field label="Status">
-            <select
-              value={m.status}
-              onChange={(e) => patch({ status: e.target.value as MilestoneStatus })}
-            >
-              {STATUSES.map((s) => <option key={s} value={s}>{STATUS_LABEL[s]}</option>)}
-            </select>
-          </Field>
           <Field label="Target date">
             <input
               type="date"

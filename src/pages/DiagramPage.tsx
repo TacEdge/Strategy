@@ -25,7 +25,7 @@ export const DiagramPage = ({
 }) => {
   const { state, dispatch } = useStore();
   const allLoos = useLoos();
-  const [viewId, setViewId] = useState<ViewId>('6m');
+  const [viewId, setViewId] = useState<ViewId>('month');
   const [visibleLooIds, setVisibleLooIds] = useState<Set<string>>(
     () => new Set(allLoos.map((l) => l.id)),
   );

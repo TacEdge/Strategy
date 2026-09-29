@@ -219,8 +219,13 @@ export const buildDiagramPdf = async (input: PdfInput): Promise<Blob> => {
     const x = xOfDay(daysBetween(t0, d));
     if (!inRange(x)) continue;
     const isYear = d.getMonth() === 0;
-    stroke(isYear ? C.line2 : C.guide, isYear ? 0.35 : 0.25);
-    doc.line(x, cardY + 0.3, x, bodyBottom - 0.3);
+    // Guide density steps with the zoom, as on screen: monthly to Year,
+    // quarterly at 3 years, half-yearly at 5 years.
+    const guide = isYear || d.getMonth() % monthStep === 0 || (monthStep === 12 && d.getMonth() === 6);
+    if (guide) {
+      stroke(isYear ? C.line2 : C.guide, isYear ? 0.35 : 0.25);
+      doc.line(x, cardY + 0.3, x, bodyBottom - 0.3);
+    }
     if (d.getMonth() % monthStep !== 0 || x > x1 - 6) continue;
     font('JBM', 'normal', 6, C.ink40, 0.25);
     doc.text(monthShort(d.getMonth()).toUpperCase(), x + 1.2, cardY + 7.2);

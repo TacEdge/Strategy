@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { IconSearch, IconBell, IconFlag, IconMenu, IconCompass, IconLink } from './icons';
 import lockupCream from '../assets/brand/tacedge-lockup-cream.svg';
+import { VoiceCommand } from './VoiceCommand';
 import { TERMS } from '../lib/terms';
 
 export type NavKey = 'campaign' | 'loos' | 'tasks' | 'reviews';
@@ -33,6 +34,7 @@ export const Shell = ({
         <input type="search" placeholder={`Search ${TERMS.tasksLower}`} aria-label={`Search ${TERMS.tasksLower}`} />
       </div>
       <div className="topbar-actions">
+        <VoiceCommand />
         <button type="button" className="topbar-icon-btn" title="Notifications" aria-label="Notifications">
           <IconBell size={17} />
         </button>

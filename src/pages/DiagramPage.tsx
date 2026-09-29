@@ -91,6 +91,18 @@ export const DiagramPage = ({
     if (x < el.scrollLeft + 40 || x > el.scrollLeft + el.clientWidth - 40) scrollToDate(iso, 0.5);
   };
 
+  // Voice commands add from the top bar; bring what they added into view.
+  const revealRef = useRef(revealDate);
+  revealRef.current = revealDate;
+  useEffect(() => {
+    const onReveal = (e: Event) => {
+      const iso = (e as CustomEvent<{ date: string }>).detail?.date;
+      if (iso) revealRef.current(iso);
+    };
+    window.addEventListener('tacedge:reveal', onReveal);
+    return () => window.removeEventListener('tacedge:reveal', onReveal);
+  }, []);
+
   return (
     <div className="page">
       <TimeControls

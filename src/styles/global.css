@@ -879,6 +879,62 @@ input, select, textarea { font: inherit; color: var(--te-ink); }
 .modal-actions { display: flex; justify-content: flex-end; gap: var(--te-sp-xs); padding-top: var(--te-sp-sm); }
 .confirm-message { font-size: var(--te-fs-md); line-height: 1.55; color: var(--te-ink-60); }
 
+/* ============================== Voice command ============================== */
+
+.topbar-mic { width: 40px; height: 40px; border-color: var(--te-cream-line); border-radius: var(--te-r-pill); }
+.voice-overlay {
+  position: fixed; inset: 0; z-index: 90;
+  background: rgba(36, 42, 31, 0.35);
+  display: flex; align-items: flex-end; justify-content: center;
+  padding: var(--te-sp-md);
+}
+.voice-sheet {
+  background: var(--te-card);
+  border-radius: var(--te-r-panel);
+  box-shadow: var(--te-shadow-lg);
+  width: min(520px, 100%);
+  padding: var(--te-sp-md) var(--te-sp-xl) var(--te-sp-xl);
+  display: flex; flex-direction: column; gap: var(--te-sp-md);
+  animation: voice-in 160ms ease;
+}
+@keyframes voice-in { from { transform: translateY(16px); opacity: 0; } to { transform: none; opacity: 1; } }
+.voice-head { display: flex; align-items: center; justify-content: space-between; }
+.voice-listening { display: flex; flex-direction: column; align-items: center; gap: var(--te-sp-md); padding: var(--te-sp-sm) 0; }
+/* Big enough to hit without looking. */
+.voice-mic-big {
+  width: 84px; height: 84px; border-radius: 50%;
+  display: grid; place-items: center;
+  background: var(--te-forest); color: var(--te-cream);
+  border: none; cursor: pointer;
+}
+.voice-mic-big.listening { animation: voice-pulse 1.4s ease-in-out infinite; }
+@keyframes voice-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--te-olive) 45%, transparent); }
+  50% { box-shadow: 0 0 0 16px color-mix(in srgb, var(--te-olive) 0%, transparent); }
+}
+@media (prefers-reduced-motion: reduce) { .voice-mic-big.listening, .voice-sheet { animation: none; } }
+.voice-transcript { font-size: var(--te-fs-md); line-height: 1.5; text-align: center; min-height: 3em; color: var(--te-ink); }
+.voice-transcript .muted { color: var(--te-ink-40); }
+.voice-typing { display: flex; flex-direction: column; gap: var(--te-sp-sm); }
+.voice-typing textarea {
+  border: 1px solid var(--te-line-2); border-radius: var(--te-r-sm);
+  padding: 10px 12px; font-size: 16px; line-height: 1.5; resize: vertical; width: 100%;
+  background: var(--te-card);
+}
+.voice-notice { font-size: var(--te-fs-sm); color: var(--te-ink-60); line-height: 1.45; }
+.voice-actions { display: flex; justify-content: flex-end; gap: var(--te-sp-xs); }
+.voice-actions .btn { display: inline-flex; align-items: center; gap: 6px; }
+.voice-done { display: flex; flex-direction: column; gap: var(--te-sp-sm); }
+.voice-item {
+  display: flex; align-items: center; gap: var(--te-sp-sm);
+  border: 1px solid var(--te-line); border-radius: var(--te-r-md);
+  padding: 10px 12px;
+}
+.voice-item-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.voice-item-kind { font-family: var(--te-mono); font-size: var(--te-fs-2xs); letter-spacing: 0.08em; text-transform: uppercase; color: var(--te-olive); }
+.voice-item-title { font-weight: 600; font-size: var(--te-fs-md); color: var(--te-ink); }
+.voice-item-meta { font-size: var(--te-fs-sm); color: var(--te-ink-60); }
+
 /* ============================== LOO manager ============================== */
 
 .loo-row {
@@ -989,6 +1045,9 @@ input, select, textarea { font: inherit; color: var(--te-ink); }
   .context-banner { grid-template-columns: 1fr 1fr; }
   .today-grid { grid-template-columns: 1fr; }
   .today-context { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 560px) {
+  .topbar-divider, .topbar-page { display: none; }
 }
 @media (max-width: 900px) {
   .nav-rail { display: none; }

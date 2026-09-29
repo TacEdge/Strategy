@@ -42,6 +42,15 @@ strategic objective is a `StrategicHorizon`. User-facing words live in
   theme, semantic zoom. Add a key task or a strategic objective from the
   toolbar and move on; nothing opens. Selecting a dot opens a compact
   panel to change status, date, line or owner, or delete.
+- **Voice** (microphone in the top bar, on every page) — tap once and say
+  a command, e.g. "key task next Friday to meet with Rutledge" or
+  "strategic objective at the end of next month, second customer signed".
+  Several commands can go in one sentence. Items are added straight away
+  and read back aloud, with Undo. Parsing is rule-based and on-device
+  (`src/lib/voice.ts`): it picks up the kind, date phrase, line (said or
+  inferred from words like customer, build, hire) and owner. Where live
+  speech recognition is unavailable, as in some home-screen web apps, the
+  same box accepts typing or the keyboard's dictation mic.
 - **Key Tasks** (`#/tasks`) — the flat list behind the diagram, attention
   first. A row opens that key task on the diagram.
 - **Reviews** (`#/review`) — what needs attention, what is due before the

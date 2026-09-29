@@ -51,6 +51,12 @@ strategic objective is a `StrategicHorizon`. User-facing words live in
   inferred from words like customer, build, hire) and owner. Where live
   speech recognition is unavailable, as in some home-screen web apps, the
   same box accepts typing or the keyboard's dictation mic.
+- **Export** (toolbar on the diagram) — a one-page A4 landscape PDF of the
+  diagram exactly as it is on screen: the visible date window, the visible
+  lines and the current label setting, drawn as vectors in the brand fonts
+  (`src/lib/exportPdf.ts`). On iPad it opens the share sheet (Mail,
+  Messages, AirDrop, Save to Files); elsewhere it downloads. jsPDF and the
+  fonts load only when an export is made.
 - **Key Tasks** (`#/tasks`) — the flat list behind the diagram, attention
   first. A row opens that key task on the diagram.
 - **Reviews** (`#/review`) — what needs attention, what is due before the

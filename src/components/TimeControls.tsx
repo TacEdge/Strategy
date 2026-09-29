@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 import type { LineOfOperation } from '../types';
 import { VIEWS } from '../lib/views';
 import type { ViewId } from '../lib/views';
-import { IconToday, IconFilter, IconExpand, IconPlus } from './icons';
+import { IconToday, IconFilter, IconExpand, IconPlus, IconExport } from './icons';
 import { TERMS } from '../lib/terms';
 
 /** Small anchored menu that closes on outside click or Escape. */
@@ -41,12 +41,13 @@ interface TimeControlsProps {
   onFocusAll: () => void;
   onToggleExpanded: () => void;
   onAdd: (kind: 'milestone' | 'horizon') => void;
+  onExport: () => void;
 }
 
 export const TimeControls = ({
   viewId, loos, visibleLooIds, expanded, showLabels,
   onToggleLabels, onView, onToday, onToggleLoo, onFocusAll,
-  onToggleExpanded, onAdd,
+  onToggleExpanded, onAdd, onExport,
 }: TimeControlsProps) => {
   const [openMenu, setOpenMenu] = useState<'focus' | 'add' | null>(null);
 
@@ -137,6 +138,12 @@ export const TimeControls = ({
             {TERMS.objective}
           </button>
         </Menu>
+      </div>
+
+      <div className="toolbar-group">
+        <button type="button" className="btn-quiet" onClick={onExport} title="Export the diagram as a one-page PDF">
+          <IconExport size={14} /> Export
+        </button>
       </div>
 
       <div className="toolbar-group">

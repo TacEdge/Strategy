@@ -79,6 +79,9 @@ export const IconLink = (p: P) => (
 export const IconFlag = (p: P) => (
   <svg {...base(p)}><path d="M5 21V4" /><path d="M5 4h12l-2.5 4L17 12H5" /></svg>
 );
+export const IconExport = (p: P) => (
+  <svg {...base(p)}><path d="M12 15V4m-4 4 4-4 4 4" /><path d="M5 13v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5" /></svg>
+);
 export const IconMenu = (p: P) => (
   <svg {...base(p)}><path d="M4 7h16M4 12h16M4 17h16" /></svg>
 );

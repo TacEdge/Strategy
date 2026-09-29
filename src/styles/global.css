@@ -909,6 +909,11 @@ input, select, textarea { font: inherit; color: var(--te-ink); }
 .voice-item-title { font-weight: 600; font-size: var(--te-fs-md); color: var(--te-ink); }
 .voice-item-meta { font-size: var(--te-fs-sm); color: var(--te-ink-60); }
 
+.export-summary { font-family: var(--te-mono); font-size: var(--te-fs-xs); letter-spacing: 0.06em; text-transform: uppercase; color: var(--te-ink-60); }
+.export-status { font-size: var(--te-fs-sm); color: var(--te-ink-60); }
+.export-status.error { color: var(--te-brick); }
+.modal-actions .btn { display: inline-flex; align-items: center; gap: 6px; }
+
 /* ============================== LOO manager ============================== */
 
 .loo-row {

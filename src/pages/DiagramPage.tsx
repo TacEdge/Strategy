@@ -9,6 +9,8 @@ import { MilestoneDrawer } from '../components/MilestoneDrawer';
 import { HorizonDrawer } from '../components/HorizonDrawer';
 import { AddMilestoneModal, AddHorizonModal } from '../components/AddModals';
 import { LooManager } from '../components/LooManager';
+import { ExportSheet } from '../components/ExportSheet';
+import type { PdfInput } from '../lib/exportPdf';
 
 export const DiagramPage = ({
   expanded, onToggleExpanded,
@@ -43,6 +45,7 @@ export const DiagramPage = ({
       ? initialHorizonId : null),
   );
   const [addOpen, setAddOpen] = useState<'milestone' | 'horizon' | null>(null);
+  const [exportInput, setExportInput] = useState<PdfInput | null>(null);
   const scrollRef = useRef<HTMLDivElement | null>(null);
 
   const view = viewById(viewId);
@@ -81,6 +84,24 @@ export const DiagramPage = ({
     setSelectedHorizonId((cur) => (cur === id ? null : id));
   };
   const closePanels = () => { setSelectedMilestoneId(null); setSelectedHorizonId(null); };
+
+  // Export exactly what is on screen: the visible date window, the visible
+  // lines, and the current label setting.
+  const openExport = () => {
+    const el = scrollRef.current;
+    if (!el) return;
+    closePanels();
+    setExportInput({
+      loos,
+      milestones: state.milestones,
+      horizons: state.horizons,
+      view,
+      startDay: el.scrollLeft / view.pxPerDay,
+      days: el.clientWidth / view.pxPerDay,
+      showLabels,
+      today: todayIso(),
+    });
+  };
 
   // Adding is fire-and-forget: the new item lands on the diagram and the
   // timeline scrolls to it if it is out of view. No panel opens.
@@ -122,6 +143,7 @@ export const DiagramPage = ({
         onFocusAll={() => { setVisibleLooIds(new Set(allLoos.map((l) => l.id))); setFocusLooId(null); }}
         onToggleExpanded={onToggleExpanded}
         onAdd={(kind) => { closePanels(); setAddOpen(kind); }}
+        onExport={openExport}
       />
 
       <Diagram
@@ -162,6 +184,8 @@ export const DiagramPage = ({
       {addOpen === 'horizon' && (
         <AddHorizonModal onClose={() => setAddOpen(null)} onCreated={(h) => revealDate(h.date)} />
       )}
+
+      {exportInput && <ExportSheet input={exportInput} onClose={() => setExportInput(null)} />}
 
       {modal === 'loos' && <LooManager onClose={onCloseModal} />}
     </div>

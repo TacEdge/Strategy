@@ -10,6 +10,7 @@ import { TIMELINE_START } from './views';
 import type { ViewSpec } from './views';
 import { parseDate, daysBetween, addDays, fmtDayMonth, fmtDateLong, monthShort } from './time';
 import { TERMS } from './terms';
+import { placeLabels, tiersThatFit } from './labels';
 import lockupUrl from '../assets/brand/tacedge-lockup-cream.svg';
 import bvp400Url from '../assets/pdf-fonts/be-vietnam-pro-400.ttf?url';
 import bvp600Url from '../assets/pdf-fonts/be-vietnam-pro-600.ttf?url';
@@ -304,9 +305,24 @@ export const buildDiagramPdf = async (input: PdfInput): Promise<Blob> => {
   });
 
   /* ---- Key Tasks: markers and labels ---- */
-  const labelW = input.view.id === 'month' || input.view.id === 'quarter' ? 30 : mmPerDay < 0.3 ? 20 : 26;
+  const fullLabelW = input.view.id === 'month' || input.view.id === 'quarter' ? 30 : mmPerDay < 0.3 ? 20 : 26;
   const showMeta = ['month', 'quarter', '6m'].includes(input.view.id);
   const r = 1.55;
+  // Label styles, as on screen: full size, then dense for a crowded lane.
+  // Block heights are the tallest case: two title lines, plus date and owner.
+  const labelStyles = [
+    { mode: 'full', width: fullLabelW, blockH: 6 + (showMeta ? 2.9 : 0), lineH: 3, size: 7.2, maxLines: 2 },
+    { mode: 'narrow', width: fullLabelW * 0.7, blockH: 5.2, lineH: 2.6, size: 6.3, maxLines: 2 },
+    { mode: 'oneline', width: fullLabelW * 0.7, blockH: 2.6, lineH: 2.6, size: 6.3, maxLines: 1 },
+  ].map((s) => {
+    const tierH = s.blockH + 1.2;
+    return {
+      ...s,
+      tierH,
+      maxBelow: tiersThatFit(laneH * (1 - 0.42), 2.8, s.blockH, tierH, 0.8),
+      maxAbove: tiersThatFit(laneH * 0.42, 3, s.blockH, tierH, 0.8),
+    };
+  });
 
   const marker = (status: MilestoneStatus, x: number, y: number, overdue: boolean) => {
     const col = STATUS_COLOR[status];
@@ -348,34 +364,47 @@ export const buildDiagramPdf = async (input: PdfInput): Promise<Blob> => {
       .map((m) => ({ m, x: xOf(m.targetDate) }))
       .filter((p) => inRange(p.x));
 
-    // Same placement as the screen: below the line, above when crowded.
-    const rowEnds: number[] = [];
-    const placed = tasks.map((p) => {
-      const cx = Math.min(Math.max(p.x, x0 + labelW / 2), x1 - labelW / 2);
-      const w = input.showLabels ? labelW + 2 : 6;
-      let row = rowEnds.findIndex((end) => cx - w / 2 >= end + 1.5);
-      if (row === -1) row = rowEnds.length < 2 ? rowEnds.length : rowEnds.indexOf(Math.min(...rowEnds));
-      rowEnds[row] = cx + w / 2;
-      return { ...p, cx, row };
-    });
+    // Same rule as the screen: tiers out from the line; dense when crowded.
+    let best: { style: typeof labelStyles[number]; slots: ReturnType<typeof placeLabels>; hidden: number; withCx: { m: Milestone; x: number; cx: number }[] } | null = null;
+    for (const style of labelStyles) {
+      const withCx = tasks.map((p) => ({ ...p, cx: Math.min(Math.max(p.x, x0 + style.width / 2), x1 - style.width / 2) }));
+      const slots = placeLabels(
+        withCx.map((p) => ({ id: p.m.id, x: p.cx })),
+        { width: style.width + 2, gap: 1.5, maxBelow: style.maxBelow, maxAbove: style.maxAbove },
+      );
+      const hidden = [...slots.values()].filter((s) => s === null).length;
+      if (!best || hidden < best.hidden) best = { style, slots, hidden, withCx };
+      if (hidden === 0) break;
+    }
+    const { style, slots, withCx } = best!;
+    const labelW = style.width;
+    const pdfTierH = style.tierH;
 
-    placed.forEach(({ m, x, cx, row }) => {
+    withCx.forEach(({ m, x, cx }) => {
       const overdue = m.status !== 'complete' && m.targetDate < input.today;
-      if (input.showLabels) {
-        font('BVP', 'normal', 7.2, overdue ? C.ink : C.ink60);
+      const slot = input.showLabels ? slots.get(m.id) ?? null : null;
+      if (slot) {
+        font('BVP', 'normal', style.size, overdue ? C.ink : C.ink60);
         let lines = doc.splitTextToSize(m.title, labelW) as string[];
-        if (lines.length > 2) {
-          let second = lines[1];
-          while (second.length > 1 && doc.getTextWidth(`${second}…`) > labelW) second = second.slice(0, -1);
-          lines = [lines[0], `${second.trimEnd()}…`];
+        if (lines.length > style.maxLines) {
+          let last = lines[style.maxLines - 1];
+          while (last.length > 1 && doc.getTextWidth(`${last}…`) > labelW) last = last.slice(0, -1);
+          lines = [...lines.slice(0, style.maxLines - 1), `${last.trimEnd()}…`];
         }
-        const meta = showMeta ? `${fmtDayMonth(m.targetDate)}${m.owner ? ` · ${m.owner}` : ''}` : '';
-        const blockH = lines.length * 3 + (meta ? 2.9 : 0);
-        let y = row === 1 ? ly - 3 - blockH + 2.3 : ly + 5;
+        const meta = showMeta && style.mode === 'full' ? `${fmtDayMonth(m.targetDate)}${m.owner ? ` · ${m.owner}` : ''}` : '';
+        const blockH = lines.length * style.lineH + (meta ? 2.9 : 0);
+        const step = slot.level * pdfTierH;
+        let y = slot.side === 'above' ? ly - 3 - step - blockH + 2.3 : ly + 5 + step;
+        if (slot.level > 0) {
+          stroke(C.oliveEdge, 0.2, [0.4, 0.6]);
+          if (slot.side === 'below') doc.line(x, ly + 2.4, x, ly + 5 + step - 2.6);
+          else doc.line(x, ly - 3 - step + 1, x, ly - 2.4);
+          doc.setLineDashPattern([], 0);
+        }
         lines.forEach((line) => {
-          font('BVP', 'normal', 7.2, overdue ? C.ink : C.ink60);
+          font('BVP', 'normal', style.size, overdue ? C.ink : C.ink60);
           doc.text(line, cx, y, { align: 'center' });
-          y += 3;
+          y += style.lineH;
         });
         if (meta) {
           font('JBM', 'normal', 5.4, overdue ? C.brick : C.ink40);

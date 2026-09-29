@@ -634,7 +634,16 @@ input, select, textarea { font: inherit; color: var(--te-ink); }
 .ms-tag.overdue .ms-tag-title { color: var(--te-ink); }
 .ms-dot.dragging { z-index: 30; }
 
-/* Milestone label beneath (or above) the dot */
+/* Leader from a dot to a label that had to step out a tier or more */
+.ms-leader {
+  position: absolute; z-index: 10;
+  width: 0;
+  border-left: 1px dotted var(--te-olive-edge);
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+/* Key task label beneath (or above) the dot */
 .ms-tag {
   position: absolute; z-index: 11;
   transform: translateX(-50%);
@@ -644,6 +653,13 @@ input, select, textarea { font: inherit; color: var(--te-ink); }
   cursor: pointer;
 }
 .ms-tag.above { transform: translate(-50%, -100%); }
+/* Crowded lane: narrower and title only, then one truncated line, so more
+   labels fit before any has to hide. */
+.ms-tag.narrow .ms-tag-title, .ms-tag.oneline .ms-tag-title { font-size: 11px; line-height: 1.25; }
+.ms-tag.oneline .ms-tag-title {
+  display: block; max-width: 100%;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
 /* Long-range views: lighter, more compact annotation */
 .ms-tag.compact .ms-tag-title {
   font-size: 10px;

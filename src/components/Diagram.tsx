@@ -8,6 +8,8 @@ import {
 } from '../lib/time';
 import { MarkerIcon } from './icons';
 import { STATUS_LABEL } from './ui';
+import { placeLabels, tiersThatFit } from '../lib/labels';
+import type { LabelSlot } from '../lib/labels';
 import { TERMS } from '../lib/terms';
 
 const HEAD_H = 40;
@@ -33,8 +35,19 @@ interface DiagramProps {
 interface Placed {
   m: Milestone;
   x: number;
-  row: number; // 0 = label below the line, 1 = label above
+  /** Where the label sits, or null when the lane is too crowded to show it. */
+  slot: LabelSlot | null;
   laneTop: number;
+}
+
+/** How a lane's labels are drawn: full size, or compressed when crowded. */
+type LabelMode = 'full' | 'narrow' | 'oneline';
+
+interface LaneLabels {
+  mode: LabelMode;
+  width: number;
+  tierH: number;
+  items: Placed[];
 }
 
 /** Horizontal drag that distinguishes click from drag and reports day deltas. */
@@ -187,32 +200,55 @@ export const Diagram = ({
     return ticks;
   }, [view.showWeeks, px, t0, t1]);
 
-  // ---- key task placement: centre track, alternate above when crowded ----
-  const labelW = sparse ? 82 : showMeta ? 132 : 110;
+  // ---- key task placement ----
+  // Labels sit just below the line and step out in tiers when crowded. A
+  // lane that still cannot show every label at full size compresses them:
+  // first narrower with the title only, then a single truncated line. Each
+  // step fits more per tier and more tiers per lane. Only after that does
+  // a label give way to its dot.
+  const labelOffset = sparse ? 8 : 10; // dot centre to label edge
+  const labelStyles = useMemo(() => {
+    // Block heights: up to two title lines, plus date and owner when shown.
+    const full = { mode: 'full' as LabelMode, width: sparse ? 82 : showMeta ? 132 : 110, blockH: sparse ? 25 : showMeta ? 46 : 31 };
+    const narrow = { mode: 'narrow' as LabelMode, width: sparse ? 64 : 92, blockH: sparse ? 22 : 30 };
+    const oneline = { mode: 'oneline' as LabelMode, width: sparse ? 64 : 92, blockH: sparse ? 13 : 15 };
+    return [full, narrow, oneline].map((s) => {
+      const tierH = s.blockH + 4;
+      return {
+        ...s,
+        tierH,
+        maxBelow: tiersThatFit(laneH * (1 - LINE_AT), labelOffset, s.blockH, tierH, 2),
+        maxAbove: tiersThatFit(laneH * LINE_AT, labelOffset, s.blockH, tierH, 2),
+      };
+    });
+  }, [sparse, showMeta, laneH, labelOffset]);
+
   const placedByLane = useMemo(() => {
-    const map = new Map<string, Placed[]>();
+    const map = new Map<string, LaneLabels>();
     loos.forEach((loo, laneIdx) => {
       const laneTop = HEAD_H + laneIdx * laneH;
       const ms = state.milestones
         .filter((m) => m.looId === loo.id)
-        .sort((a, b) => a.targetDate.localeCompare(b.targetDate));
-
-      const rowEnds: number[] = [];
-      const placed: Placed[] = ms.map((m) => {
-        const cx = x(m.targetDate);
-        const w = showLabels ? labelW + 8 : 26;
-        const startX = cx - w / 2;
-        let row = rowEnds.findIndex((end) => startX >= end + 6);
-        if (row === -1) {
-          row = rowEnds.length < 2 ? rowEnds.length : rowEnds.indexOf(Math.min(...rowEnds));
-        }
-        rowEnds[row] = cx + w / 2;
-        return { m, x: cx, row, laneTop };
+        .sort((a, b) => a.targetDate.localeCompare(b.targetDate))
+        .map((m) => ({ m, x: x(m.targetDate) }));
+      const ids = ms.map((p) => ({ id: p.m.id, x: p.x }));
+      let best: { style: typeof labelStyles[number]; slots: Map<string, LabelSlot | null>; hidden: number } | null = null;
+      for (const style of labelStyles) {
+        const slots = placeLabels(ids, { width: style.width + 8, gap: 6, maxBelow: style.maxBelow, maxAbove: style.maxAbove });
+        const hidden = [...slots.values()].filter((s) => s === null).length;
+        if (!best || hidden < best.hidden) best = { style, slots, hidden };
+        if (hidden === 0) break;
+      }
+      const { style, slots } = best!;
+      map.set(loo.id, {
+        mode: style.mode,
+        width: style.width,
+        tierH: style.tierH,
+        items: ms.map((p) => ({ m: p.m, x: p.x, slot: showLabels ? slots.get(p.m.id) ?? null : null, laneTop })),
       });
-      map.set(loo.id, placed);
     });
     return map;
-  }, [state.milestones, loos, laneH, showLabels, labelW, px]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [state.milestones, loos, laneH, showLabels, labelStyles, px]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const horizons = useMemo(
     () => [...state.horizons].sort((a, b) => a.date.localeCompare(b.date)),
@@ -391,8 +427,13 @@ export const Diagram = ({
             );
           })}
 
-          {/* key tasks: dots on the line, labels beneath (or above when crowded) */}
-          {loos.map((loo) => (placedByLane.get(loo.id) ?? []).map((pl) => {
+          {/* key tasks: dots on the line, labels in tiers out from it */}
+          {loos.map((loo) => {
+            const lane = placedByLane.get(loo.id);
+            if (!lane) return null;
+            const { tierH, mode } = lane;
+            const labelW = lane.width;
+            return lane.items.map((pl) => {
             const { m } = pl;
             const dx = msDrag.drag?.id === m.id ? msDrag.drag.dx : 0;
             const cx = pl.x + dx;
@@ -441,13 +482,25 @@ export const Diagram = ({
                 >
                   <MarkerIcon status={m.status} size={sparse ? 12 : 14} />
                 </button>
-                {showLabels && (
+                {pl.slot && pl.slot.level > 0 && (
+                  // A thin leader ties an outer-tier label back to its dot.
+                  <span
+                    className="ms-leader"
+                    aria-hidden
+                    style={pl.slot.side === 'below'
+                      ? { left: cx, top: cy + 8, height: labelOffset - 8 + pl.slot.level * tierH - 2 }
+                      : { left: cx, top: cy - labelOffset - pl.slot.level * tierH + 2, height: labelOffset - 8 + pl.slot.level * tierH - 2 }}
+                  />
+                )}
+                {pl.slot && (
                   <button
                     type="button"
-                    className={`ms-tag${sparse ? ' compact' : ''}${pl.row === 1 ? ' above' : ''}${overdue ? ' overdue' : ''}`}
+                    className={`ms-tag${sparse ? ' compact' : ''}${mode !== 'full' ? ` ${mode}` : ''}${pl.slot.side === 'above' ? ' above' : ''}${overdue ? ' overdue' : ''}`}
                     style={{
                       left: cx,
-                      top: pl.row === 1 ? cy - (sparse ? 8 : 10) : cy + (sparse ? 8 : 10),
+                      top: pl.slot.side === 'above'
+                        ? cy - labelOffset - pl.slot.level * tierH
+                        : cy + labelOffset + pl.slot.level * tierH,
                       width: labelW,
                     }}
                     {...selectProps(() => onSelectMilestone(m.id))}
@@ -456,7 +509,7 @@ export const Diagram = ({
                     aria-hidden
                   >
                     <span className="ms-tag-title">{m.title}</span>
-                    {showMeta && (
+                    {showMeta && mode === 'full' && (
                       <span className="ms-tag-meta">
                         {fmtDayMonth(m.targetDate)}{m.owner ? ` · ${m.owner}` : ''}
                       </span>
@@ -465,7 +518,8 @@ export const Diagram = ({
                 )}
               </div>
             );
-          }))}
+            });
+          })}
         </div>
       </div>
 

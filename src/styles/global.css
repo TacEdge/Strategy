@@ -444,6 +444,11 @@ input, select, textarea { font: inherit; color: var(--te-ink); }
 }
 
 /* Calendar-year grouping */
+.week-band {
+  position: absolute;
+  background: color-mix(in srgb, var(--te-tint) 70%, transparent);
+  pointer-events: none;
+}
 .year-band {
   position: absolute;
   background: color-mix(in srgb, var(--te-tint) 40%, transparent);

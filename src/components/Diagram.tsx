@@ -294,6 +294,11 @@ export const Diagram = ({
           {yearBands.filter((b) => b.year % 2 === 1).map((b) => (
             <div key={`yb-${b.year}`} className="year-band" style={{ left: b.x0, width: b.x1 - b.x0, top: 0, height: totalH }} />
           ))}
+          {/* Month view: every other week (Monday to Sunday) carries a faint
+              tint, so weeks can be counted at a glance. */}
+          {weekTicks.map((tk, i) => (i % 2 === 0 ? (
+            <div key={`wb-${tk.x}`} className="week-band" style={{ left: tk.x, width: 7 * px, top: 0, height: totalH }} />
+          ) : null))}
           {yearBands.slice(1).map((b) => (
             <div key={`ys-${b.year}`} className="year-sep" style={{ left: b.x0, top: 0, height: totalH }} />
           ))}

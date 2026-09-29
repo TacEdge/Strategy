@@ -200,7 +200,7 @@ export const buildDiagramPdf = async (input: PdfInput): Promise<Blob> => {
   /* ---- Alternating bands for the unit of this zoom, as on screen:
           weeks in Month view, months from Quarter to Year, years beyond ---- */
   const longZoom = input.view.id === '3y' || input.view.id === '5y';
-  const bandUnit: 'week' | 'month' | 'year' = input.view.showWeeks ? 'week' : longZoom ? 'year' : 'month';
+  const bandUnit: 'day' | 'week' | 'month' | 'year' = input.view.showDays ? 'day' : input.view.showWeeks ? 'week' : longZoom ? 'year' : 'month';
   const band = (a0: number, b0: number) => {
     const a = Math.max(x0, a0);
     const b = Math.min(x1, b0);
@@ -209,7 +209,11 @@ export const buildDiagramPdf = async (input: PdfInput): Promise<Blob> => {
       doc.rect(a, cardY + 0.3, b - a, cardH - 0.6, 'F');
     }
   };
-  if (bandUnit === 'week') {
+  if (bandUnit === 'day') {
+    for (let i = Math.floor(input.startDay) - 1; i < input.startDay + input.days; i++) {
+      if (i % 2 === 1) band(xOfDay(i), xOfDay(i + 1));
+    }
+  } else if (bandUnit === 'week') {
     const firstMonday = addDays(t0, (8 - t0.getDay()) % 7);
     const fm = daysBetween(t0, firstMonday);
     for (let d = fm + Math.floor((input.startDay - fm) / 7) * 7 - 7; d < input.startDay + input.days; d += 7) {

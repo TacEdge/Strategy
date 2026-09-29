@@ -233,9 +233,10 @@ export const Diagram = ({
     return monthTicks.filter((tk) => tk.month !== 0);
   }, [monthTicks, view.id]);
 
-  // Alternating bands mark the unit you count in at this zoom: weeks in
-  // Month view, months from Quarter to Year, years at 3 and 5 years.
-  const bandUnit: 'week' | 'month' | 'year' = view.showWeeks ? 'week' : sparse ? 'year' : 'month';
+  // Alternating bands mark the unit you count in at this zoom: days in
+  // Week view, weeks in Month view, months from Quarter to Year, years at
+  // 3 and 5 years.
+  const bandUnit: 'day' | 'week' | 'month' | 'year' = view.showDays ? 'day' : view.showWeeks ? 'week' : sparse ? 'year' : 'month';
 
   // Calendar-year bands, with a slightly stronger separator at each boundary.
   const yearBands = useMemo(() => {
@@ -270,10 +271,10 @@ export const Diagram = ({
     if (!view.showDays) return [];
     const from = Math.max(0, Math.floor((scrollX - viewportW) / px));
     const to = Math.min(daysBetween(t0, t1), Math.ceil((scrollX + 2 * viewportW) / px));
-    const ticks: { x: number; label: string; weekend: boolean }[] = [];
+    const ticks: { x: number; label: string; weekend: boolean; odd: boolean }[] = [];
     for (let i = from; i <= to; i++) {
       const d = addDays(t0, i);
-      ticks.push({ x: i * px, label: `${DAY_NAMES[d.getDay()]} ${d.getDate()}`, weekend: d.getDay() === 0 || d.getDay() === 6 });
+      ticks.push({ x: i * px, label: `${DAY_NAMES[d.getDay()]} ${d.getDate()}`, weekend: d.getDay() === 0 || d.getDay() === 6, odd: i % 2 === 1 });
     }
     return ticks;
   }, [view.showDays, scrollX, viewportW, px, t0, t1]);
@@ -422,6 +423,9 @@ export const Diagram = ({
           ))}
           {bandUnit === 'month' && monthTicks.map((tk, i) => (i % 2 === 0 ? (
             <div key={`mb-${tk.x}`} className="period-band" style={{ left: tk.x, width: (monthTicks[i + 1]?.x ?? width) - tk.x, top: 0, height: totalH }} />
+          ) : null))}
+          {bandUnit === 'day' && dayTicks.map((tk) => (tk.odd ? (
+            <div key={`db-${tk.x}`} className="period-band" style={{ left: tk.x, width: px, top: 0, height: totalH }} />
           ) : null))}
           {bandUnit === 'week' && weekTicks.map((tk, i) => (i % 2 === 0 ? (
             <div key={`wb-${tk.x}`} className="period-band" style={{ left: tk.x, width: 7 * px, top: 0, height: totalH }} />

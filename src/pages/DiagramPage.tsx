@@ -1,7 +1,6 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useStore, useLoos } from '../state/store';
-import { viewById, TIMELINE_START } from '../lib/views';
-import type { ViewId } from '../lib/views';
+import { viewForScale, clampZoom, zoomStep, ZOOM_DEFAULT, ZOOM_MIN, ZOOM_MAX, TIMELINE_START } from '../lib/views';
 import { parseDate, toIso, daysBetween, todayIso } from '../lib/time';
 import { TimeControls } from '../components/TimeControls';
 import { Diagram } from '../components/Diagram';
@@ -27,7 +26,11 @@ export const DiagramPage = ({
 }) => {
   const { state, dispatch } = useStore();
   const allLoos = useLoos();
-  const [viewId, setViewId] = useState<ViewId>('month');
+  // Zoom is a continuous scale in px per day. The nearest named view sets
+  // what is shown; the scale itself sets the size.
+  const [pxPerDay, setPxPerDay] = useState(ZOOM_DEFAULT);
+  const pxRef = useRef(pxPerDay);
+  pxRef.current = pxPerDay;
   const [visibleLooIds, setVisibleLooIds] = useState<Set<string>>(
     () => new Set(allLoos.map((l) => l.id)),
   );
@@ -48,8 +51,42 @@ export const DiagramPage = ({
   const [exportInput, setExportInput] = useState<PdfInput | null>(null);
   const scrollRef = useRef<HTMLDivElement | null>(null);
 
-  const view = viewById(viewId);
-  const showLabels = labelsOverride ?? !['3y', '5y'].includes(viewId);
+  const view = useMemo(() => viewForScale(pxPerDay), [pxPerDay]);
+  const showLabels = labelsOverride ?? !['3y', '5y'].includes(view.id);
+
+  // Zoom about a point: the date under the fingers (or the centre) stays
+  // put. The scroll position is corrected once the wider timeline renders.
+  const pendingAnchor = useRef<{ day: number; ax: number } | null>(null);
+  const zoomTo = useCallback((next: number, clientX?: number) => {
+    const el = scrollRef.current;
+    if (el) {
+      const rect = el.getBoundingClientRect();
+      const ax = clientX === undefined ? rect.width / 2 : Math.min(rect.width, Math.max(0, clientX - rect.left));
+      pendingAnchor.current = { day: (el.scrollLeft + ax) / pxRef.current, ax };
+    }
+    setPxPerDay(clampZoom(next));
+  }, []);
+  useLayoutEffect(() => {
+    const a = pendingAnchor.current;
+    const el = scrollRef.current;
+    if (a && el) {
+      el.scrollLeft = a.day * pxPerDay - a.ax;
+      pendingAnchor.current = null;
+    }
+  }, [pxPerDay]);
+  // The buttons zoom about Today when it is on screen, else the centre.
+  const stepZoom = (dir: 1 | -1) => {
+    const next = zoomStep(pxRef.current, dir);
+    if (next === null) return;
+    const el = scrollRef.current;
+    let anchor: number | undefined;
+    if (el) {
+      const rect = el.getBoundingClientRect();
+      const tx = daysBetween(parseDate(TIMELINE_START), parseDate(todayIso())) * pxRef.current - el.scrollLeft;
+      if (tx >= 0 && tx <= rect.width) anchor = rect.left + tx;
+    }
+    zoomTo(next, anchor);
+  };
 
   // Newly created LOOs become visible.
   useEffect(() => {
@@ -87,7 +124,9 @@ export const DiagramPage = ({
     }
   }, [view.id, scrollToDate]);
 
-  useEffect(() => { scrollHome(); }, [scrollHome]);
+  // Land on today once, when the diagram first opens. Zooming keeps its
+  // own anchor, so the view never jumps back to today mid-pinch.
+  useEffect(() => { scrollHome(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const selectMilestone = (id: string) => {
     setSelectedHorizonId(null);
@@ -141,13 +180,16 @@ export const DiagramPage = ({
   return (
     <div className="page diagram-page">
       <TimeControls
-        viewId={viewId}
+        zoomLabel={view.label}
+        canZoomIn={pxPerDay < ZOOM_MAX * 0.999}
+        canZoomOut={pxPerDay > ZOOM_MIN * 1.001}
+        onZoomIn={() => stepZoom(1)}
+        onZoomOut={() => stepZoom(-1)}
         loos={allLoos}
         visibleLooIds={visibleLooIds}
         expanded={expanded}
         showLabels={showLabels}
         onToggleLabels={() => setLabelsOverride(!showLabels)}
-        onView={setViewId}
         onToday={scrollHome}
         onToggleLoo={(id) => setVisibleLooIds((prev) => {
           const next = new Set(prev);
@@ -174,6 +216,7 @@ export const DiagramPage = ({
         onMoveMilestone={(id, iso) => dispatch({ type: 'milestone/update', id, patch: { targetDate: iso } })}
         onMoveHorizon={(id, iso) => dispatch({ type: 'horizon/update', id, patch: { date: iso } })}
         onToggleFocus={(id) => setFocusLooId((cur) => (cur === id ? null : id))}
+        onZoom={zoomTo}
         onSetTaskOutcome={(id, outcome) => dispatch({ type: 'milestone/update', id, patch: { outcome } })}
         onSetObjectiveOutcome={(id, outcome) => dispatch({ type: 'horizon/update', id, patch: { outcome } })}
       />

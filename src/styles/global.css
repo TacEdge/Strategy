@@ -270,6 +270,14 @@ input, select, textarea { font: inherit; color: var(--te-ink); }
   margin-right: 2px;
 }
 .view-switch .view-today:hover { background: var(--te-tint); color: var(--te-forest); }
+.view-switch .zoom-btn { display: inline-grid; place-items: center; width: 32px; padding: 6px 0; color: var(--te-ink-60); }
+.view-switch .zoom-btn:disabled { opacity: 0.3; cursor: default; }
+.view-switch .zoom-readout {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 78px; padding: 6px 4px;
+  font-size: var(--te-fs-sm); font-weight: 600; color: var(--te-ink);
+  cursor: default;
+}
 
 
 .toolbar-group {
@@ -359,6 +367,8 @@ input, select, textarea { font: inherit; color: var(--te-ink); }
   flex: 1;
   position: relative;
   cursor: grab;
+  /* One finger scrolls; two fingers zoom the diagram, not the page. */
+  touch-action: pan-x pan-y;
 }
 .diagram-scroll.dragging-milestone { cursor: default; }
 .diagram-scroll.panning { cursor: grabbing; }

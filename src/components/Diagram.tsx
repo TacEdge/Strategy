@@ -31,7 +31,12 @@ interface DiagramProps {
   onToggleFocus: (looId: string) => void;
   onSetTaskOutcome: (id: string, outcome: Outcome) => void;
   onSetObjectiveOutcome: (id: string, outcome: Outcome) => void;
+  /** Continuous zoom: a new px-per-day scale, anchored at a screen x. */
+  onZoom: (pxPerDay: number, clientX?: number) => void;
 }
+
+/** Safari's non-standard pinch events, used on iPad and iPhone. */
+interface GestureEvt extends Event { scale: number; clientX: number }
 
 /** Tap a box, choose: completed, didn't complete, or reopen; or edit. */
 const OutcomeMenu = ({
@@ -152,7 +157,7 @@ const isObjectiveOverdue = (h: { outcome: Outcome; date: string }, today: string
 export const Diagram = ({
   state, loos, view, selectedMilestoneId, selectedHorizonId, focusLooId, showLabels, scrollRef,
   onSelectMilestone, onSelectHorizon, onMoveMilestone, onMoveHorizon, onToggleFocus,
-  onSetTaskOutcome, onSetObjectiveOutcome,
+  onSetTaskOutcome, onSetObjectiveOutcome, onZoom,
 }: DiagramProps) => {
   // The tick-box menu: which box it belongs to and where it sits.
   const [menu, setMenu] = useState<{ kind: 'task' | 'objective'; id: string; x: number; y: number } | null>(null);
@@ -183,7 +188,7 @@ export const Diagram = ({
   const today = todayIso();
 
   // Semantic density by view: dots -> labelled dots -> dates and owners.
-  const sparse = px < 1; // 5y / 3y
+  const sparse = view.id === '3y' || view.id === '5y';
   const showMeta = ['quarter', 'month', 'week'].includes(view.id);
 
   const msDrag = useDragDays(
@@ -346,11 +351,75 @@ export const Diagram = ({
     [state.horizons],
   );
 
+  // ---- pinch, trackpad and ctrl-wheel zoom ----
+  // Two fingers on the diagram change the scale; the date between them
+  // stays put. iPad and iPhone send Safari's gesture events; other touch
+  // browsers give two touches; a trackpad pinch arrives as a ctrl-wheel.
+  const pinching = useRef(false);
+  const pxRef = useRef(px);
+  pxRef.current = px;
+  const zoomRef = useRef(onZoom);
+  zoomRef.current = onZoom;
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    let startPx = 0;
+    let raf = 0;
+    let pending: { px: number; x: number } | null = null;
+    const flush = () => { raf = 0; if (pending) { zoomRef.current(pending.px, pending.x); pending = null; } };
+    const queue = (p: number, x: number) => { pending = { px: p, x }; if (!raf) raf = requestAnimationFrame(flush); };
+    const begin = () => { startPx = pxRef.current; pinching.current = true; panning.current = null; setIsPanning(false); };
+    const end = () => { pinching.current = false; };
+
+    const hasGestureEvents = 'GestureEvent' in window;
+    const onGStart = (e: Event) => { e.preventDefault(); begin(); };
+    const onGChange = (e: Event) => { e.preventDefault(); const g = e as GestureEvt; queue(startPx * g.scale, g.clientX); };
+    const onGEnd = (e: Event) => { e.preventDefault(); end(); };
+
+    let touchDist = 0;
+    const dist = (e: TouchEvent) => Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+    const mid = (e: TouchEvent) => (e.touches[0].clientX + e.touches[1].clientX) / 2;
+    const onTStart = (e: TouchEvent) => { if (e.touches.length === 2) { touchDist = dist(e); begin(); } };
+    const onTMove = (e: TouchEvent) => {
+      if (e.touches.length === 2 && touchDist) { e.preventDefault(); queue(startPx * (dist(e) / touchDist), mid(e)); }
+    };
+    const onTEnd = () => { if (touchDist) { touchDist = 0; end(); } };
+
+    const onWheel = (e: WheelEvent) => {
+      if (!e.ctrlKey && !e.metaKey) return;
+      e.preventDefault();
+      queue(pxRef.current * Math.exp(-e.deltaY * 0.003), e.clientX);
+    };
+
+    if (hasGestureEvents) {
+      el.addEventListener('gesturestart', onGStart, { passive: false });
+      el.addEventListener('gesturechange', onGChange, { passive: false });
+      el.addEventListener('gestureend', onGEnd, { passive: false });
+    } else {
+      el.addEventListener('touchstart', onTStart, { passive: true });
+      el.addEventListener('touchmove', onTMove, { passive: false });
+      el.addEventListener('touchend', onTEnd);
+      el.addEventListener('touchcancel', onTEnd);
+    }
+    el.addEventListener('wheel', onWheel, { passive: false });
+    return () => {
+      cancelAnimationFrame(raf);
+      el.removeEventListener('gesturestart', onGStart);
+      el.removeEventListener('gesturechange', onGChange);
+      el.removeEventListener('gestureend', onGEnd);
+      el.removeEventListener('touchstart', onTStart);
+      el.removeEventListener('touchmove', onTMove);
+      el.removeEventListener('touchend', onTEnd);
+      el.removeEventListener('touchcancel', onTEnd);
+      el.removeEventListener('wheel', onWheel);
+    };
+  }, [scrollRef]);
+
   // ---- background panning ----
   const panning = useRef<{ startX: number; scroll: number } | null>(null);
   const [isPanning, setIsPanning] = useState(false);
   const onBgPointerDown = (e: ReactPointerEvent) => {
-    if (e.button !== 0) return;
+    if (e.button !== 0 || pinching.current) return;
     const el = scrollRef.current;
     if (!el) return;
     panning.current = { startX: e.clientX, scroll: el.scrollLeft };
@@ -358,7 +427,7 @@ export const Diagram = ({
     (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
   };
   const onBgPointerMove = (e: ReactPointerEvent) => {
-    if (!panning.current || !scrollRef.current) return;
+    if (!panning.current || !scrollRef.current || pinching.current) return;
     scrollRef.current.scrollLeft = panning.current.scroll - (e.clientX - panning.current.startX);
   };
   const onBgPointerUp = () => { panning.current = null; setIsPanning(false); };

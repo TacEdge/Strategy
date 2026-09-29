@@ -43,7 +43,11 @@ strategic objective is a `StrategicHorizon`. User-facing words live in
 
 - **Campaign** (`#/`, the landing route) — the LOO Diagram: lanes, key
   tasks as status dots with labels, strategic objective spines with their
-  theme, semantic zoom from Week (a column per day) to 5 years. Add a key task or a strategic objective from the
+  theme, and continuous zoom: pinch the diagram (or use the plus and
+  minus buttons, or a trackpad pinch) anywhere from a week with a column
+  per day out to five years. The nearest named level decides what is
+  shown at each scale, so day columns, week bands, month bands and label
+  density switch as you zoom. Add a key task or a strategic objective from the
   toolbar and move on; nothing opens. Selecting a dot opens a compact
   panel to change status, date, line or owner, or delete.
 - **Voice** (microphone in the top bar, on every page) — tap once and say

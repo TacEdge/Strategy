@@ -176,8 +176,11 @@ export const Diagram = ({
     return monthTicks.filter((tk) => tk.month !== 0);
   }, [monthTicks, view.id]);
 
-  // Calendar-year bands: alternate a whisper of tint so years read as the
-  // parent grouping, with a slightly stronger separator at each boundary.
+  // Alternating bands mark the unit you count in at this zoom: weeks in
+  // Month view, months from Quarter to Year, years at 3 and 5 years.
+  const bandUnit: 'week' | 'month' | 'year' = view.showWeeks ? 'week' : sparse ? 'year' : 'month';
+
+  // Calendar-year bands, with a slightly stronger separator at each boundary.
   const yearBands = useMemo(() => {
     const bands: { year: number; x0: number; x1: number }[] = [];
     for (let y = t0.getFullYear(); y <= t1.getFullYear(); y++) {
@@ -326,14 +329,15 @@ export const Diagram = ({
         onPointerCancel={onBgPointerUp}
       >
         <div className="timeline" style={{ width, height: totalH }}>
-          {/* calendar-year grouping: alternating bands and boundary separators */}
-          {yearBands.filter((b) => b.year % 2 === 1).map((b) => (
-            <div key={`yb-${b.year}`} className="year-band" style={{ left: b.x0, width: b.x1 - b.x0, top: 0, height: totalH }} />
+          {/* alternating bands for the unit of this zoom, plus year separators */}
+          {bandUnit === 'year' && yearBands.filter((b) => b.year % 2 === 1).map((b) => (
+            <div key={`yb-${b.year}`} className="period-band" style={{ left: b.x0, width: b.x1 - b.x0, top: 0, height: totalH }} />
           ))}
-          {/* Month view: every other week (Monday to Sunday) carries a faint
-              tint, so weeks can be counted at a glance. */}
-          {weekTicks.map((tk, i) => (i % 2 === 0 ? (
-            <div key={`wb-${tk.x}`} className="week-band" style={{ left: tk.x, width: 7 * px, top: 0, height: totalH }} />
+          {bandUnit === 'month' && monthTicks.map((tk, i) => (i % 2 === 0 ? (
+            <div key={`mb-${tk.x}`} className="period-band" style={{ left: tk.x, width: (monthTicks[i + 1]?.x ?? width) - tk.x, top: 0, height: totalH }} />
+          ) : null))}
+          {bandUnit === 'week' && weekTicks.map((tk, i) => (i % 2 === 0 ? (
+            <div key={`wb-${tk.x}`} className="period-band" style={{ left: tk.x, width: 7 * px, top: 0, height: totalH }} />
           ) : null))}
           {yearBands.slice(1).map((b) => (
             <div key={`ys-${b.year}`} className="year-sep" style={{ left: b.x0, top: 0, height: totalH }} />

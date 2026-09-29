@@ -179,19 +179,33 @@ export const buildDiagramPdf = async (input: PdfInput): Promise<Blob> => {
   const inRange = (x: number) => x >= x0 - 0.5 && x <= x1 + 0.5;
   const mmPerDay = tw / input.days;
 
-  /* ---- Week bands (Month view): every other week, as on screen ---- */
-  if (input.view.showWeeks) {
+  /* ---- Alternating bands for the unit of this zoom, as on screen:
+          weeks in Month view, months from Quarter to Year, years beyond ---- */
+  const bandUnit: 'week' | 'month' | 'year' = input.view.showWeeks ? 'week' : mmPerDay * 30.4 < 3.2 ? 'year' : 'month';
+  const band = (a0: number, b0: number) => {
+    const a = Math.max(x0, a0);
+    const b = Math.min(x1, b0);
+    if (b > a) {
+      doc.setFillColor(C.weekBand);
+      doc.rect(a, cardY + 0.3, b - a, cardH - 0.6, 'F');
+    }
+  };
+  if (bandUnit === 'week') {
     const firstMonday = addDays(t0, (8 - t0.getDay()) % 7);
     const fm = daysBetween(t0, firstMonday);
     for (let d = fm + Math.floor((input.startDay - fm) / 7) * 7 - 7; d < input.startDay + input.days; d += 7) {
-      const idx = Math.round((d - fm) / 7);
-      if (idx % 2 !== 0) continue;
-      const a = Math.max(x0, xOfDay(d));
-      const b = Math.min(x1, xOfDay(d + 7));
-      if (b > a) {
-        doc.setFillColor(C.weekBand);
-        doc.rect(a, cardY + 0.3, b - a, cardH - 0.6, 'F');
-      }
+      if (Math.round((d - fm) / 7) % 2 === 0) band(xOfDay(d), xOfDay(d + 7));
+    }
+  } else if (bandUnit === 'month') {
+    const s = addDays(t0, Math.floor(input.startDay));
+    for (let d = new Date(s.getFullYear(), s.getMonth() - 1, 1); daysBetween(t0, d) < input.startDay + input.days; d = new Date(d.getFullYear(), d.getMonth() + 1, 1)) {
+      const idx = (d.getFullYear() - t0.getFullYear()) * 12 + d.getMonth() - t0.getMonth();
+      if (idx % 2 === 0) band(xOfDay(daysBetween(t0, d)), xOfDay(daysBetween(t0, new Date(d.getFullYear(), d.getMonth() + 1, 1))));
+    }
+  } else {
+    const s = addDays(t0, Math.floor(input.startDay));
+    for (let y = s.getFullYear() - 1; daysBetween(t0, new Date(y, 0, 1)) < input.startDay + input.days; y++) {
+      if (y % 2 === 1) band(xOfDay(daysBetween(t0, new Date(y, 0, 1))), xOfDay(daysBetween(t0, new Date(y + 1, 0, 1))));
     }
   }
 

@@ -166,7 +166,8 @@ export const Diagram = ({
   const t1 = parseDate(TIMELINE_END);
   const px = view.pxPerDay;
   const width = daysBetween(t0, t1) * px;
-  const x = (iso: string) => daysBetween(t0, parseDate(iso)) * px;
+  // A date sits in the middle of its day column, not on the line between days.
+  const x = (iso: string) => (daysBetween(t0, parseDate(iso)) + 0.5) * px;
   // Lanes stretch to fill the card, never shrinking below the view's own
   // height; with many lines the card grows and the page scrolls instead.
   const cardRef = useRef<HTMLDivElement | null>(null);

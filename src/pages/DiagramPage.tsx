@@ -82,7 +82,7 @@ export const DiagramPage = ({
     let anchor: number | undefined;
     if (el) {
       const rect = el.getBoundingClientRect();
-      const tx = daysBetween(parseDate(TIMELINE_START), parseDate(todayIso())) * pxRef.current - el.scrollLeft;
+      const tx = (daysBetween(parseDate(TIMELINE_START), parseDate(todayIso())) + 0.5) * pxRef.current - el.scrollLeft;
       if (tx >= 0 && tx <= rect.width) anchor = rect.left + tx;
     }
     zoomTo(next, anchor);
@@ -106,7 +106,7 @@ export const DiagramPage = ({
   const scrollToDate = useCallback((iso: string, ratio = 0.3) => {
     const el = scrollRef.current;
     if (!el) return;
-    const x = daysBetween(parseDate(TIMELINE_START), parseDate(iso)) * view.pxPerDay;
+    const x = (daysBetween(parseDate(TIMELINE_START), parseDate(iso)) + 0.5) * view.pxPerDay;
     el.scrollLeft = Math.max(0, x - el.clientWidth * ratio);
   }, [view.pxPerDay]);
 
@@ -161,7 +161,7 @@ export const DiagramPage = ({
   const revealDate = (iso: string) => {
     const el = scrollRef.current;
     if (!el) return;
-    const x = daysBetween(parseDate(TIMELINE_START), parseDate(iso)) * view.pxPerDay;
+    const x = (daysBetween(parseDate(TIMELINE_START), parseDate(iso)) + 0.5) * view.pxPerDay;
     if (x < el.scrollLeft + 40 || x > el.scrollLeft + el.clientWidth - 40) scrollToDate(iso, 0.5);
   };
 

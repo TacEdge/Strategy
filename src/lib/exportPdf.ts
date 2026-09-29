@@ -193,7 +193,8 @@ export const buildDiagramPdf = async (input: PdfInput): Promise<Blob> => {
   const t0 = parseDate(TIMELINE_START);
   const dayOf = (iso: string) => daysBetween(t0, parseDate(iso));
   const xOfDay = (d: number) => x0 + ((d - input.startDay) / input.days) * tw;
-  const xOf = (iso: string) => xOfDay(dayOf(iso));
+  // A date sits in the middle of its day, as on screen.
+  const xOf = (iso: string) => xOfDay(dayOf(iso) + 0.5);
   const inRange = (x: number) => x >= x0 - 0.5 && x <= x1 + 0.5;
   const mmPerDay = tw / input.days;
 

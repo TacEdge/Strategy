@@ -494,7 +494,11 @@ export const Diagram = ({
           {bandUnit === 'month' && monthTicks.map((tk, i) => (i % 2 === 0 ? (
             <div key={`mb-${tk.x}`} className="period-band" style={{ left: tk.x, width: (monthTicks[i + 1]?.x ?? width) - tk.x, top: 0, height: totalH }} />
           ) : null))}
-          {bandUnit === 'day' && dayTicks.map((tk) => (tk.odd ? (
+          {/* Week zoom: weekends grey, so the business days read as the
+              working canvas; weekdays keep the faint alternation. */}
+          {bandUnit === 'day' && dayTicks.map((tk) => (tk.weekend ? (
+            <div key={`db-${tk.x}`} className="weekend-band" style={{ left: tk.x, width: px, top: 0, height: totalH }} />
+          ) : tk.odd ? (
             <div key={`db-${tk.x}`} className="period-band" style={{ left: tk.x, width: px, top: 0, height: totalH }} />
           ) : null))}
           {bandUnit === 'week' && weekTicks.map((tk, i) => (i % 2 === 0 ? (
@@ -507,7 +511,18 @@ export const Diagram = ({
           {/* time header */}
           <div className="time-head" style={{ width }}>
             {visibleTicks.map((tk) => (
-              <div key={`${tk.year}-${tk.month}`} className={`month-tick${view.showDays ? ' top' : ''}`} style={{ left: tk.x, width: sparse ? px * 91 : px * 30 }}>
+              <div
+                key={`${tk.year}-${tk.month}`}
+                className={`month-tick${view.showDays ? ' top' : ''}`}
+                style={{
+                  left: tk.x,
+                  width: sparse ? px * 91 : px * 30,
+                  // Week zoom: step the month label past the Today chip when today
+                  // falls on the first days of the month.
+                  paddingLeft: view.showDays && x(today) - tk.x > -34 && x(today) - tk.x < 70
+                    ? x(today) - tk.x + 42 : undefined,
+                }}
+              >
                 {view.showDays ? (
                   // Week view: the day row is full, so month and year share the top row.
                   <span className="year">{tk.label} {tk.year}</span>

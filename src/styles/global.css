@@ -456,7 +456,13 @@ input, select, textarea { font: inherit; color: var(--te-ink); }
 }
 
 /* Calendar-year grouping */
-/* Alternating period bands: weeks, months or years depending on zoom */
+/* Weekend columns at Week zoom: a neutral grey, distinct from the green tint */
+.weekend-band {
+  position: absolute;
+  background: rgba(36, 42, 31, 0.07);
+  pointer-events: none;
+}
+/* Alternating period bands: days, weeks, months or years depending on zoom */
 .period-band {
   position: absolute;
   background: color-mix(in srgb, var(--te-tint) 70%, transparent);

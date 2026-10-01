@@ -211,8 +211,14 @@ export const buildDiagramPdf = async (input: PdfInput): Promise<Blob> => {
     }
   };
   if (bandUnit === 'day') {
+    // Weekends grey; weekdays keep the faint alternation, as on screen.
     for (let i = Math.floor(input.startDay) - 1; i < input.startDay + input.days; i++) {
-      if (i % 2 === 1) band(xOfDay(i), xOfDay(i + 1));
+      const dow = addDays(t0, i).getDay();
+      if (dow === 0 || dow === 6) {
+        const a = Math.max(x0, xOfDay(i));
+        const b = Math.min(x1, xOfDay(i + 1));
+        if (b > a) { doc.setFillColor('#ECEDEA'); doc.rect(a, cardY + 0.3, b - a, cardH - 0.6, 'F'); }
+      } else if (i % 2 === 1) band(xOfDay(i), xOfDay(i + 1));
     }
   } else if (bandUnit === 'week') {
     const firstMonday = addDays(t0, (8 - t0.getDay()) % 7);

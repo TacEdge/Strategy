@@ -277,10 +277,10 @@ export const Diagram = ({
     if (!view.showDays) return [];
     const from = Math.max(0, Math.floor((scrollX - viewportW) / px));
     const to = Math.min(daysBetween(t0, t1), Math.ceil((scrollX + 2 * viewportW) / px));
-    const ticks: { x: number; label: string; weekend: boolean; odd: boolean }[] = [];
+    const ticks: { x: number; label: string; weekend: boolean }[] = [];
     for (let i = from; i <= to; i++) {
       const d = addDays(t0, i);
-      ticks.push({ x: i * px, label: `${DAY_NAMES[d.getDay()]} ${d.getDate()}`, weekend: d.getDay() === 0 || d.getDay() === 6, odd: i % 2 === 1 });
+      ticks.push({ x: i * px, label: `${DAY_NAMES[d.getDay()]} ${d.getDate()}`, weekend: d.getDay() === 0 || d.getDay() === 6 });
     }
     return ticks;
   }, [view.showDays, scrollX, viewportW, px, t0, t1]);
@@ -494,12 +494,10 @@ export const Diagram = ({
           {bandUnit === 'month' && monthTicks.map((tk, i) => (i % 2 === 0 ? (
             <div key={`mb-${tk.x}`} className="period-band" style={{ left: tk.x, width: (monthTicks[i + 1]?.x ?? width) - tk.x, top: 0, height: totalH }} />
           ) : null))}
-          {/* Week zoom: weekends grey, so the business days read as the
-              working canvas; weekdays keep the faint alternation. */}
+          {/* Week zoom: weekends grey, weekdays plain, so the business
+              days read as one clean working canvas. */}
           {bandUnit === 'day' && dayTicks.map((tk) => (tk.weekend ? (
             <div key={`db-${tk.x}`} className="weekend-band" style={{ left: tk.x, width: px, top: 0, height: totalH }} />
-          ) : tk.odd ? (
-            <div key={`db-${tk.x}`} className="period-band" style={{ left: tk.x, width: px, top: 0, height: totalH }} />
           ) : null))}
           {bandUnit === 'week' && weekTicks.map((tk, i) => (i % 2 === 0 ? (
             <div key={`wb-${tk.x}`} className="period-band" style={{ left: tk.x, width: 7 * px, top: 0, height: totalH }} />

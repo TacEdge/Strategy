@@ -7,7 +7,7 @@ import {
   parseDate, toIso, daysBetween, addDays, monthShort, todayIso, fmtDayMonth,
 } from '../lib/time';
 import { OutcomeBox, OUTCOME_LABEL, IconEdit } from './icons';
-import { placeLabels, tiersThatFit } from '../lib/labels';
+import { placeLabels, tiersThatFit, stackMarkers, stackRank } from '../lib/labels';
 import type { LabelSlot } from '../lib/labels';
 import { TERMS } from '../lib/terms';
 
@@ -91,6 +91,10 @@ interface Placed {
   x: number;
   /** Where the label sits, or null when the lane is too crowded to show it. */
   slot: LabelSlot | null;
+  /** Marker offset down the line when it shares its spot, else 0. */
+  dy: number;
+  /** How far the stack reaches from the line; labels start past it. */
+  ext: number;
   laneTop: number;
 }
 
@@ -311,14 +315,9 @@ export const Diagram = ({
     const oneline = { mode: 'oneline' as LabelMode, width: sparse ? 64 : 92, blockH: sparse ? 13 : 15 };
     return [full, narrow, oneline].map((s) => {
       const tierH = s.blockH + 4;
-      return {
-        ...s,
-        tierH,
-        maxBelow: tiersThatFit(laneH * (1 - LINE_AT), labelOffset, s.blockH, tierH, 2),
-        maxAbove: tiersThatFit(laneH * LINE_AT, labelOffset, s.blockH, tierH, 2),
-      };
+      return { ...s, tierH };
     });
-  }, [sparse, showMeta, laneH, labelOffset]);
+  }, [sparse, showMeta]);
 
   const placedByLane = useMemo(() => {
     const map = new Map<string, LaneLabels>();
@@ -329,19 +328,30 @@ export const Diagram = ({
         .sort((a, b) => a.targetDate.localeCompare(b.targetDate))
         .map((m) => ({ m, x: x(m.targetDate) }));
       const ids = ms.map((p) => ({ id: p.m.id, x: p.x }));
+      // Tasks on the same day (or too close to tell apart) stack down the
+      // line so each has its own box to tick.
+      const boxSize = sparse ? 15 : 19;
+      const maxExt = Math.max(0, ...[...stackMarkers(ids, boxSize, boxSize + 5).values()].map((st) => st.ext));
       let best: { style: typeof labelStyles[number]; slots: Map<string, LabelSlot | null>; hidden: number } | null = null;
       for (const style of labelStyles) {
-        const slots = placeLabels(ids, { width: style.width + 8, gap: 6, maxBelow: style.maxBelow, maxAbove: style.maxAbove });
+        // A tall stack leaves less room for label tiers on each side.
+        const maxBelow = tiersThatFit(laneH * (1 - LINE_AT), labelOffset + maxExt, style.blockH, style.tierH, 2);
+        const maxAbove = tiersThatFit(laneH * LINE_AT, labelOffset + maxExt, style.blockH, style.tierH, 2);
+        const slots = placeLabels(ids, { width: style.width + 8, gap: 6, maxBelow, maxAbove });
         const hidden = [...slots.values()].filter((s) => s === null).length;
         if (!best || hidden < best.hidden) best = { style, slots, hidden };
         if (hidden === 0) break;
       }
       const { style, slots } = best!;
+      const stacks = stackMarkers(ids, boxSize, boxSize + 5, (id) => stackRank(showLabels ? slots.get(id) : null));
       map.set(loo.id, {
         mode: style.mode,
         width: style.width,
         tierH: style.tierH,
-        items: ms.map((p) => ({ m: p.m, x: p.x, slot: showLabels ? slots.get(p.m.id) ?? null : null, laneTop })),
+        items: ms.map((p) => ({
+          m: p.m, x: p.x, slot: showLabels ? slots.get(p.m.id) ?? null : null, laneTop,
+          dy: stacks.get(p.m.id)?.dy ?? 0, ext: stacks.get(p.m.id)?.ext ?? 0,
+        })),
       });
     });
     return map;
@@ -634,7 +644,10 @@ export const Diagram = ({
             const { m } = pl;
             const dx = msDrag.drag?.id === m.id ? msDrag.drag.dx : 0;
             const cx = pl.x + dx;
-            const cy = pl.laneTop + laneH * LINE_AT;
+            const cy = pl.laneTop + laneH * LINE_AT + pl.dy;
+            // Labels and leaders measure from the edge of the stack.
+            const ly = pl.laneTop + laneH * LINE_AT;
+            const off = labelOffset + pl.ext;
             const dragging = msDrag.drag?.id === m.id && msDrag.drag.dx !== 0;
             const selected = selectedMilestoneId === m.id;
             const opacity = nodeOpacity(loo, m);
@@ -686,8 +699,8 @@ export const Diagram = ({
                     className="ms-leader"
                     aria-hidden
                     style={pl.slot.side === 'below'
-                      ? { left: cx, top: cy + 8, height: labelOffset - 8 + pl.slot.level * tierH - 2 }
-                      : { left: cx, top: cy - labelOffset - pl.slot.level * tierH + 2, height: labelOffset - 8 + pl.slot.level * tierH - 2 }}
+                      ? { left: cx, top: ly + pl.ext + 8, height: labelOffset - 8 + pl.slot.level * tierH - 2 }
+                      : { left: cx, top: ly - off - pl.slot.level * tierH + 2, height: labelOffset - 8 + pl.slot.level * tierH - 2 }}
                   />
                 )}
                 {pl.slot && (
@@ -697,8 +710,8 @@ export const Diagram = ({
                     style={{
                       left: cx,
                       top: pl.slot.side === 'above'
-                        ? cy - labelOffset - pl.slot.level * tierH
-                        : cy + labelOffset + pl.slot.level * tierH,
+                        ? ly - off - pl.slot.level * tierH
+                        : ly + off + pl.slot.level * tierH,
                       width: labelW,
                     }}
                     {...selectProps(() => onSelectMilestone(m.id))}

@@ -10,7 +10,7 @@ import { TIMELINE_START } from './views';
 import type { ViewSpec } from './views';
 import { parseDate, daysBetween, addDays, fmtDayMonth, fmtDateLong, monthShort } from './time';
 import { TERMS } from './terms';
-import { placeLabels, tiersThatFit } from './labels';
+import { placeLabels, tiersThatFit, stackMarkers, stackRank } from './labels';
 import lockupUrl from '../assets/brand/tacedge-lockup-cream.svg';
 import bvp400Url from '../assets/pdf-fonts/be-vietnam-pro-400.ttf?url';
 import bvp600Url from '../assets/pdf-fonts/be-vietnam-pro-600.ttf?url';
@@ -377,13 +377,10 @@ export const buildDiagramPdf = async (input: PdfInput): Promise<Blob> => {
     { mode: 'oneline', width: fullLabelW * 0.7, blockH: 2.6, lineH: 2.6, size: 6.3, maxLines: 1 },
   ].map((s) => {
     const tierH = s.blockH + 1.2;
-    return {
-      ...s,
-      tierH,
-      maxBelow: tiersThatFit(laneH * (1 - 0.42), 2.8, s.blockH, tierH, 0.8),
-      maxAbove: tiersThatFit(laneH * 0.42, 3, s.blockH, tierH, 0.8),
-    };
+    return { ...s, tierH };
   });
+  const boxSize = r * 1.15 * 2;
+  const boxPitch = boxSize + 1.2;
 
   const marker = (outcome: Outcome, x: number, y: number, overdue: boolean) => outcomeBox(outcome, x, y, r * 1.15, overdue);
 
@@ -396,12 +393,18 @@ export const buildDiagramPdf = async (input: PdfInput): Promise<Blob> => {
       .filter((p) => inRange(p.x));
 
     // Same rule as the screen: tiers out from the line; dense when crowded.
+    // Same-day tasks stack down the line, as on screen; a tall stack
+    // leaves less room for label tiers.
+    const ids = tasks.map((p) => ({ id: p.m.id, x: p.x }));
+    const maxExt = Math.max(0, ...[...stackMarkers(ids, boxSize, boxPitch).values()].map((st) => st.ext));
     let best: { style: typeof labelStyles[number]; slots: ReturnType<typeof placeLabels>; hidden: number; withCx: { m: Milestone; x: number; cx: number }[] } | null = null;
     for (const style of labelStyles) {
       const withCx = tasks.map((p) => ({ ...p, cx: Math.min(Math.max(p.x, x0 + style.width / 2), x1 - style.width / 2) }));
+      const maxBelow = tiersThatFit(laneH * (1 - 0.42), 2.8 + maxExt, style.blockH, style.tierH, 0.8);
+      const maxAbove = tiersThatFit(laneH * 0.42, 3 + maxExt, style.blockH, style.tierH, 0.8);
       const slots = placeLabels(
         withCx.map((p) => ({ id: p.m.id, x: p.cx })),
-        { width: style.width + 2, gap: 1.5, maxBelow: style.maxBelow, maxAbove: style.maxAbove },
+        { width: style.width + 2, gap: 1.5, maxBelow, maxAbove },
       );
       const hidden = [...slots.values()].filter((s) => s === null).length;
       if (!best || hidden < best.hidden) best = { style, slots, hidden, withCx };
@@ -410,10 +413,12 @@ export const buildDiagramPdf = async (input: PdfInput): Promise<Blob> => {
     const { style, slots, withCx } = best!;
     const labelW = style.width;
     const pdfTierH = style.tierH;
+    const stacks = stackMarkers(ids, boxSize, boxPitch, (id) => stackRank(input.showLabels ? slots.get(id) : null));
 
     withCx.forEach(({ m, x, cx }) => {
       const overdue = m.outcome === 'open' && m.targetDate < input.today;
       const slot = input.showLabels ? slots.get(m.id) ?? null : null;
+      const { dy, ext } = stacks.get(m.id) ?? { dy: 0, ext: 0 };
       if (slot) {
         font('BVP', 'normal', style.size, overdue ? C.ink : C.ink60);
         let lines = doc.splitTextToSize(m.title, labelW) as string[];
@@ -425,11 +430,11 @@ export const buildDiagramPdf = async (input: PdfInput): Promise<Blob> => {
         const meta = showMeta && style.mode === 'full' ? `${fmtDayMonth(m.targetDate)}${m.owner ? ` · ${m.owner}` : ''}` : '';
         const blockH = lines.length * style.lineH + (meta ? 2.9 : 0);
         const step = slot.level * pdfTierH;
-        let y = slot.side === 'above' ? ly - 3 - step - blockH + 2.3 : ly + 5 + step;
+        let y = slot.side === 'above' ? ly - ext - 3 - step - blockH + 2.3 : ly + ext + 5 + step;
         if (slot.level > 0) {
           stroke(C.oliveEdge, 0.2, [0.4, 0.6]);
-          if (slot.side === 'below') doc.line(x, ly + 2.4, x, ly + 5 + step - 2.6);
-          else doc.line(x, ly - 3 - step + 1, x, ly - 2.4);
+          if (slot.side === 'below') doc.line(x, ly + ext + 2.4, x, ly + ext + 5 + step - 2.6);
+          else doc.line(x, ly - ext - 3 - step + 1, x, ly - ext - 2.4);
           doc.setLineDashPattern([], 0);
         }
         lines.forEach((line) => {
@@ -442,7 +447,7 @@ export const buildDiagramPdf = async (input: PdfInput): Promise<Blob> => {
           doc.text(meta, cx, y - 0.1, { align: 'center' });
         }
       }
-      marker(m.outcome, x, ly, overdue);
+      marker(m.outcome, x, ly + dy, overdue);
     });
   });
 

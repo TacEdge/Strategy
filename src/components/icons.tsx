@@ -1,5 +1,5 @@
 import type { SVGProps } from 'react';
-import type { Outcome } from '../types';
+import type { Outcome, TaskKind } from '../types';
 
 type P = SVGProps<SVGSVGElement> & { size?: number };
 
@@ -98,6 +98,48 @@ export const OUTCOME_LABEL: Record<Outcome, string> = {
   done: 'Completed',
   missed: "Didn't complete",
 };
+
+/** A decision point ends decided or not decided. */
+export const DECISION_LABEL: Record<Outcome, string> = {
+  open: 'To decide',
+  done: 'Decided',
+  missed: 'Not decided',
+};
+
+export const outcomeLabel = (outcome: Outcome, kind?: TaskKind): string =>
+  (kind === 'decision' ? DECISION_LABEL : OUTCOME_LABEL)[outcome];
+
+/* A Decision Point is a star on its line: open is an outline, decided a
+   solid green star, not decided a red outline struck through. */
+const STAR = 'M10 1.6 12.35 7.36 18.56 7.82 13.8 11.84 15.29 17.88 10 14.6 4.71 17.88 6.2 11.84 1.44 7.82 7.65 7.36Z';
+
+export const OutcomeStar = ({
+  outcome, size = 18, overdue = false,
+}: { outcome: Outcome; size?: number; overdue?: boolean }) => {
+  const edge = outcome === 'done' ? 'var(--te-forest)'
+    : outcome === 'missed' ? 'var(--te-brick)'
+      : overdue ? 'var(--te-ochre)' : 'var(--te-ink-40)';
+  const fill = outcome === 'done' ? 'var(--te-forest)'
+    : outcome === 'missed' ? 'var(--te-brick-tint)'
+      : 'var(--te-card)';
+  return (
+    <svg width={size} height={size} viewBox="0 0 20 20" aria-hidden style={{ display: 'block' }}>
+      <path d={STAR} fill={fill} stroke={edge} strokeWidth={1.6} strokeLinejoin="round" />
+      {outcome === 'missed' && (
+        <path d="M4.5 15.5 15.5 4.5" fill="none" stroke="var(--te-brick)" strokeWidth="2.2" strokeLinecap="round" />
+      )}
+    </svg>
+  );
+};
+
+/** The marker for a point on a line: a box for a key task, a star for a decision point. */
+export const OutcomeMark = ({
+  kind, outcome, size, overdue,
+}: { kind?: TaskKind; outcome: Outcome; size?: number; overdue?: boolean }) => (
+  kind === 'decision'
+    ? <OutcomeStar outcome={outcome} size={size} overdue={overdue} />
+    : <OutcomeBox outcome={outcome} size={size} overdue={overdue} />
+);
 
 export const OutcomeBox = ({
   outcome, size = 18, overdue = false, bold = false,

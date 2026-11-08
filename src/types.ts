@@ -14,6 +14,13 @@
  */
 export type Outcome = 'open' | 'done' | 'missed';
 
+/**
+ * What a point on a line is. A **Key Task** is a condition to make true;
+ * a **Decision Point** is a decision to make, shown as a star, holding
+ * the details of that decision.
+ */
+export type TaskKind = 'task' | 'decision';
+
 export interface Campaign {
   id: string;
   name: string;
@@ -51,6 +58,10 @@ export interface Milestone {
   targetDate: string; // ISO date
   outcome: Outcome;
   owner: string;
+  /** Absent means a key task. */
+  kind?: TaskKind;
+  /** A decision point's details: the options and what it hinges on. */
+  details?: string;
 }
 
 export interface WeeklyPlan {

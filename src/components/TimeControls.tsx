@@ -42,7 +42,7 @@ interface TimeControlsProps {
   onToggleLoo: (id: string) => void;
   onFocusAll: () => void;
   onToggleExpanded: () => void;
-  onAdd: (kind: 'milestone' | 'horizon') => void;
+  onAdd: (kind: 'milestone' | 'decision' | 'horizon') => void;
   onExport: () => void;
 }
 
@@ -133,6 +133,9 @@ export const TimeControls = ({
         <Menu open={openMenu === 'add'} onClose={() => setOpenMenu(null)}>
           <button type="button" className="menu-action" onClick={() => { onAdd('milestone'); setOpenMenu(null); }}>
             {TERMS.task}
+          </button>
+          <button type="button" className="menu-action" onClick={() => { onAdd('decision'); setOpenMenu(null); }}>
+            {TERMS.decision}
           </button>
           <button type="button" className="menu-action" onClick={() => { onAdd('horizon'); setOpenMenu(null); }}>
             {TERMS.objective}

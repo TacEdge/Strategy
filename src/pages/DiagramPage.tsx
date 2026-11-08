@@ -6,7 +6,7 @@ import { TimeControls } from '../components/TimeControls';
 import { Diagram } from '../components/Diagram';
 import { MilestoneDrawer } from '../components/MilestoneDrawer';
 import { HorizonDrawer } from '../components/HorizonDrawer';
-import { AddMilestoneModal, AddHorizonModal } from '../components/AddModals';
+import { AddMilestoneModal, AddDecisionModal, AddHorizonModal } from '../components/AddModals';
 import { LooManager } from '../components/LooManager';
 import { ExportSheet } from '../components/ExportSheet';
 import type { PdfInput } from '../lib/exportPdf';
@@ -47,7 +47,7 @@ export const DiagramPage = ({
       && state.horizons.some((h) => h.id === initialHorizonId)
       ? initialHorizonId : null),
   );
-  const [addOpen, setAddOpen] = useState<'milestone' | 'horizon' | null>(null);
+  const [addOpen, setAddOpen] = useState<'milestone' | 'decision' | 'horizon' | null>(null);
   const [exportInput, setExportInput] = useState<PdfInput | null>(null);
   const scrollRef = useRef<HTMLDivElement | null>(null);
 
@@ -235,6 +235,13 @@ export const DiagramPage = ({
       )}
       {addOpen === 'milestone' && (
         <AddMilestoneModal
+          onClose={() => setAddOpen(null)}
+          defaultLooId={focusLooId}
+          onCreated={(m) => revealDate(m.targetDate)}
+        />
+      )}
+      {addOpen === 'decision' && (
+        <AddDecisionModal
           onClose={() => setAddOpen(null)}
           defaultLooId={focusLooId}
           onCreated={(m) => revealDate(m.targetDate)}

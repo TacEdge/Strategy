@@ -31,6 +31,11 @@ Line of Operation and by time. Nothing needs opening to be understood.
   deleted to tidy up: what was not completed stays on the record, and a
   fresh task is added if it is to be tried again. A task still open past
   its date reads as overdue (ochre) on the diagram.
+- **Decision Points** — a decision that must be made on a line by a date.
+  It shows as a star on its line and holds the details of the decision:
+  the options, what it hinges on, who needs to be in the room. Tap the
+  star to read them and to mark it decided (solid green star) or not
+  decided (red star, struck through).
 - **Strategic Objectives** — vertical synchronisation points: a theme, a
   date and the same tick-box outcome, in a larger box at the head of the
   spine. Lines continue visually through and beyond every one.

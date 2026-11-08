@@ -27,6 +27,9 @@ export const MilestoneDrawer = ({
 
   if (!m) return null;
   const loo = state.loos.find((l) => l.id === m.looId);
+  const decision = m.kind === 'decision';
+  const noun = decision ? TERMS.decision : TERMS.task;
+  const nounLower = decision ? TERMS.decisionLower : TERMS.taskLower;
 
   const patch = (p: Partial<Milestone>) => dispatch({ type: 'milestone/update', id: m.id, patch: p });
 
@@ -37,10 +40,10 @@ export const MilestoneDrawer = ({
   };
 
   return (
-    <aside className="drawer drawer-compact" aria-label={`${TERMS.task}: ${m.title}`}>
+    <aside className="drawer drawer-compact" aria-label={`${noun}: ${m.title}`}>
       <div className="drawer-head">
         <div className="drawer-head-info">
-          <span className="eyebrow">{loo?.name ?? TERMS.task}</span>
+          <span className="eyebrow">{decision ? `${noun} · ${loo?.name ?? ''}` : loo?.name ?? noun}</span>
           {editingTitle ? (
             <input
               className="drawer-title-input"
@@ -51,7 +54,7 @@ export const MilestoneDrawer = ({
                 if (e.key === 'Enter') commitTitle();
                 if (e.key === 'Escape') setEditingTitle(false);
               }}
-              aria-label={`${TERMS.task} title`}
+              aria-label={`${noun} title`}
               autoFocus
             />
           ) : (
@@ -70,22 +73,32 @@ export const MilestoneDrawer = ({
             </h2>
           )}
           <div style={{ display: 'flex', gap: 14, alignItems: 'center', flexWrap: 'wrap' }}>
-            <OutcomeBadge outcome={m.outcome} overdue={m.outcome === 'open' && m.targetDate < todayIso()} />
+            <OutcomeBadge kind={m.kind} outcome={m.outcome} overdue={m.outcome === 'open' && m.targetDate < todayIso()} />
             <span className="detail-text muted" style={{ fontSize: 13 }}>{fmtDate(m.targetDate)}</span>
           </div>
         </div>
-        <button type="button" className="icon-btn" onClick={onClose} aria-label={`Close ${TERMS.taskLower} panel`}>
+        <button type="button" className="icon-btn" onClick={onClose} aria-label={`Close ${nounLower} panel`}>
           <IconClose size={16} />
         </button>
       </div>
 
       <div className="drawer-body">
+        {decision && (
+          <Field label="Details">
+            <textarea
+              value={m.details ?? ''}
+              onChange={(e) => patch({ details: e.target.value })}
+              placeholder="The options, what it hinges on, and who needs to be in the room."
+              rows={4}
+            />
+          </Field>
+        )}
         <div className="field">
-          <span className="field-label">Outcome</span>
-          <OutcomePicker value={m.outcome} onChange={(outcome) => patch({ outcome })} />
+          <span className="field-label">{decision ? 'Decision' : 'Outcome'}</span>
+          <OutcomePicker kind={m.kind} value={m.outcome} onChange={(outcome) => patch({ outcome })} />
         </div>
         <div className="meta-grid">
-          <Field label="Target date">
+          <Field label={decision ? 'Decide by' : 'Target date'}>
             <input
               type="date"
               value={m.targetDate}
@@ -111,7 +124,7 @@ export const MilestoneDrawer = ({
 
       {confirm && (
         <ConfirmDialog
-          title={`Delete ${TERMS.taskLower}`}
+          title={`Delete ${nounLower}`}
           message={`Delete "${m.title}"? This cannot be undone.`}
           confirmLabel="Delete"
           danger

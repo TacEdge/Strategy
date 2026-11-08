@@ -144,6 +144,30 @@ export const buildDiagramPdf = async (input: PdfInput): Promise<Blob> => {
     doc.setLineCap('butt');
   };
 
+  // A decision point is a star: open an outline, decided solid green, not
+  // decided a red outline struck through. Same shape as on screen.
+  const STAR_PTS: [number, number][] = [
+    [10, 1.6], [12.35, 7.36], [18.56, 7.82], [13.8, 11.84], [15.29, 17.88],
+    [10, 14.6], [4.71, 17.88], [6.2, 11.84], [1.44, 7.82], [7.65, 7.36],
+  ];
+  const outcomeStar = (outcome: Outcome, x: number, y: number, half: number, overdue: boolean) => {
+    const edge = outcome === 'open' && overdue ? C.ochre : OUTCOME_EDGE[outcome];
+    doc.setFillColor(outcome === 'done' ? C.forest : OUTCOME_FILL[outcome]);
+    stroke(edge, half * 0.2);
+    doc.setLineJoin('round');
+    const s = half / 9;
+    const pts = STAR_PTS.map(([px, py]) => [x + (px - 10) * s, y + (py - 10.6) * s]);
+    const segs = pts.slice(1).map((p, i) => [p[0] - pts[i][0], p[1] - pts[i][1]]);
+    doc.lines(segs, pts[0][0], pts[0][1], [1, 1], 'FD', true);
+    doc.setLineJoin('miter');
+    if (outcome === 'missed') {
+      doc.setLineCap('round');
+      stroke(C.brick, half * 0.26);
+      doc.line(x - half * 0.55, y + half * 0.5, x + half * 0.55, y - half * 0.6);
+      doc.setLineCap('butt');
+    }
+  };
+
   /* ---- Page and header band ---- */
   doc.setFillColor(C.cream);
   doc.rect(0, 0, W, H, 'F');
@@ -382,7 +406,9 @@ export const buildDiagramPdf = async (input: PdfInput): Promise<Blob> => {
   const boxSize = r * 1.15 * 2;
   const boxPitch = boxSize + 1.2;
 
-  const marker = (outcome: Outcome, x: number, y: number, overdue: boolean) => outcomeBox(outcome, x, y, r * 1.15, overdue);
+  const marker = (m: Milestone, x: number, y: number, overdue: boolean) => (m.kind === 'decision'
+    ? outcomeStar(m.outcome, x, y, r * 1.4, overdue)
+    : outcomeBox(m.outcome, x, y, r * 1.15, overdue));
 
   input.loos.forEach((loo, i) => {
     const ly = bodyTop + i * laneH + laneH * 0.42;
@@ -447,7 +473,7 @@ export const buildDiagramPdf = async (input: PdfInput): Promise<Blob> => {
           doc.text(meta, cx, y - 0.1, { align: 'center' });
         }
       }
-      marker(m.outcome, x, ly + dy, overdue);
+      marker(m, x, ly + dy, overdue);
     });
   });
 

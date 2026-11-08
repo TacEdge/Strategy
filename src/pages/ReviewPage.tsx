@@ -107,7 +107,7 @@ export const ReviewPage = ({
               <SectionHeading>Overdue, still open</SectionHeading>
               {overdue.length > 0 ? overdue.map((m) => (
                 <div key={m.id} className="dep-item">
-                  <OutcomeBadge outcome={m.outcome} overdue compact />
+                  <OutcomeBadge kind={m.kind} outcome={m.outcome} overdue compact />
                   <button type="button" className="dep-link" onClick={() => onOpenMilestone(m.id)}>{m.title}</button>
                   <span className="dep-loo" style={{ marginLeft: 'auto', color: 'var(--te-ochre)' }}>{fmtDate(m.targetDate)}</span>
                 </div>
@@ -117,7 +117,7 @@ export const ReviewPage = ({
               <SectionHeading>Didn't complete</SectionHeading>
               {missed.length > 0 ? missed.map((m) => (
                 <div key={m.id} className="dep-item">
-                  <OutcomeBadge outcome={m.outcome} compact />
+                  <OutcomeBadge kind={m.kind} outcome={m.outcome} compact />
                   <button type="button" className="dep-link" onClick={() => onOpenMilestone(m.id)}>{m.title}</button>
                   <span className="dep-loo" style={{ marginLeft: 'auto' }}>{fmtDate(m.targetDate)}</span>
                 </div>

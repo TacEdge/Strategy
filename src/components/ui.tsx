@@ -1,19 +1,23 @@
 import { useEffect, useRef } from 'react';
 import type { ReactNode } from 'react';
-import type { Outcome } from '../types';
-import { OutcomeBox, OUTCOME_LABEL } from './icons';
+import type { Outcome, TaskKind } from '../types';
+import { OutcomeMark, outcomeLabel } from './icons';
 
 export const OUTCOMES: Outcome[] = ['open', 'done', 'missed'];
 
-export const OutcomeBadge = ({ outcome, overdue = false, compact = false }: { outcome: Outcome; overdue?: boolean; compact?: boolean }) => (
-  <span className={`outcome-badge outcome-${outcome}${overdue ? ' overdue' : ''}`} title={OUTCOME_LABEL[outcome]}>
-    <OutcomeBox outcome={outcome} overdue={overdue} size={15} />
-    {!compact && <span>{overdue && outcome === 'open' ? 'Open · overdue' : OUTCOME_LABEL[outcome]}</span>}
+export const OutcomeBadge = ({
+  outcome, overdue = false, compact = false, kind,
+}: { outcome: Outcome; overdue?: boolean; compact?: boolean; kind?: TaskKind }) => (
+  <span className={`outcome-badge outcome-${outcome}${overdue ? ' overdue' : ''}`} title={outcomeLabel(outcome, kind)}>
+    <OutcomeMark kind={kind} outcome={outcome} overdue={overdue} size={15} />
+    {!compact && <span>{overdue && outcome === 'open' ? `${outcomeLabel(outcome, kind)} · overdue` : outcomeLabel(outcome, kind)}</span>}
   </span>
 );
 
-/** Three-way choice: open, completed, didn't complete. */
-export const OutcomePicker = ({ value, onChange }: { value: Outcome; onChange: (o: Outcome) => void }) => (
+/** Three-way choice: open, completed, didn't complete (or to decide, decided, not decided). */
+export const OutcomePicker = ({
+  value, onChange, kind,
+}: { value: Outcome; onChange: (o: Outcome) => void; kind?: TaskKind }) => (
   <div className="outcome-picker" role="radiogroup" aria-label="Outcome">
     {OUTCOMES.map((o) => (
       <button
@@ -24,8 +28,8 @@ export const OutcomePicker = ({ value, onChange }: { value: Outcome; onChange: (
         className={`outcome-option outcome-${o}${value === o ? ' on' : ''}`}
         onClick={() => onChange(o)}
       >
-        <OutcomeBox outcome={o} size={15} />
-        {OUTCOME_LABEL[o]}
+        <OutcomeMark kind={kind} outcome={o} size={15} />
+        {outcomeLabel(o, kind)}
       </button>
     ))}
   </div>

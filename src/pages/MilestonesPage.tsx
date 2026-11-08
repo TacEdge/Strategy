@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import type { Milestone, Outcome } from '../types';
 import { useStore, useLoos } from '../state/store';
 import { fmtDate, parseDate, daysBetween, todayIso } from '../lib/time';
-import { OutcomeBox, OUTCOME_LABEL } from '../components/icons';
+import { OutcomeMark, outcomeLabel } from '../components/icons';
 import { isOverdue } from '../components/Diagram';
 import { TERMS } from '../lib/terms';
 
@@ -111,15 +111,15 @@ export const MilestonesPage = ({ onOpenMilestone }: { onOpenMilestone: (id: stri
                 className={`pv-row${needsAttention(m) ? ' attention' : ''}`}
                 role="row"
                 onClick={() => onOpenMilestone(m.id)}
-                title={`${m.title}. ${OUTCOME_LABEL[m.outcome]}. Open on the diagram.`}
+                title={`${m.kind === 'decision' ? `${TERMS.decision}: ` : ''}${m.title}. ${outcomeLabel(m.outcome, m.kind)}. Open on the diagram.`}
               >
-                <span aria-label={OUTCOME_LABEL[m.outcome]}>
-                  <OutcomeBox outcome={m.outcome} overdue={overdue} size={17} />
+                <span aria-label={outcomeLabel(m.outcome, m.kind)}>
+                  <OutcomeMark kind={m.kind} outcome={m.outcome} overdue={overdue} size={17} />
                 </span>
                 <span className="pv-ms-title">{m.title}</span>
                 <span className="pv-loo">{loo ? `${String(loo.number).padStart(2, '0')} ${loo.name}` : '—'}</span>
                 <span className={`pv-status outcome-${m.outcome}${overdue ? ' overdue' : ''}`}>
-                  {overdue ? 'Overdue' : OUTCOME_LABEL[m.outcome]}
+                  {overdue ? 'Overdue' : outcomeLabel(m.outcome, m.kind)}
                 </span>
                 <span className={`pv-date${overdue ? ' overdue' : ''}`}>
                   {fmtDate(m.targetDate)}

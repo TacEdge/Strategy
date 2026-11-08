@@ -15,7 +15,7 @@
  */
 import { toIso, addDays, parseDate } from './time';
 
-export type CommandKind = 'task' | 'objective';
+export type CommandKind = 'task' | 'decision' | 'objective';
 
 export interface ParsedCommand {
   kind: CommandKind;
@@ -252,8 +252,8 @@ const findDate = (text: string, today: Date): { date: Date; start: number; end: 
 /* Kind, line of operation, owner                                       */
 /* ------------------------------------------------------------------ */
 
-const KIND_RE = /\b(strategic\s+objectives?|objectives?|key\s+tasks?|tasks?)\b/gi;
-const kindOf = (word: string): CommandKind => (/objective/i.test(word) ? 'objective' : 'task');
+const KIND_RE = /\b(strategic\s+objectives?|objectives?|decision\s+points?|decisions?|key\s+tasks?|tasks?)\b/gi;
+const kindOf = (word: string): CommandKind => (/objective/i.test(word) ? 'objective' : /decision/i.test(word) ? 'decision' : 'task');
 
 /** Words that point to a default line, keyed by the line's name. */
 const LINE_HINTS: Record<string, RegExp> = {
@@ -347,7 +347,7 @@ const cut = (text: string, start: number, end: number) => `${text.slice(0, start
 /* Entry point                                                          */
 /* ------------------------------------------------------------------ */
 
-const DEFAULT_DAYS: Record<CommandKind, number> = { task: 7, objective: 90 };
+const DEFAULT_DAYS: Record<CommandKind, number> = { task: 7, decision: 14, objective: 90 };
 
 /** Split an utterance at each "key task" / "strategic objective". */
 const segments = (text: string): { kind: CommandKind; body: string }[] => {

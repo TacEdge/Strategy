@@ -6,7 +6,7 @@ import { TIMELINE_START, TIMELINE_END } from '../lib/views';
 import {
   parseDate, toIso, daysBetween, addDays, monthShort, todayIso, fmtDayMonth,
 } from '../lib/time';
-import { OutcomeBox, OUTCOME_LABEL, IconEdit } from './icons';
+import { OutcomeBox, OutcomeMark, OUTCOME_LABEL, outcomeLabel, IconEdit } from './icons';
 import { placeLabels, tiersThatFit, stackMarkers, stackRank } from '../lib/labels';
 import type { LabelSlot } from '../lib/labels';
 import { TERMS } from '../lib/terms';
@@ -652,7 +652,8 @@ export const Diagram = ({
             const selected = selectedMilestoneId === m.id;
             const opacity = nodeOpacity(loo, m);
             const overdue = isOverdue(m, today);
-            const label = `${m.title}. ${OUTCOME_LABEL[m.outcome]}${overdue ? ', overdue' : ''}, ${fmtDayMonth(m.targetDate)}, ${m.owner}.`;
+            const decision = m.kind === 'decision';
+            const label = `${decision ? `${TERMS.decision}: ` : ''}${m.title}. ${outcomeLabel(m.outcome, m.kind)}${overdue ? ', overdue' : ''}, ${fmtDayMonth(m.targetDate)}, ${m.owner}.`;
 
             if (selected && !sparse) {
               return (
@@ -665,7 +666,7 @@ export const Diagram = ({
                   title={`${label} Drag to reschedule.`}
                   {...msDrag.handlers(m.id)}
                 >
-                  <OutcomeBox outcome={m.outcome} size={18} overdue={overdue} />
+                  <OutcomeMark kind={m.kind} outcome={m.outcome} size={18} overdue={overdue} />
                   <span className="msb-text">
                     <span className="msb-title">{m.title}</span>
                     {showMeta && (
@@ -679,19 +680,20 @@ export const Diagram = ({
             }
 
             // The box opens the outcome menu; the label selects for editing.
-            // Dragging an unselected task pans the canvas; rescheduling
-            // requires selecting first.
+            // A decision point's star holds its details, so the star opens
+            // the panel. Dragging an unselected task pans the canvas;
+            // rescheduling requires selecting first.
             return (
               <div key={m.id} className="ms-point" style={{ opacity }}>
                 <button
                   type="button"
-                  className={`ms-box outcome-${m.outcome}`}
+                  className={`ms-box outcome-${m.outcome}${decision ? ' decision' : ''}`}
                   style={{ left: cx, top: cy }}
-                  aria-label={`${label} Tap to mark completed or not.`}
-                  title={`${label} Tap to mark.`}
-                  {...selectProps(() => setMenu({ kind: 'task', id: m.id, x: cx, y: cy }))}
+                  aria-label={decision ? `${label} Tap for the details.` : `${label} Tap to mark completed or not.`}
+                  title={decision ? `${label} Tap for the details.` : `${label} Tap to mark.`}
+                  {...selectProps(() => (decision ? onSelectMilestone(m.id) : setMenu({ kind: 'task', id: m.id, x: cx, y: cy })))}
                 >
-                  <OutcomeBox outcome={m.outcome} size={sparse ? 15 : 19} overdue={overdue} />
+                  <OutcomeMark kind={m.kind} outcome={m.outcome} size={decision ? (sparse ? 17 : 22) : sparse ? 15 : 19} overdue={overdue} />
                 </button>
                 {pl.slot && pl.slot.level > 0 && (
                   // A thin leader ties an outer-tier label back to its dot.

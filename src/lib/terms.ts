@@ -4,6 +4,7 @@
  *
  * - A **Key Task** is a condition on a Line of Operation at a point in time.
  * - A **Strategic Objective** is a synchronisation point across every line.
+ * - A **Decision Point** is a decision to make on a line, shown as a star.
  */
 export const TERMS = {
   task: 'Key Task',
@@ -13,4 +14,7 @@ export const TERMS = {
   objective: 'Strategic Objective',
   objectiveLower: 'strategic objective',
   objectives: 'Strategic Objectives',
+  decision: 'Decision Point',
+  decisionLower: 'decision point',
+  decisions: 'Decision Points',
 } as const;

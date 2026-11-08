@@ -130,10 +130,11 @@ export const VoiceCommand = () => {
       return;
     }
     const made: Added[] = commands.map((c) => {
-      const id = newId(c.kind === 'task' ? 'ms' : 'hz');
-      if (c.kind === 'task') {
+      const id = newId(c.kind === 'task' ? 'ms' : c.kind === 'decision' ? 'dp' : 'hz');
+      if (c.kind !== 'objective') {
         const milestone: Milestone = {
           id, title: c.title, looId: c.looId, targetDate: c.date, outcome: 'open', owner: c.owner,
+          ...(c.kind === 'decision' ? { kind: 'decision' as const, details: '' } : {}),
         };
         dispatch({ type: 'milestone/add', milestone });
       } else {
@@ -148,9 +149,9 @@ export const VoiceCommand = () => {
     setNotice('');
     setPhase('done');
     const lineName = (id: string) => lines.find((l) => l.id === id)?.name ?? '';
-    say(made.map((c) => (c.kind === 'task'
-      ? `Added ${TERMS.taskLower}: ${c.title}, ${spokenDate(c.date)}, ${lineName(c.looId)}.`
-      : `Added ${TERMS.objectiveLower}: ${c.title}, ${spokenDate(c.date)}.`)).join(' '));
+    say(made.map((c) => (c.kind === 'objective'
+      ? `Added ${TERMS.objectiveLower}: ${c.title}, ${spokenDate(c.date)}.`
+      : `Added ${c.kind === 'decision' ? TERMS.decisionLower : TERMS.taskLower}: ${c.title}, ${spokenDate(c.date)}, ${lineName(c.looId)}.`)).join(' '));
     // Eyes-free: the sheet clears itself unless touched.
     clearCloseTimer();
     closeTimer.current = window.setTimeout(() => setOpen(false), 9000);
@@ -214,7 +215,7 @@ export const VoiceCommand = () => {
 
   const undo = (item: Added) => {
     clearCloseTimer();
-    dispatch(item.kind === 'task'
+    dispatch(item.kind !== 'objective'
       ? { type: 'milestone/delete', id: item.id }
       : { type: 'horizon/delete', id: item.id });
     setAdded((list) => list.filter((a) => a.id !== item.id));
@@ -312,14 +313,14 @@ export const VoiceCommand = () => {
                   <div key={a.id} className="voice-item">
                     <div className="voice-item-text">
                       <span className="voice-item-kind">
-                        {a.kind === 'task' ? TERMS.task : TERMS.objective}
-                        {a.kind === 'task' && ` · ${lineName(a.looId)}`}
+                        {a.kind === 'task' ? TERMS.task : a.kind === 'decision' ? TERMS.decision : TERMS.objective}
+                        {a.kind !== 'objective' && ` · ${lineName(a.looId)}`}
                       </span>
                       <span className="voice-item-title">{a.title}</span>
                       <span className="voice-item-meta">
                         {spokenDate(a.date)}{a.dateHeard ? '' : ' · no date heard'}
-                        {a.kind === 'task' && a.looSource === 'default' ? ' · line not heard' : ''}
-                        {a.kind === 'task' && a.owner ? ` · ${a.owner}` : ''}
+                        {a.kind !== 'objective' && a.looSource === 'default' ? ' · line not heard' : ''}
+                        {a.kind !== 'objective' && a.owner ? ` · ${a.owner}` : ''}
                       </span>
                     </div>
                     <button type="button" className="btn btn-secondary btn-sm" onClick={() => undo(a)}>Undo</button>
